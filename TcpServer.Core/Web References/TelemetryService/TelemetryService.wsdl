@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy/ws-policy.xsd" xmlns:tns="http://webservice.telemetry.udo.fors.ru/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:sp="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702" name="TelemetryService" targetNamespace="http://webservice.telemetry.udo.fors.ru/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsp:Policy wsu:Id="UsernameToken" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:sp="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702">
+    <wsp:ExactlyOne>
+      <wsp:All>
+        <!-- Empty <TransportBinding/> element required due to bug in CXF 2.2.6 +++-->
+        <sp:TransportBinding />
+        <sp:SupportingTokens>
+          <wsp:Policy>
+            <sp:UsernameToken sp:IncludeToken="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702/IncludeToken/AlwaysToRecipient" />
+          </wsp:Policy>
+        </sp:SupportingTokens>
+      </wsp:All>
+    </wsp:ExactlyOne>
+  </wsp:Policy>
+  <wsdl:types>
+    <xs:schema attributeFormDefault="unqualified" elementFormDefault="unqualified" targetNamespace="http://webservice.telemetry.udo.fors.ru/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:element name="storeTelemetry" type="tns:storeTelemetry" />
+      <xs:element name="storeTelemetryList" type="tns:storeTelemetryList" />
+      <xs:element name="storeTelemetryListResponse" type="tns:storeTelemetryListResponse" />
+      <xs:element name="storeTelemetryResponse" type="tns:storeTelemetryResponse" />
+      <xs:element name="testService" type="tns:testService" />
+      <xs:element name="testServiceResponse" type="tns:testServiceResponse" />
+      <xs:complexType name="testService">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="a" type="xs:int" />
+          <xs:element minOccurs="0" name="b" type="xs:int" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="testServiceResponse">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="result" type="xs:int" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="storeTelemetryList">
+        <xs:sequence>
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="telemetryWithDetails" type="tns:telemetryWithDetails" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="telemetryWithDetails">
+        <xs:sequence>
+          <xs:element name="telemetry" type="tns:telemetryBa" />
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="telemetryDetails" type="tns:telemetryDetailBa" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="telemetryBa">
+        <xs:sequence>
+          <xs:element name="coordX" type="xs:double" />
+          <xs:element name="coordY" type="xs:double" />
+          <xs:element name="date" type="xs:dateTime" />
+          <xs:element name="glonass" type="xs:boolean" />
+          <xs:element name="gpsCode" type="xs:string" />
+          <xs:element name="speed" type="xs:double" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="telemetryDetailBa">
+        <xs:sequence>
+          <xs:element name="sensorCode" type="xs:string" />
+          <xs:element name="value" type="xs:double" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="storeTelemetryListResponse">
+        <xs:sequence />
+      </xs:complexType>
+      <xs:complexType name="storeTelemetry">
+        <xs:sequence>
+          <xs:element name="telemetry" type="tns:telemetryBa" />
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="telemetryDetails" type="tns:telemetryDetailBa" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="storeTelemetryResponse">
+        <xs:sequence />
+      </xs:complexType>
+      <xs:element name="TelemetryException" type="tns:TelemetryException" />
+      <xs:complexType name="TelemetryException">
+        <xs:sequence>
+          <xs:element name="user" nillable="true" type="xs:string" />
+          <xs:element name="gpsCode" nillable="true" type="xs:string" />
+          <xs:element name="date" nillable="true" type="xs:dateTime" />
+        </xs:sequence>
+      </xs:complexType>
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:message name="testServiceResponse">
+    <wsdl:part name="parameters" element="tns:testServiceResponse" />
+  </wsdl:message>
+  <wsdl:message name="storeTelemetry">
+    <wsdl:part name="parameters" element="tns:storeTelemetry" />
+  </wsdl:message>
+  <wsdl:message name="storeTelemetryList">
+    <wsdl:part name="parameters" element="tns:storeTelemetryList" />
+  </wsdl:message>
+  <wsdl:message name="storeTelemetryResponse">
+    <wsdl:part name="parameters" element="tns:storeTelemetryResponse" />
+  </wsdl:message>
+  <wsdl:message name="storeTelemetryListResponse">
+    <wsdl:part name="parameters" element="tns:storeTelemetryListResponse" />
+  </wsdl:message>
+  <wsdl:message name="TelemetryException">
+    <wsdl:part name="TelemetryException" element="tns:TelemetryException" />
+  </wsdl:message>
+  <wsdl:message name="testService">
+    <wsdl:part name="parameters" element="tns:testService" />
+  </wsdl:message>
+  <wsdl:portType name="TelemetryService">
+    <wsdl:operation name="testService">
+      <wsdl:documentation>Тестовая операция - возвращает сумму двух входных целочисленных параметров</wsdl:documentation>
+      <wsdl:input name="testService" message="tns:testService">
+        <wsdl:documentation>Входные параметры к операции testService - два целых числа</wsdl:documentation>
+      </wsdl:input>
+      <wsdl:output name="testServiceResponse" message="tns:testServiceResponse">
+        <wsdl:documentation>Результат операции testService - сумма двух входных параметров</wsdl:documentation>
+      </wsdl:output>
+      <wsdl:fault name="TelemetryException" message="tns:TelemetryException" />
+    </wsdl:operation>
+    <wsdl:operation name="storeTelemetryList">
+      <wsdl:documentation>Сохранение массива данных по передвижению техники с показаниями датчиков</wsdl:documentation>
+      <wsdl:input name="storeTelemetryList" message="tns:storeTelemetryList">
+        <wsdl:documentation>Входные параметры к операции storeTelemetryList: Массив данных по передвижению техники с показаниями датчиков</wsdl:documentation>
+      </wsdl:input>
+      <wsdl:output name="storeTelemetryListResponse" message="tns:storeTelemetryListResponse">
+        <wsdl:documentation>Результат выполнения функции сохранения - пустой</wsdl:documentation>
+      </wsdl:output>
+      <wsdl:fault name="TelemetryException" message="tns:TelemetryException" />
+    </wsdl:operation>
+    <wsdl:operation name="storeTelemetry">
+      <wsdl:documentation>Сохранение данных по передвижению техники и значений показаний датчиков</wsdl:documentation>
+      <wsdl:input name="storeTelemetry" message="tns:storeTelemetry">
+        <wsdl:documentation>Входные параметры к операции storeTelemetry: Данные по передвижению техники с показаниями датчиков</wsdl:documentation>
+      </wsdl:input>
+      <wsdl:output name="storeTelemetryResponse" message="tns:storeTelemetryResponse">
+        <wsdl:documentation>Результат выполнения функции сохранения - пустой</wsdl:documentation>
+      </wsdl:output>
+      <wsdl:fault name="TelemetryException" message="tns:TelemetryException" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="TelemetryServiceServiceSoapBinding" type="tns:TelemetryService">
+    <wsp:PolicyReference xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" URI="#UsernameToken" />
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="testService">
+      <soap:operation soapAction="" style="document" />
+      <wsdl:input name="testService">
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output name="testServiceResponse">
+        <soap:body use="literal" />
+      </wsdl:output>
+      <wsdl:fault name="TelemetryException">
+        <soap:fault use="literal" name="TelemetryException" namespace="" />
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="storeTelemetryList">
+      <soap:operation soapAction="" style="document" />
+      <wsdl:input name="storeTelemetryList">
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output name="storeTelemetryListResponse">
+        <soap:body use="literal" />
+      </wsdl:output>
+      <wsdl:fault name="TelemetryException">
+        <soap:fault use="literal" name="TelemetryException" namespace="" />
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="storeTelemetry">
+      <soap:operation soapAction="" style="document" />
+      <wsdl:input name="storeTelemetry">
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output name="storeTelemetryResponse">
+        <soap:body use="literal" />
+      </wsdl:output>
+      <wsdl:fault name="TelemetryException">
+        <soap:fault use="literal" name="TelemetryException" namespace="" />
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="TelemetryService">
+    <wsdl:port name="TelemetryServicePort" binding="tns:TelemetryServiceServiceSoapBinding">
+      <soap:address location="http://ods.mos.ru:80/telemetry/telemetryWebService" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
