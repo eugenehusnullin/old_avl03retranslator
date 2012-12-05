@@ -119,6 +119,7 @@ namespace TcpServer.Core
                     var isPacket = IsPacket(srcData);
                     if (isPacket)
                     {
+
                         var basePacket = BasePacket.GetFromGlonass(srcData);
                         packetString = basePacket.ToPacketGps();
                     }
@@ -130,9 +131,11 @@ namespace TcpServer.Core
                     {
                         serverStream.Write(dstData, 0, dstData.Length);
                     }
-
+                   
                     log.AppendFormat("dst: {0}", packetString);
 
+
+                    
                     Logger.PacketWriteLine(log.ToString());
 
                 }

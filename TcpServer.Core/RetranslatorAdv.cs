@@ -43,6 +43,7 @@ namespace TcpServer.Core
         }
 
         private readonly object _thisLock = new object();
+        
 
         public void Start()
         {

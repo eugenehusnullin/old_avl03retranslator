@@ -317,9 +317,10 @@ namespace TcpServer.Core
             int.TryParse(rtcSttring.Substring(10, 2), out rtcMinute);
 
             int rtcSeconds;
-            int.TryParse(rtcSttring.Substring(6, 2), out rtcSeconds);
+            int.TryParse(rtcSttring.Substring(12, 2), out rtcSeconds);
 
             result.RTC = new DateTime(rtcYear, rtcMonth, rtcDay, rtcHour, rtcMinute, rtcSeconds);
+            result.ValidNavigDateTime = new DateTime(rtcYear, rtcMonth, rtcDay, rtcHour, rtcMinute, rtcSeconds);
 
             result.Voltage = matchGroups["Voltage"].Value;
             result.ADC = matchGroups["ADC"].Value;
