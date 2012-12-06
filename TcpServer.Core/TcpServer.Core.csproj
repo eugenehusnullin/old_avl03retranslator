@@ -47,6 +47,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="async\ConnectionsAccepter.cs" />
+    <Compile Include="async\DataHoldingUserToken.cs" />
     <Compile Include="BasePacket.cs" />
     <Compile Include="ByteHelper.cs" />
     <Compile Include="Crc16.cs" />
@@ -65,7 +67,6 @@
     </Compile>
     <Compile Include="RetranslatorGlonass.cs" />
     <Compile Include="RetranslatorAdv.cs" />
-    <Compile Include="RetranslatorNonblocking.cs" />
     <Compile Include="RetranslatorTelemaxima.cs" />
     <Compile Include="RetranslatorTeltonika.cs" />
     <Compile Include="RetranslatorWialon.cs" />
@@ -110,6 +111,7 @@
     </None>
     <None Include="Web References\TelemetryService\TelemetryService.wsdl" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
