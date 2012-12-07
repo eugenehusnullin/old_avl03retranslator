@@ -7,7 +7,7 @@ using System.Text;
 
 namespace TcpServer.Core.async
 {
-    class ConnectionsAccepter
+    public class ConnectionsAccepter
     {
         private const int INIT_ACCEPT_POOL_SIZE = 50;
         private const int BACKLOG = 500;
@@ -16,6 +16,7 @@ namespace TcpServer.Core.async
         private const int SEND_BUFFER_SIZE = 512;
         private const int MAX_BUFFERS_COUNT = 10;
         private const int RECEIVE_PREFIX_LENGTH = 4;
+        private const int SEND_PREFIX_LENGTH = 0;
 
         private Socket listenSocket;
         private string listenHost;
@@ -33,9 +34,16 @@ namespace TcpServer.Core.async
         private static object bufferLock = new object();
         private int initBufferSize;
 
+        public ConnectionsAccepter(string listenHost, int listenPort)
+        {
+            this.listenHost = listenHost;
+            this.listenPort = listenPort;
+        }
+
         private void init()
         {
-            initBufferSize = (RECEIVE_BUFFER_SIZE * INIT_BLOCK_POOL_SIZE) + (SEND_BUFFER_SIZE + INIT_BLOCK_POOL_SIZE);
+            initBufferSize = RECEIVE_BUFFER_SIZE * INIT_BLOCK_POOL_SIZE;
+            initBufferSize += SEND_BUFFER_SIZE * INIT_BLOCK_POOL_SIZE;
 
             bufferArrays = new byte[MAX_BUFFERS_COUNT][];
             bufferArrays[currentBufferArrayIndex] = new byte[initBufferSize];
@@ -58,8 +66,7 @@ namespace TcpServer.Core.async
             SocketAsyncEventArgs s = new SocketAsyncEventArgs();
             s.Completed += new EventHandler<SocketAsyncEventArgs>(blockEvent);
 
-            DataHoldingUserToken userToken = new DataHoldingUserToken();
-
+            int bufferOffsetReceive, bufferOffsetSend; 
             lock (bufferLock)
             {
                 if (currentBufferOffset == initBufferSize)
@@ -72,16 +79,17 @@ namespace TcpServer.Core.async
                     currentBufferArrayIndex++;
                     bufferArrays[currentBufferArrayIndex] = new byte[initBufferSize];
                     currentBufferOffset = 0;
-                }                
-                s.SetBuffer(bufferArrays[currentBufferArrayIndex], currentBufferOffset, 0);
+                }
                 
-                userToken.bufferOffsetReceive = currentBufferOffset;
+                bufferOffsetReceive = currentBufferOffset;
                 currentBufferOffset += RECEIVE_BUFFER_SIZE;
-                userToken.bufferOffsetSend = currentBufferOffset;
+                bufferOffsetSend = currentBufferOffset;
                 currentBufferOffset += SEND_BUFFER_SIZE;
-            }
 
-            s.UserToken = userToken;
+                s.SetBuffer(bufferArrays[currentBufferArrayIndex], bufferOffsetReceive, RECEIVE_BUFFER_SIZE);
+            }
+            
+            s.UserToken = new DataHoldingUserToken(bufferOffsetReceive, bufferOffsetSend, RECEIVE_PREFIX_LENGTH, SEND_PREFIX_LENGTH);
             return s;
         }
 
@@ -104,7 +112,16 @@ namespace TcpServer.Core.async
             listenSocket.Bind(localEndPoint);
             listenSocket.Listen(BACKLOG);
 
-            startAccept();            
+            startAccept();
+        }
+
+        public void stop()
+        {
+            if (listenSocket.Connected)
+            {
+                listenSocket.Shutdown(SocketShutdown.Both);
+            }
+            listenSocket.Close();
         }
 
         private void startAccept()
@@ -130,6 +147,8 @@ namespace TcpServer.Core.async
 
         private void processAccept(SocketAsyncEventArgs s)
         {
+            Console.WriteLine("Connected: ");
+
             startAccept();
 
             if (s.SocketError != SocketError.Success)
@@ -175,6 +194,7 @@ namespace TcpServer.Core.async
         {
             DataHoldingUserToken userToken = (DataHoldingUserToken)rs.UserToken;
             rs.SetBuffer(userToken.bufferOffsetReceive, RECEIVE_BUFFER_SIZE);
+            userToken.beforeNewRequestReceive();
 
             if (!rs.AcceptSocket.ReceiveAsync(rs))
             {
@@ -184,6 +204,7 @@ namespace TcpServer.Core.async
 
         private void processReceive(SocketAsyncEventArgs rs)
         {
+            Console.WriteLine("processReceive: ");
             var userToken = (DataHoldingUserToken) rs.UserToken;
 
             if (rs.SocketError != SocketError.Success || rs.BytesTransferred == 0)
@@ -194,20 +215,24 @@ namespace TcpServer.Core.async
             }
 
             int bytesToProcess = rs.BytesTransferred;
-
             if (userToken.receivedPrefixBytesDoneCount < RECEIVE_PREFIX_LENGTH)
             {
                 bytesToProcess = handlePrefix(rs, userToken, bytesToProcess);
 
-                if (bytesToProcess == 0)
+                if (bytesToProcess < 0)
+                {
+                    userToken.reset();
+                    closeSocket(rs);
+                    return;
+                }
+                else if (bytesToProcess == 0)
                 {
                     startReceive(rs);
                     return;
                 }
             }
-            else
-            {
-            }
+
+            handleMessage(rs, userToken, bytesToProcess);
         }
 
         
@@ -254,7 +279,80 @@ namespace TcpServer.Core.async
 
         private int handlePrefix(SocketAsyncEventArgs rs, DataHoldingUserToken userToken, int bytesToProcess)
         {
-            throw new NotImplementedException();
+            if (userToken.receivedPrefixBytesDoneCount == 0)
+            {
+                userToken.byteArrayForPrefix = new byte[RECEIVE_PREFIX_LENGTH];
+            }
+
+            int length = Math.Min(RECEIVE_PREFIX_LENGTH - userToken.receivedPrefixBytesDoneCount, bytesToProcess);
+
+            Buffer.BlockCopy(rs.Buffer, userToken.bufferOffsetReceive
+                + userToken.receivedPrefixBytesDoneCountThisOperation + userToken.receivedMessageBytesDoneCountThisOperation,
+                userToken.byteArrayForPrefix, userToken.receivedPrefixBytesDoneCount, length);
+
+            userToken.receivedPrefixBytesDoneCount += length;
+            userToken.receivedPrefixBytesDoneCountThisOperation += length;
+
+            if (userToken.receivedPrefixBytesDoneCount == RECEIVE_PREFIX_LENGTH)
+            {
+                // заголовок готов, проверяем его, если он нормальный устанавливаем длину ожидаемого сообщения
+                var prefix = Encoding.ASCII.GetString(userToken.byteArrayForPrefix);
+                if (!prefix.StartsWith("$$"))
+                {
+                    return -1;
+                }
+
+                try
+                {
+                    userToken.lengthOfCurrentIncomingMessage = Convert.ToInt32(prefix.Substring(2), 16) - 4;
+                    if (userToken.lengthOfCurrentIncomingMessage <= 0)
+                    {
+                        return -3;
+                    }
+                }
+                catch
+                {
+                    return -2;
+                }
+            }
+
+            return bytesToProcess - length;
+        }
+
+        private int handleMessage(SocketAsyncEventArgs rs, DataHoldingUserToken userToken, int bytesToProcess)
+        {
+            if (userToken.receivedMessageBytesDoneCount == 0)
+            {
+                userToken.byteArrayForMessage = new byte[userToken.lengthOfCurrentIncomingMessage];
+            }
+
+            int length = Math.Min(userToken.lengthOfCurrentIncomingMessage - userToken.receivedMessageBytesDoneCount, bytesToProcess);
+
+            Buffer.BlockCopy(rs.Buffer, userToken.bufferOffsetReceive +
+                userToken.receivedPrefixBytesDoneCountThisOperation + userToken.receivedMessageBytesDoneCountThisOperation,
+                userToken.byteArrayForMessage, userToken.receivedMessageBytesDoneCount, length);
+
+            userToken.receivedMessageBytesDoneCount += length;
+            userToken.receivedMessageBytesDoneCountThisOperation += length;
+
+            if (userToken.receivedMessageBytesDoneCount == userToken.lengthOfCurrentIncomingMessage)
+            {
+                //// сообщение готово
+                //var message = Encoding.ASCII.GetString(userToken.byteArrayForMessage);
+
+                //// отладка
+                //var prefix = Encoding.ASCII.GetString(userToken.byteArrayForPrefix);
+                //Console.WriteLine(DateTime.Now.ToString());
+                //Console.WriteLine(prefix + message);                
+                //Console.WriteLine();
+                //Console.WriteLine();
+                
+                //userToken.reset();
+                //startReceive(rs);
+
+            }
+
+            return bytesToProcess - length;
         }
     }
 }
