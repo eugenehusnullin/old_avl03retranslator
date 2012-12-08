@@ -119,8 +119,18 @@ namespace TcpServer.Core
                     var isPacket = IsPacket(srcData);
                     if (isPacket)
                     {
-
                         var basePacket = BasePacket.GetFromGlonass(srcData);
+
+                        try
+                        {
+                            Thread Make_Maxima = new Thread(delegate() { RetranslatorTelemaxima.DoMaxima(basePacket); });
+                            Make_Maxima.Start();
+                        }
+                        catch (Exception exx)
+                        {
+                            log.AppendFormat("{0}MAXIMA RETRANSLATE ERROR: {1}", Environment.NewLine, exx.Message);
+                        }
+
                         packetString = basePacket.ToPacketGps();
                     }
 

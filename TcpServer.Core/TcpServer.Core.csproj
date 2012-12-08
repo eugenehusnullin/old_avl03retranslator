@@ -65,7 +65,6 @@
     </Compile>
     <Compile Include="RetranslatorGlonass.cs" />
     <Compile Include="RetranslatorAdv.cs" />
-    <Compile Include="RetranslatorNonblocking.cs" />
     <Compile Include="RetranslatorTelemaxima.cs" />
     <Compile Include="RetranslatorTeltonika.cs" />
     <Compile Include="RetranslatorWialon.cs" />
