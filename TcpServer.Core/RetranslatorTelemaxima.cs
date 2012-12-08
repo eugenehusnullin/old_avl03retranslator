@@ -160,8 +160,7 @@ namespace TcpServer.Core
                 if (car_id != 0)
                     log.AppendFormat("{0}{1} MAXIMA: {2}", Environment.NewLine, DateTime.Now.ToString(), "Packet IS NOT RETRANSLATED, BUT SHOULD BE.");
             }
-            File.AppendAllText("MaximaRetranslation.txt", log.ToString(), Encoding.Default);
-            return retranslated;
+            File.AppendAllText("MaximaRetranslation.txt", log.ToString(), Encoding.Default);            
         }
     }
 }
