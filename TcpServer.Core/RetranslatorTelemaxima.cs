@@ -111,9 +111,11 @@ namespace TcpServer.Core
                 return id;
         }
          * */
-        public static bool DoMaxima(BasePacket Packet)
+        public static void DoMaxima(object stateInfo)
         {
             StringBuilder log = new StringBuilder();
+
+            BasePacket Packet = (BasePacket)stateInfo;
             int max_try = 3;
             int crew_state = -1;
             bool retranslated = false;
