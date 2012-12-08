@@ -14,7 +14,7 @@ namespace TcpServer.TestRetranslator.Glonass
             var options = new Options();
             options.LogPath = "RetranslatorLog";
             options.UseFeedBack = true;
-            var retranslator = new RetranslatorGlonass("192.168.1.5", 10181, "77.74.50.78", 20141, null, options);
+            var retranslator = new RetranslatorGlonass("127.0.0.1", 10181, "77.74.50.78", 20141, null, options);
             retranslator.Start();
 
             Console.ReadKey();

@@ -14,21 +14,31 @@ namespace TcpServer.Core
 {
 
     public class RetranslatorTelemaxima
-    {        
-        private static Dictionary<string, int> DB = new Dictionary<string, int>();
-
-        static RetranslatorTelemaxima()
+    {
+        private static Dictionary<String, Int32> DB = new Dictionary<String, Int32>();
+        private static Logger Logger;
+        private static object lockObject = new object();
+        public static void Init(Logger OutLogger)
         {
-            OleDbConnection con = new OleDbConnection("Provider=Microsoft.Jet.OLEDB.4.0; Data Source=maxima_taxi.mdb;");
-
-            OleDbCommand select = new OleDbCommand("select imei,id from main", con);
-            OleDbDataReader reader = select.ExecuteReader();
-            while (reader.Read())
+            Logger = OutLogger;
+            try
             {
-                DB.Add(reader[0].ToString(), int.Parse(reader[1].ToString()));
+                OleDbConnection con = new OleDbConnection("Provider=Microsoft.Jet.OLEDB.4.0; Data Source=maxima_taxi.mdb;");
+                con.Open();
+                OleDbCommand select = new OleDbCommand("select imei,id from main", con);
+                OleDbDataReader reader = select.ExecuteReader();
+                while (reader.Read())
+                {
+                    DB.Add(reader[0].ToString(), int.Parse(reader[1].ToString()));
+                }
+                con.Close();
             }
-            con.Close();            
+            catch (Exception e)
+            {
+                Logger.ErrorWriteLine(e);
+            }
         }
+
         private static bool Retranslate_To_Maxima(string ip, int port, int car_id, double lat, double lon)
         {
             StringBuilder log = new StringBuilder();
@@ -40,15 +50,27 @@ namespace TcpServer.Core
                 var Send_Query = (HttpWebRequest)WebRequest.Create("http://" + ip + ":" + port + "//??type=set_car_gps&id_car=" + car_id.ToString() + "&lat=" + real_lat + "&lon=" + real_lon);
                 Send_Query.Timeout = 10000;
                 var Data = (HttpWebResponse)Send_Query.GetResponse();
-                string HTML = new StreamReader(Data.GetResponseStream(), Encoding.Default).ReadToEnd();
+                string HTML = new StreamReader(Data.GetResponseStream(), Encoding.Default).ReadToEnd();                
                 log.AppendFormat("{0}{1} MAXIMA: {2}", Environment.NewLine, DateTime.Now.ToString(), "Answer on Maxima's retranslation try is: " + HTML);
+                lock (lockObject)
+                {
+                    File.AppendAllText("MaximaRetranslation.txt", log.ToString(), Encoding.Default);
+                }
                 if (HTML == "OK")
                     return true;
                 else return false;
+
+                
             }
             catch (Exception ex)
             {
+                Logger.ErrorWriteLine(ex);
+
                 log.AppendFormat("{0}{1} MAXIMA: {2}", Environment.NewLine, DateTime.Now.ToString(), "Retranslation faild. Reason: " + ex.Message);
+                lock (lockObject)
+                {
+                    File.AppendAllText("MaximaRetranslation.txt", log.ToString(), Encoding.Default);
+                }
                 return false;
             }
         }
@@ -72,6 +94,10 @@ namespace TcpServer.Core
                 {
                     //Состояние 1 - запрос прошел успешно и машина свободна
                     log.AppendFormat("{0}{1} MAXIMA: {2}", Environment.NewLine, DateTime.Now.ToString(), "Gor crew info successfully. Crew state is: " + state);
+                    lock (lockObject)
+                    {
+                        File.AppendAllText("MaximaRetranslation.txt", log.ToString(), Encoding.Default);
+                    }
                     return 1;
                 }
                 // Состояние 0 - запрос прошел успешно, но машина не свободна
@@ -79,8 +105,13 @@ namespace TcpServer.Core
             }
             catch (Exception ex)
             {
+                Logger.ErrorWriteLine(ex);
                 // Состояние -1 будет означать, что запрос не удался и его необходимо повторить.
                 log.AppendFormat("{0}{1} MAXIMA: {2}", Environment.NewLine, DateTime.Now.ToString(), "Error while trying to get crew state. Reason: " + ex.Message);
+                lock (lockObject)
+                {
+                    File.AppendAllText("MaximaRetranslation.txt", log.ToString(), Encoding.Default);
+                }
                 return -1;
             }
         }
@@ -119,16 +150,19 @@ namespace TcpServer.Core
             int max_try = 3;
             int crew_state = -1;
             bool retranslated = false;
-            int car_id = 0;
+            int car_id = -1;
             if (DB.TryGetValue(Packet.IMEI, out car_id))
             {
                 //1 на линии 2 на заказе 3 перерыв 4 не работает
                 do
                 {
-                    log.AppendFormat("{0}{1} MAXIMA: {2}", Environment.NewLine, DateTime.Now.ToString(), "Try to get crew state in Maxima API.");
+                    log.AppendFormat("{0}{1} MAXIMA: {2}", Environment.NewLine, DateTime.Now.ToString(), "Try to get crew state in Maxima API. Crew ID: " + car_id);
                     crew_state = Get_Crew_State("93.191.61.125", 27000, car_id, "1");
                     if (crew_state > -1)
+                    {
+                        log.AppendFormat("{0}{1} MAXIMA: {2}", Environment.NewLine, DateTime.Now.ToString(), " Successfully got a state. Current state: " + crew_state);
                         break;
+                    }
                     max_try--;
                 }
                 while (max_try > 0);
@@ -137,6 +171,7 @@ namespace TcpServer.Core
                 {
                     do
                     {
+
                         log.AppendFormat("{0}{1} MAXIMA: {2}", Environment.NewLine, DateTime.Now.ToString(), "Try to set coordinates in Maxima API. Lon: " + Packet.Longitude / 100 + " Lat: " + Packet.Latitude / 100);
                         retranslated = Retranslate_To_Maxima("93.191.61.125", 27000, car_id, Packet.Latitude / 100, Packet.Longitude / 100);
                         if (retranslated)
@@ -157,10 +192,10 @@ namespace TcpServer.Core
             }
             else
             {
-                if (car_id != 0)
+                if (car_id != -1 && !retranslated)
                     log.AppendFormat("{0}{1} MAXIMA: {2}", Environment.NewLine, DateTime.Now.ToString(), "Packet IS NOT RETRANSLATED, BUT SHOULD BE.");
             }
-            File.AppendAllText("MaximaRetranslation.txt", log.ToString(), Encoding.Default);            
+            File.AppendAllText("MaximaRetranslation.txt", log.ToString(), Encoding.Default);
         }
     }
 }

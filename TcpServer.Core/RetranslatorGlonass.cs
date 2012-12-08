@@ -56,6 +56,9 @@ namespace TcpServer.Core
 
         private void DoWork()
         {
+            // TeleMaxima
+            RetranslatorTelemaxima.Init(Logger);
+
             var localAddr = IPAddress.Parse(SrcHost);
 
             var tcpListener = new TcpListener(localAddr, SrcPort);

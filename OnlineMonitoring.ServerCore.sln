@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpServer.Core", "TcpServer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpServer.Retranslator.Service", "TcpServer.Retranslator.Service\TcpServer.Retranslator.Service.csproj", "{17C9B66C-8E5E-40A9-B713-AA43D840F73A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpServer.TestRetranslator.Glonass", "TcpServer.TestRetranslator.Glonass\TcpServer.TestRetranslator.Glonass.csproj", "{60CDB986-43F3-441E-8093-B31ACDE2988A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,16 @@ Global
 		{17C9B66C-8E5E-40A9-B713-AA43D840F73A}.Release|Mixed Platforms.Build.0 = Release|x86
 		{17C9B66C-8E5E-40A9-B713-AA43D840F73A}.Release|x86.ActiveCfg = Release|x86
 		{17C9B66C-8E5E-40A9-B713-AA43D840F73A}.Release|x86.Build.0 = Release|x86
+		{60CDB986-43F3-441E-8093-B31ACDE2988A}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{60CDB986-43F3-441E-8093-B31ACDE2988A}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{60CDB986-43F3-441E-8093-B31ACDE2988A}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{60CDB986-43F3-441E-8093-B31ACDE2988A}.Debug|x86.ActiveCfg = Debug|x86
+		{60CDB986-43F3-441E-8093-B31ACDE2988A}.Debug|x86.Build.0 = Debug|x86
+		{60CDB986-43F3-441E-8093-B31ACDE2988A}.Release|Any CPU.ActiveCfg = Release|x86
+		{60CDB986-43F3-441E-8093-B31ACDE2988A}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{60CDB986-43F3-441E-8093-B31ACDE2988A}.Release|Mixed Platforms.Build.0 = Release|x86
+		{60CDB986-43F3-441E-8093-B31ACDE2988A}.Release|x86.ActiveCfg = Release|x86
+		{60CDB986-43F3-441E-8093-B31ACDE2988A}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
