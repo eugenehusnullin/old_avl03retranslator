@@ -8,47 +8,36 @@ namespace TcpServer.Core.async
 {
     class DataHoldingUserToken
     {
-        public readonly int bufferOffsetReceive;
-        public readonly int bufferOffsetSend;
+        public SocketGroup socketGroup;
         
-        public Byte[] byteArrayForPrefix;
-        public Byte[] byteArrayForMessage;
-        public int receivedPrefixBytesDoneCount = 0;        
-        public int receivedMessageBytesDoneCount = 0;
-        public int lengthOfCurrentIncomingMessage = 0;
-        public int receivedPrefixBytesDoneCountThisOperation = 0;
-        public int receivedMessageBytesDoneCountThisOperation = 0;
+        public Byte[] prefixBytes;
+        public Byte[] messageBytes;
 
-        public string receivedPrefix;
-        public string receivedMessage;
-        
-        //public int receiveMessageOffset;
-        //public readonly int permanentReceiveMessageOffset;
+        public int prefixBytesDoneCount = 0;        
+        public int messageBytesDoneCount = 0;
+        public int messageLength = 0;
 
-        public DataHoldingUserToken(int rOffset, int sOffset, int receivePrefixLength, int sendPrefixLength)
+        public int prefixBytesDoneCountThisOp = 0;
+        public int messageBytesDoneCountThisOp = 0;
+
+        public DataHoldingUserToken()
         {
-            this.bufferOffsetReceive = rOffset;
-            this.bufferOffsetSend = sOffset;
-            //this.receiveMessageOffset = rOffset + receivePrefixLength;
-            //this.permanentReceiveMessageOffset = this.receiveMessageOffset;
         }
 
         public void reset()
         {
-            byteArrayForPrefix = null;
-            byteArrayForMessage = null;
+            prefixBytes = null;
+            messageBytes = null;
 
-            receivedPrefixBytesDoneCount = 0;
-            receivedMessageBytesDoneCount = 0;
-            lengthOfCurrentIncomingMessage = 0;
-            receivedPrefixBytesDoneCountThisOperation = 0;
-            receivedMessageBytesDoneCountThisOperation = 0;
+            prefixBytesDoneCount = 0;
+            messageBytesDoneCount = 0;
+            messageLength = 0;            
         }
 
-        public void beforeNewRequestReceive()
+        public void resetVariableForNewRequest()
         {
-            receivedPrefixBytesDoneCountThisOperation = 0;
-            receivedMessageBytesDoneCountThisOperation = 0;
+            prefixBytesDoneCountThisOp = 0;
+            messageBytesDoneCountThisOp = 0;
         }
     }
 }

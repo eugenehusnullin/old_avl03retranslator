@@ -1,104 +1,199 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace TcpServer.Core.async
 {
     public class ConnectionsAccepter
     {
-        private const int INIT_ACCEPT_POOL_SIZE = 50;
+        private const int INIT_ACCEPT_BLOCK_POOL_SIZE = 50;        
         private const int BACKLOG = 500;
+        private const int INIT_CONNECT_BLOCK_POOL_SIZE = 50;
+
         private const int INIT_BLOCK_POOL_SIZE = 1000;
         private const int RECEIVE_BUFFER_SIZE = 512;
         private const int SEND_BUFFER_SIZE = 512;
-        private const int MAX_BUFFERS_COUNT = 10;
+        
         private const int RECEIVE_PREFIX_LENGTH = 4;
         private const int SEND_PREFIX_LENGTH = 0;
 
         private Socket listenSocket;
         private string listenHost;
         private int listenPort;
+        private string monHost;
+        private int monPort;
+        private IPEndPoint monEndPoint;
 
-        private Stack<SocketAsyncEventArgs> acceptPool;
-        private static object acceptPoolLock = new object();
-        private Stack<SocketAsyncEventArgs> blockPool;
-        private static object blockPoolLock = new object();
-        private Stack<SocketAsyncEventArgs> monPool;
-                
-        private byte[][] bufferArrays;
-        private int currentBufferArrayIndex = 0;
-        private int currentBufferOffset = 0;
-        private static object bufferLock = new object();
-        private int initBufferSize;
+        private ConcurrentStack<SocketAsyncEventArgs> blockAcceptPool;
+        private ConcurrentStack<SocketAsyncEventArgs> blockReceivePool;
+        private ConcurrentStack<SocketAsyncEventArgs> blockSendPool;
+        private ConcurrentStack<SocketAsyncEventArgs> monConnectPool;
+        private ConcurrentStack<SocketAsyncEventArgs> monReceivePool;
+        private ConcurrentStack<SocketAsyncEventArgs> monSendPool;
 
-        public ConnectionsAccepter(string listenHost, int listenPort)
+        private BufferManager blockReceiveBufferManager;
+        private BufferManager blockSendBufferManager;
+        private BufferManager monReceiveBufferManager;
+        private BufferManager monSendBufferManager;
+
+        private EventHandler<SocketAsyncEventArgs> blockAcceptEventHandler;
+        private EventHandler<SocketAsyncEventArgs> blockReceiveEventHandler;
+        private EventHandler<SocketAsyncEventArgs> blockSendEventHandler;
+        private EventHandler<SocketAsyncEventArgs> monConnectEventHandler;
+        private EventHandler<SocketAsyncEventArgs> monReceiveEventHandler;
+        private EventHandler<SocketAsyncEventArgs> monSendEventHandler;
+
+
+        public ConnectionsAccepter(string listenHost, int listenPort, string monHost, int monPort)
         {
             this.listenHost = listenHost;
             this.listenPort = listenPort;
+
+            this.monHost = monHost;
+            this.monPort = monPort;
         }
 
         private void init()
         {
-            initBufferSize = RECEIVE_BUFFER_SIZE * INIT_BLOCK_POOL_SIZE;
-            initBufferSize += SEND_BUFFER_SIZE * INIT_BLOCK_POOL_SIZE;
-
-            bufferArrays = new byte[MAX_BUFFERS_COUNT][];
-            bufferArrays[currentBufferArrayIndex] = new byte[initBufferSize];
-
-            acceptPool = new Stack<SocketAsyncEventArgs>();
-            for (int i = 0; i < INIT_ACCEPT_POOL_SIZE; i++)
+            blockAcceptEventHandler = new EventHandler<SocketAsyncEventArgs>(blockAcceptEvent);
+            blockAcceptPool = new ConcurrentStack<SocketAsyncEventArgs>();
+            for (int i = 0; i < INIT_ACCEPT_BLOCK_POOL_SIZE; i++)
             {
-                acceptPool.Push(createSocketAsyncEventArgsForAccept());
+                blockAcceptPool.Push(createSAEABlockAccept());
             }
 
-            blockPool = new Stack<SocketAsyncEventArgs>();
+            blockReceiveEventHandler = new EventHandler<SocketAsyncEventArgs>(blockReceiveEvent);
+            blockReceiveBufferManager = new BufferManager(INIT_BLOCK_POOL_SIZE, RECEIVE_BUFFER_SIZE);
+            blockReceivePool = new ConcurrentStack<SocketAsyncEventArgs>();
             for (int i = 0; i < INIT_BLOCK_POOL_SIZE; i++)
             {
-                blockPool.Push(createSocketAsyncEventArgsForBlock());
+                blockReceivePool.Push(createSAEABlockReceive());
             }
-        }
 
-        private SocketAsyncEventArgs createSocketAsyncEventArgsForBlock()
-        {
-            SocketAsyncEventArgs s = new SocketAsyncEventArgs();
-            s.Completed += new EventHandler<SocketAsyncEventArgs>(blockEvent);
-
-            int bufferOffsetReceive, bufferOffsetSend; 
-            lock (bufferLock)
+            blockSendEventHandler = new EventHandler<SocketAsyncEventArgs>(blockSendEvent);
+            blockSendBufferManager = new BufferManager(INIT_BLOCK_POOL_SIZE, SEND_BUFFER_SIZE);
+            blockSendPool = new ConcurrentStack<SocketAsyncEventArgs>();
+            for (int i = 0; i < INIT_BLOCK_POOL_SIZE; i++)
             {
-                if (currentBufferOffset == initBufferSize)
-                {
-                    if (currentBufferArrayIndex == MAX_BUFFERS_COUNT)
-                    {
-                        throw new Exception("Please increase MAX_BUFFERS_COUNT settings.");
-                    }
-
-                    currentBufferArrayIndex++;
-                    bufferArrays[currentBufferArrayIndex] = new byte[initBufferSize];
-                    currentBufferOffset = 0;
-                }
-                
-                bufferOffsetReceive = currentBufferOffset;
-                currentBufferOffset += RECEIVE_BUFFER_SIZE;
-                bufferOffsetSend = currentBufferOffset;
-                currentBufferOffset += SEND_BUFFER_SIZE;
-
-                s.SetBuffer(bufferArrays[currentBufferArrayIndex], bufferOffsetReceive, RECEIVE_BUFFER_SIZE);
+                blockSendPool.Push(createSAEABlockSend());
             }
-            
-            s.UserToken = new DataHoldingUserToken(bufferOffsetReceive, bufferOffsetSend, RECEIVE_PREFIX_LENGTH, SEND_PREFIX_LENGTH);
-            return s;
+
+            var monIPAddress = IPAddress.Parse(monHost);
+            monEndPoint = new IPEndPoint(monIPAddress, monPort);
+            monConnectEventHandler = new EventHandler<SocketAsyncEventArgs>(monConnectEvent);
+            monConnectPool = new ConcurrentStack<SocketAsyncEventArgs>();
+            for (int i = 0; i < INIT_CONNECT_BLOCK_POOL_SIZE; i++)
+            {
+                monConnectPool.Push(createSAEAMonConnect());
+            }
+
+            monSendEventHandler = new EventHandler<SocketAsyncEventArgs>(monSendEvent);
+            monSendBufferManager = new BufferManager(INIT_BLOCK_POOL_SIZE, SEND_BUFFER_SIZE);
+            monSendPool = new ConcurrentStack<SocketAsyncEventArgs>();
+            for (int i = 0; i < INIT_BLOCK_POOL_SIZE; i++)
+            {
+                monSendPool.Push(createSAEAMonSend());
+            }
+
+            monReceiveEventHandler = new EventHandler<SocketAsyncEventArgs>(monReceiveEvent);
+            monReceiveBufferManager = new BufferManager(INIT_BLOCK_POOL_SIZE, RECEIVE_BUFFER_SIZE);
+            monReceivePool = new ConcurrentStack<SocketAsyncEventArgs>();
+            for (int i = 0; i < INIT_BLOCK_POOL_SIZE; i++)
+            {
+                monReceivePool.Push(createSAEAMonReceive());
+            }
         }
 
-        private SocketAsyncEventArgs createSocketAsyncEventArgsForAccept()
+        private SocketAsyncEventArgs createSAEABlockAccept()
         {
-            SocketAsyncEventArgs s = new SocketAsyncEventArgs();
-            s.Completed += new EventHandler<SocketAsyncEventArgs>(acceptEvent);
+            var saea = new SocketAsyncEventArgs();
+            saea.Completed += blockAcceptEventHandler;
 
-            return s;
+            return saea;
+        }
+
+        private SocketAsyncEventArgs createSAEABlockReceive()
+        {
+            var saea = new SocketAsyncEventArgs();
+            saea.Completed += blockReceiveEvent;
+            blockReceiveBufferManager.setBuffer(saea);
+
+            var userToken = new DataHoldingUserToken();
+            userToken.socketGroup = new SocketGroup();
+            userToken.socketGroup.blockReceiveSAEA = saea;
+            saea.UserToken = userToken;
+
+            return saea;
+        }
+
+        private SocketAsyncEventArgs createSAEABlockSend()
+        {
+            var saea = new SocketAsyncEventArgs();
+            saea.Completed += blockSendEvent;
+            blockSendBufferManager.setBuffer(saea);
+            saea.UserToken = new DataHoldingUserToken();
+            return saea;
+        }
+
+        private SocketAsyncEventArgs createSAEAMonConnect()
+        {
+            var saea = new SocketAsyncEventArgs();
+            saea.Completed += monConnectEventHandler;
+            saea.RemoteEndPoint = monEndPoint;
+            return saea;
+        }
+
+        private SocketAsyncEventArgs createSAEAMonSend()
+        {
+            var saea = new SocketAsyncEventArgs();
+            saea.Completed += monSendEvent;
+            monSendBufferManager.setBuffer(saea);
+            saea.UserToken = new DataHoldingUserToken();
+            return saea;
+        }
+
+        private SocketAsyncEventArgs createSAEAMonReceive()
+        {
+            var saea = new SocketAsyncEventArgs();
+            saea.Completed += monReceiveEvent;
+            monReceiveBufferManager.setBuffer(saea);
+            saea.UserToken = new DataHoldingUserToken();
+            return saea;
+        }
+
+        private void blockAcceptEvent(object sender, SocketAsyncEventArgs e)
+        {
+            blockProcessAccept(e);
+        }
+
+        private void blockReceiveEvent(object sender, SocketAsyncEventArgs e)
+        {
+            blockProcessReceive(e);
+        }
+
+        private void blockSendEvent(object sender, SocketAsyncEventArgs e)
+        {
+            blockProcessSend(e);            
+        }
+
+        private void monConnectEvent(object sender, SocketAsyncEventArgs e)
+        {
+            monProcessConnect(e);
+        }
+
+        private void monReceiveEvent(object sender, SocketAsyncEventArgs e)
+        {
+            monProcessReceive(e);
+        }
+
+        private void monSendEvent(object sender, SocketAsyncEventArgs e)
+        {
+            monProcessSend(e);
         }
 
         public void start()
@@ -106,13 +201,13 @@ namespace TcpServer.Core.async
             init();
 
             var listenIPAddress = IPAddress.Parse(listenHost);
-            IPEndPoint localEndPoint = new IPEndPoint(listenIPAddress, listenPort);
+            var localEndPoint = new IPEndPoint(listenIPAddress, listenPort);
 
             listenSocket = new Socket(localEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             listenSocket.Bind(localEndPoint);
             listenSocket.Listen(BACKLOG);
 
-            startAccept();
+            blockStartAccept();
         }
 
         public void stop()
@@ -124,142 +219,276 @@ namespace TcpServer.Core.async
             listenSocket.Close();
         }
 
-        private void startAccept()
+        private void blockStartAccept()
         {
             SocketAsyncEventArgs s;
-            lock (acceptPoolLock)
+
+            if (!blockAcceptPool.TryPop(out s))
             {
-                if (acceptPool.Count == 0)
-                {
-                    s = createSocketAsyncEventArgsForAccept();
-                }
-                else
-                {
-                    s = acceptPool.Pop();
-                }                
+                s = createSAEABlockAccept();
             }
 
             if (!listenSocket.AcceptAsync(s))
             {
-                processAccept(s);
+                blockProcessAccept(s);
             }
         }
 
-        private void processAccept(SocketAsyncEventArgs s)
+        private void blockProcessAccept(SocketAsyncEventArgs e)
         {
-            Console.WriteLine("Connected: ");
+            blockStartAccept();
 
-            startAccept();
-
-            if (s.SocketError != SocketError.Success)
+            if (e.SocketError == SocketError.Success)
             {
-                s.AcceptSocket.Close();
-                lock (acceptPoolLock)
+                SocketAsyncEventArgs rSaea;
+
+                if (!blockReceivePool.TryPop(out rSaea))
                 {
-                    acceptPool.Push(s);
+                    rSaea = createSAEABlockReceive();
                 }
-                return;
+
+                rSaea.AcceptSocket = e.AcceptSocket;
+                e.AcceptSocket = null;
+
+                blockStartReceive(rSaea);
             }
-
-            SocketAsyncEventArgs rs;
-            lock(blockPoolLock)
+            else
             {
-                if (blockPool.Count == 0)
-                {
-                    rs = createSocketAsyncEventArgsForBlock();
-                }
-                else
-                {
-                    rs = blockPool.Pop();
-                }
+                e.AcceptSocket.Close();
             }
+            blockAcceptPool.Push(e);
+        }
 
-            rs.AcceptSocket = s.AcceptSocket;
-            s.AcceptSocket = null;
-            
-            startReceive(rs);
+        private void blockStartReceive(SocketAsyncEventArgs e)
+        {
+            var userToken = (DataHoldingUserToken)e.UserToken;            
+            userToken.resetVariableForNewRequest();
 
-            lock (acceptPoolLock)
+            if (!e.AcceptSocket.ReceiveAsync(e))
             {
-                acceptPool.Push(s);
+                blockProcessReceive(e);
             }
         }
 
-        private void acceptEvent(object sender, SocketAsyncEventArgs e)
-        {
-            processAccept(e);
-        }
-
-        private void startReceive(SocketAsyncEventArgs rs)
-        {
-            DataHoldingUserToken userToken = (DataHoldingUserToken)rs.UserToken;
-            rs.SetBuffer(userToken.bufferOffsetReceive, RECEIVE_BUFFER_SIZE);
-            userToken.beforeNewRequestReceive();
-
-            if (!rs.AcceptSocket.ReceiveAsync(rs))
-            {
-                processReceive(rs);
-            }
-        }
-
-        private void processReceive(SocketAsyncEventArgs rs)
-        {
-            Console.WriteLine("processReceive: ");
+        private void blockProcessReceive(SocketAsyncEventArgs rs)
+        {            
             var userToken = (DataHoldingUserToken) rs.UserToken;
 
             if (rs.SocketError != SocketError.Success || rs.BytesTransferred == 0)
             {
                 userToken.reset();
-                closeSocket(rs);
+                closeBlockReceiveSocket(rs);
                 return;
             }
 
             int bytesToProcess = rs.BytesTransferred;
-            if (userToken.receivedPrefixBytesDoneCount < RECEIVE_PREFIX_LENGTH)
+            while (bytesToProcess > 0)
             {
-                bytesToProcess = handlePrefix(rs, userToken, bytesToProcess);
+                if (userToken.prefixBytesDoneCount < RECEIVE_PREFIX_LENGTH)
+                {
+                    bytesToProcess = handlePrefix(rs, userToken, bytesToProcess);
 
-                if (bytesToProcess < 0)
-                {
-                    userToken.reset();
-                    closeSocket(rs);
-                    return;
+                    if (bytesToProcess < 0)
+                    {
+                        userToken.reset();
+                        closeBlockReceiveSocket(rs);
+                        return;
+                    }
+                    else if (bytesToProcess == 0)
+                    {
+                        blockStartReceive(rs);
+                        return;
+                    }
                 }
-                else if (bytesToProcess == 0)
-                {
-                    startReceive(rs);
-                    return;
-                }
+
+                bytesToProcess = handleMessage(rs, userToken, bytesToProcess);
             }
 
-            handleMessage(rs, userToken, bytesToProcess);
+            blockStartReceive(rs);
         }
 
+        private void blockStartSend(SocketAsyncEventArgs e, byte[] bytes)
+        {
+            var userToken = (DataHoldingUserToken)e.UserToken;
+
+            userToken.reset();
+            userToken.messageBytes = bytes;
+            blockStartSend(e);
+        }
+
+        private void blockStartSend(SocketAsyncEventArgs e)
+        {
+            var userToken = (DataHoldingUserToken)e.UserToken;
+            var socketGroup = userToken.socketGroup;
+
+            Buffer.BlockCopy(userToken.messageBytes, userToken.messageBytesDoneCount, e.Buffer,
+                    e.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
+            e.SetBuffer(e.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
+            if (!e.AcceptSocket.SendAsync(e))
+            {
+                blockProcessSend(e);
+            }
+        }
         
-
-        private void blockEvent(object sender, SocketAsyncEventArgs e)
+        private void blockProcessSend(SocketAsyncEventArgs e)
         {
-            switch (e.LastOperation)
+            if (e.SocketError == SocketError.Success)
             {
-                case SocketAsyncOperation.Receive:
-                    processReceive(e);
-                    break;
+                var userToken = (DataHoldingUserToken)e.UserToken;
+                userToken.messageBytesDoneCount += e.BytesTransferred;
 
-                case SocketAsyncOperation.Send:
-                    processSend(e);
-                    break;
-
-                default:
-                    throw new Exception("The last operation completed on the socket was not a receive or send");
+                if (userToken.messageBytesDoneCount == userToken.messageBytes.Length)
+                {
+                    // отправка завершена
+                    userToken.reset();
+                    userToken.socketGroup.waitWhileSendToBlock.Set();
+                }
+                else
+                {
+                    blockStartSend(e);
+                }
+            }
+            else
+            {
+                // TODO: закрыть сокеты к мониторингу и блоку
+                // не забыть за блокировку, которая ожидает окончания текущей отправки
             }
         }
 
-        private void processSend(SocketAsyncEventArgs e)
+        private void monProcessConnect(SocketAsyncEventArgs e)
         {
-            throw new NotImplementedException();
+            var socketGroup = (SocketGroup)e.UserToken;
+
+            try
+            {
+                if (e.SocketError == SocketError.Success)
+                {
+                    SocketAsyncEventArgs saeaSend;
+                    if (!monSendPool.TryPop(out saeaSend))
+                    {
+                        saeaSend = createSAEAMonSend();
+                    }
+                    saeaSend.AcceptSocket = e.ConnectSocket;
+                    socketGroup.monSendSAEA = saeaSend;
+                    ((DataHoldingUserToken)saeaSend.UserToken).socketGroup = socketGroup;
+
+
+                    SocketAsyncEventArgs saeaReceive;
+                    if (!monReceivePool.TryPop(out saeaReceive))
+                    {
+                        saeaReceive = createSAEAMonReceive();
+                    }
+                    saeaReceive.AcceptSocket = e.ConnectSocket;
+                    socketGroup.monReceiveSAEA = saeaReceive;
+                    ((DataHoldingUserToken)saeaReceive.UserToken).socketGroup = socketGroup;
+
+                    monStartSend(saeaSend);
+                    monStartReceive(saeaReceive);
+                }
+                else
+                {
+                    //TODO:
+                }
+            }
+            finally
+            {
+                e.UserToken = null;
+                monConnectPool.Push(e);
+                Monitor.Exit(socketGroup);
+            }
         }
 
-        private void closeSocket(SocketAsyncEventArgs e)
+        private void monStartReceive(SocketAsyncEventArgs e)
+        {
+            var userToken = (DataHoldingUserToken)e.UserToken;
+            userToken.resetVariableForNewRequest();
+
+            if (!e.AcceptSocket.ReceiveAsync(e))
+            {
+                monProcessReceive(e);
+            }
+        }
+
+        private void monProcessReceive(SocketAsyncEventArgs e)
+        {
+            var userToken = (DataHoldingUserToken)e.UserToken;
+            var socketGroup = userToken.socketGroup;
+
+            if (e.SocketError != SocketError.Success || e.BytesTransferred == 0)
+            {
+                // TODO: закрыть сокеты
+            }
+            else
+            {
+                if (socketGroup.blockSendSAEA == null)
+                {
+                    if (!blockSendPool.TryPop(out socketGroup.blockSendSAEA))
+                    {
+                        socketGroup.blockSendSAEA = createSAEABlockSend();
+                    }
+                    socketGroup.blockSendSAEA.AcceptSocket = socketGroup.blockReceiveSAEA.AcceptSocket;
+                    ((DataHoldingUserToken)socketGroup.blockSendSAEA.UserToken).socketGroup = socketGroup;
+                }
+
+                byte[] bytes = new byte[e.BytesTransferred];
+                Buffer.BlockCopy(e.Buffer, e.Offset, bytes, 0, e.BytesTransferred);
+
+                socketGroup.waitWhileSendToBlock.WaitOne();
+                blockStartSend(socketGroup.blockSendSAEA, bytes);
+
+                monStartReceive(e);
+            }
+        }
+
+        private void monStartSend(SocketAsyncEventArgs e, byte[] bytes)
+        {
+            var userToken = (DataHoldingUserToken)e.UserToken;
+
+            userToken.reset();
+            userToken.messageBytes = bytes;
+            monStartSend(e);
+        }
+
+        private void monStartSend(SocketAsyncEventArgs e)
+        {
+            var userToken = (DataHoldingUserToken)e.UserToken;
+            var socketGroup = userToken.socketGroup;
+
+            Buffer.BlockCopy(userToken.messageBytes, userToken.messageBytesDoneCount, e.Buffer,
+                    e.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
+            e.SetBuffer(e.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
+            if (!e.AcceptSocket.SendAsync(e))
+            {
+                monProcessSend(e);
+            }
+        }
+
+        private void monProcessSend(SocketAsyncEventArgs e)
+        {
+            if (e.SocketError == SocketError.Success)
+            {
+                var userToken = (DataHoldingUserToken)e.UserToken;
+                userToken.messageBytesDoneCount += e.BytesTransferred;
+
+                if (userToken.messageBytesDoneCount == userToken.messageBytes.Length)
+                {
+                    // отправка завершена
+                    userToken.reset();
+                    userToken.socketGroup.waitWhileSendToMon.Set();
+                }
+                else
+                {
+                    monStartSend(e);
+                }
+            }
+            else
+            {
+                // TODO: закрыть сокеты к мониторингу и блоку
+                // не забыть за блокировку, которая ожидает окончания текущей отправки
+            }
+        }
+
+        private void closeBlockReceiveSocket(SocketAsyncEventArgs e)
         {
             try
             {
@@ -270,33 +499,29 @@ namespace TcpServer.Core.async
             }
 
             e.AcceptSocket.Close();
-
-            lock (blockPoolLock)
-            {
-                blockPool.Push(e);
-            }
+            blockReceivePool.Push(e);
         }
 
         private int handlePrefix(SocketAsyncEventArgs rs, DataHoldingUserToken userToken, int bytesToProcess)
         {
-            if (userToken.receivedPrefixBytesDoneCount == 0)
+            if (userToken.prefixBytesDoneCount == 0)
             {
-                userToken.byteArrayForPrefix = new byte[RECEIVE_PREFIX_LENGTH];
+                userToken.prefixBytes = new byte[RECEIVE_PREFIX_LENGTH];
             }
 
-            int length = Math.Min(RECEIVE_PREFIX_LENGTH - userToken.receivedPrefixBytesDoneCount, bytesToProcess);
+            int length = Math.Min(RECEIVE_PREFIX_LENGTH - userToken.prefixBytesDoneCount, bytesToProcess);
 
-            Buffer.BlockCopy(rs.Buffer, userToken.bufferOffsetReceive
-                + userToken.receivedPrefixBytesDoneCountThisOperation + userToken.receivedMessageBytesDoneCountThisOperation,
-                userToken.byteArrayForPrefix, userToken.receivedPrefixBytesDoneCount, length);
+            Buffer.BlockCopy(rs.Buffer, rs.Offset
+                + userToken.prefixBytesDoneCountThisOp + userToken.messageBytesDoneCountThisOp,
+                userToken.prefixBytes, userToken.prefixBytesDoneCount, length);
 
-            userToken.receivedPrefixBytesDoneCount += length;
-            userToken.receivedPrefixBytesDoneCountThisOperation += length;
+            userToken.prefixBytesDoneCount += length;
+            userToken.prefixBytesDoneCountThisOp += length;
 
-            if (userToken.receivedPrefixBytesDoneCount == RECEIVE_PREFIX_LENGTH)
+            if (userToken.prefixBytesDoneCount == RECEIVE_PREFIX_LENGTH)
             {
                 // заголовок готов, проверяем его, если он нормальный устанавливаем длину ожидаемого сообщения
-                var prefix = Encoding.ASCII.GetString(userToken.byteArrayForPrefix);
+                var prefix = Encoding.ASCII.GetString(userToken.prefixBytes);
                 if (!prefix.StartsWith("$$"))
                 {
                     return -1;
@@ -304,8 +529,8 @@ namespace TcpServer.Core.async
 
                 try
                 {
-                    userToken.lengthOfCurrentIncomingMessage = Convert.ToInt32(prefix.Substring(2), 16) - 4;
-                    if (userToken.lengthOfCurrentIncomingMessage <= 0)
+                    userToken.messageLength = Convert.ToInt32(prefix.Substring(2), 16) - 4;
+                    if (userToken.messageLength <= 0)
                     {
                         return -3;
                     }
@@ -321,38 +546,57 @@ namespace TcpServer.Core.async
 
         private int handleMessage(SocketAsyncEventArgs rs, DataHoldingUserToken userToken, int bytesToProcess)
         {
-            if (userToken.receivedMessageBytesDoneCount == 0)
+            if (userToken.messageBytesDoneCount == 0)
             {
-                userToken.byteArrayForMessage = new byte[userToken.lengthOfCurrentIncomingMessage];
+                userToken.messageBytes = new byte[userToken.messageLength];
             }
 
-            int length = Math.Min(userToken.lengthOfCurrentIncomingMessage - userToken.receivedMessageBytesDoneCount, bytesToProcess);
+            int length = Math.Min(userToken.messageLength - userToken.messageBytesDoneCount, bytesToProcess);
 
-            Buffer.BlockCopy(rs.Buffer, userToken.bufferOffsetReceive +
-                userToken.receivedPrefixBytesDoneCountThisOperation + userToken.receivedMessageBytesDoneCountThisOperation,
-                userToken.byteArrayForMessage, userToken.receivedMessageBytesDoneCount, length);
+            Buffer.BlockCopy(rs.Buffer, rs.Offset +
+                userToken.prefixBytesDoneCountThisOp + userToken.messageBytesDoneCountThisOp,
+                userToken.messageBytes, userToken.messageBytesDoneCount, length);
 
-            userToken.receivedMessageBytesDoneCount += length;
-            userToken.receivedMessageBytesDoneCountThisOperation += length;
+            userToken.messageBytesDoneCount += length;
+            userToken.messageBytesDoneCountThisOp += length;
 
-            if (userToken.receivedMessageBytesDoneCount == userToken.lengthOfCurrentIncomingMessage)
+            if (userToken.messageBytesDoneCount == userToken.messageLength)
             {
                 //// сообщение готово
-                //var message = Encoding.ASCII.GetString(userToken.byteArrayForMessage);
+                var prefix = Encoding.ASCII.GetString(userToken.prefixBytes);
+                var message = Encoding.ASCII.GetString(userToken.messageBytes);
+                processMessageFromBlock(prefix, userToken.messageLength, message, userToken.socketGroup);
 
-                //// отладка
-                //var prefix = Encoding.ASCII.GetString(userToken.byteArrayForPrefix);
-                //Console.WriteLine(DateTime.Now.ToString());
-                //Console.WriteLine(prefix + message);                
-                //Console.WriteLine();
-                //Console.WriteLine();
-                
-                //userToken.reset();
-                //startReceive(rs);
-
+                userToken.reset();
             }
 
             return bytesToProcess - length;
+        }
+
+        private void processMessageFromBlock(string prefix, int lengthOfMessage, string message, SocketGroup socketGroup)
+        {
+            var data = prefix + message;
+            var basePacket = BasePacket.GetFromGlonass(data);
+            var gpsData = basePacket.ToPacketGps();
+
+            var bytes = Encoding.ASCII.GetBytes(gpsData);
+
+            if (socketGroup.monSendSAEA == null)
+            {
+                SocketAsyncEventArgs monConnectSAEA;
+                if (!monConnectPool.TryPop(out monConnectSAEA))
+                {
+                    monConnectSAEA = createSAEAMonConnect();
+                }
+                monConnectSAEA.UserToken = socketGroup;
+
+                Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                //socket.Connect(
+                if (!socket.ConnectAsync(monConnectSAEA))
+                {
+                    monProcessConnect(monConnectSAEA);
+                }
+            }
         }
     }
 }
