@@ -16,12 +16,6 @@ namespace TcpServer.Core.async
         public SocketAsyncEventArgs monReceiveSAEA = null;
         public SocketAsyncEventArgs monSendSAEA = null;
 
-        //public ConcurrentQueue<byte[]> fromBlockData = new ConcurrentQueue<byte[]>();
-        //public ConcurrentQueue<byte[]> fromMonData = new ConcurrentQueue<byte[]>();
-
-        //public AutoResetEvent waitDataFromBlock = new AutoResetEvent(false);
-        //public AutoResetEvent waitDataFromMon = new AutoResetEvent(false);
-
         public AutoResetEvent waitWhileSendToBlock = new AutoResetEvent(true);
         public AutoResetEvent waitWhileSendToMon = new AutoResetEvent(true);
 

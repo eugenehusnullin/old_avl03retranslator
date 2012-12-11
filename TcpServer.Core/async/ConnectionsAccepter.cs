@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,6 @@ namespace TcpServer.Core.async
     {
         private const int INIT_ACCEPT_BLOCK_POOL_SIZE = 50;        
         private const int BACKLOG = 500;
-        private const int INIT_CONNECT_BLOCK_POOL_SIZE = 50;
 
         private const int INIT_BLOCK_POOL_SIZE = 1000;
         private const int RECEIVE_BUFFER_SIZE = 512;
@@ -32,7 +32,6 @@ namespace TcpServer.Core.async
         private ConcurrentStack<SocketAsyncEventArgs> blockAcceptPool;
         private ConcurrentStack<SocketAsyncEventArgs> blockReceivePool;
         private ConcurrentStack<SocketAsyncEventArgs> blockSendPool;
-        private ConcurrentStack<SocketAsyncEventArgs> monConnectPool;
         private ConcurrentStack<SocketAsyncEventArgs> monReceivePool;
         private ConcurrentStack<SocketAsyncEventArgs> monSendPool;
 
@@ -43,8 +42,7 @@ namespace TcpServer.Core.async
 
         private EventHandler<SocketAsyncEventArgs> blockAcceptEventHandler;
         private EventHandler<SocketAsyncEventArgs> blockReceiveEventHandler;
-        private EventHandler<SocketAsyncEventArgs> blockSendEventHandler;
-        private EventHandler<SocketAsyncEventArgs> monConnectEventHandler;
+        private EventHandler<SocketAsyncEventArgs> blockSendEventHandler;        
         private EventHandler<SocketAsyncEventArgs> monReceiveEventHandler;
         private EventHandler<SocketAsyncEventArgs> monSendEventHandler;
 
@@ -56,6 +54,8 @@ namespace TcpServer.Core.async
 
             this.monHost = monHost;
             this.monPort = monPort;
+
+            LogManager.GetLogger(
         }
 
         private void init()
@@ -85,12 +85,6 @@ namespace TcpServer.Core.async
 
             var monIPAddress = IPAddress.Parse(monHost);
             monEndPoint = new IPEndPoint(monIPAddress, monPort);
-            monConnectEventHandler = new EventHandler<SocketAsyncEventArgs>(monConnectEvent);
-            monConnectPool = new ConcurrentStack<SocketAsyncEventArgs>();
-            for (int i = 0; i < INIT_CONNECT_BLOCK_POOL_SIZE; i++)
-            {
-                monConnectPool.Push(createSAEAMonConnect());
-            }
 
             monSendEventHandler = new EventHandler<SocketAsyncEventArgs>(monSendEvent);
             monSendBufferManager = new BufferManager(INIT_BLOCK_POOL_SIZE, SEND_BUFFER_SIZE);
@@ -140,14 +134,6 @@ namespace TcpServer.Core.async
             return saea;
         }
 
-        private SocketAsyncEventArgs createSAEAMonConnect()
-        {
-            var saea = new SocketAsyncEventArgs();
-            saea.Completed += monConnectEventHandler;
-            saea.RemoteEndPoint = monEndPoint;
-            return saea;
-        }
-
         private SocketAsyncEventArgs createSAEAMonSend()
         {
             var saea = new SocketAsyncEventArgs();
@@ -179,11 +165,6 @@ namespace TcpServer.Core.async
         private void blockSendEvent(object sender, SocketAsyncEventArgs e)
         {
             blockProcessSend(e);            
-        }
-
-        private void monConnectEvent(object sender, SocketAsyncEventArgs e)
-        {
-            monProcessConnect(e);
         }
 
         private void monReceiveEvent(object sender, SocketAsyncEventArgs e)
@@ -352,49 +333,6 @@ namespace TcpServer.Core.async
             {
                 // TODO: закрыть сокеты к мониторингу и блоку
                 // не забыть за блокировку, которая ожидает окончания текущей отправки
-            }
-        }
-
-        private void monProcessConnect(SocketAsyncEventArgs e)
-        {
-            var socketGroup = (SocketGroup)e.UserToken;
-
-            try
-            {
-                if (e.SocketError == SocketError.Success)
-                {
-                    SocketAsyncEventArgs saeaSend;
-                    if (!monSendPool.TryPop(out saeaSend))
-                    {
-                        saeaSend = createSAEAMonSend();
-                    }
-                    saeaSend.AcceptSocket = e.ConnectSocket;
-                    socketGroup.monSendSAEA = saeaSend;
-                    ((DataHoldingUserToken)saeaSend.UserToken).socketGroup = socketGroup;
-
-
-                    SocketAsyncEventArgs saeaReceive;
-                    if (!monReceivePool.TryPop(out saeaReceive))
-                    {
-                        saeaReceive = createSAEAMonReceive();
-                    }
-                    saeaReceive.AcceptSocket = e.ConnectSocket;
-                    socketGroup.monReceiveSAEA = saeaReceive;
-                    ((DataHoldingUserToken)saeaReceive.UserToken).socketGroup = socketGroup;
-
-                    monStartSend(saeaSend);
-                    monStartReceive(saeaReceive);
-                }
-                else
-                {
-                    //TODO:
-                }
-            }
-            finally
-            {
-                e.UserToken = null;
-                monConnectPool.Push(e);
-                Monitor.Exit(socketGroup);
             }
         }
 
@@ -583,20 +521,29 @@ namespace TcpServer.Core.async
 
             if (socketGroup.monSendSAEA == null)
             {
-                SocketAsyncEventArgs monConnectSAEA;
-                if (!monConnectPool.TryPop(out monConnectSAEA))
-                {
-                    monConnectSAEA = createSAEAMonConnect();
-                }
-                monConnectSAEA.UserToken = socketGroup;
-
                 Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                //socket.Connect(
-                if (!socket.ConnectAsync(monConnectSAEA))
+                socket.Connect(monEndPoint);
+                
+                if (!monSendPool.TryPop(out socketGroup.monSendSAEA))
                 {
-                    monProcessConnect(monConnectSAEA);
+                    socketGroup.monSendSAEA = createSAEAMonSend();
                 }
+                socketGroup.monSendSAEA.AcceptSocket = socket;
+                ((DataHoldingUserToken)socketGroup.monSendSAEA.UserToken).socketGroup = socketGroup;
+
+                
+                if (!monReceivePool.TryPop(out socketGroup.monReceiveSAEA))
+                {
+                    socketGroup.monReceiveSAEA = createSAEAMonReceive();
+                }
+                socketGroup.monReceiveSAEA.AcceptSocket = socket;
+                ((DataHoldingUserToken)socketGroup.monReceiveSAEA.UserToken).socketGroup = socketGroup;
+                
+                monStartReceive(socketGroup.monReceiveSAEA);
             }
+
+            socketGroup.waitWhileSendToMon.WaitOne();
+            monStartSend(socketGroup.monSendSAEA, bytes);
         }
     }
 }
