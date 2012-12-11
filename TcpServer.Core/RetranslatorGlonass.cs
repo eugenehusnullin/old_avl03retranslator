@@ -123,7 +123,10 @@ namespace TcpServer.Core
                     if (isPacket)
                     {
                         var basePacket = BasePacket.GetFromGlonass(srcData);
-                        ThreadPool.QueueUserWorkItem(new WaitCallback(RetranslatorTelemaxima.DoMaxima), basePacket);
+                        if (RetranslatorTelemaxima.needRetranslate(basePacket.IMEI))
+                        {
+                            ThreadPool.QueueUserWorkItem(new WaitCallback(RetranslatorTelemaxima.DoMaxima), basePacket);
+                        }
                         packetString = basePacket.ToPacketGps();
                     }
 
