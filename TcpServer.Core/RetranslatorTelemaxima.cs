@@ -61,17 +61,20 @@ namespace TcpServer.Core
                 //1 на линии 2 на заказе 3 перерыв 4 не работает
                 var real_lat = lat.ToString().Replace(".", ",");
                 var real_lon = lon.ToString().Replace(".", ",");
-                var Send_Query = (HttpWebRequest)WebRequest.Create("http://" + ip + ":" + port + "//??type=set_car_gps&id_car=" + car_id.ToString() + "&lat=" + real_lat + "&lon=" + real_lon);
+                HttpWebRequest Send_Query = (HttpWebRequest)WebRequest.Create("http://" + ip + ":" + port + "//??type=set_car_gps&id_car=" + car_id.ToString() + "&lat=" + real_lat + "&lon=" + real_lon);
                 Send_Query.Timeout = 10000;
                 Send_Query.Method = "GET";
-                var Data = (HttpWebResponse)Send_Query.GetResponse();
-                string HTML = new StreamReader(Data.GetResponseStream(), Encoding.Default).ReadToEnd();
-                logger.MessageWriteLine(String.Format("MAXIMA: {0}", "Answer on Maxima's retranslation try is: " + HTML));
-                Send_Query.GetResponse().Close();
-                Data.GetResponseStream().Close();
-                if (HTML == "OK")
-                    return true;
-                else return false;
+                try
+                {
+                    var Data = (HttpWebResponse)Send_Query.GetResponse();
+                    string HTML = new StreamReader(Data.GetResponseStream(), Encoding.Default).ReadToEnd();
+                    logger.MessageWriteLine(String.Format("MAXIMA: {0}", "Answer on Maxima's retranslation try is: " + HTML));
+                    return HTML == "OK";
+                }
+                finally
+                {
+                    Send_Query.GetResponse().Close();
+                }
             }
             catch (Exception ex)
             {
@@ -87,27 +90,25 @@ namespace TcpServer.Core
                 var Send_Query = (HttpWebRequest)WebRequest.Create("http://" + ip + ":" + port + "//??type=get_car_info&id_car=" + car_id);
                 Send_Query.Timeout = 10000;
                 Send_Query.Method = "GET";
-                var Data = (HttpWebResponse)Send_Query.GetResponse();
-                var html = new StreamReader(Data.GetResponseStream(), Encoding.Default).ReadToEnd();
-                var Doc = new XmlDocument();
-                Doc.LoadXml(html);
-                var state = Doc.GetElementsByTagName("id_crew_state")[0].InnerText;
-                logger.MessageWriteLine(String.Format("MAXIMA: {0}", "Got crew info successfully. Crew state is: " + state));
-                Send_Query.GetResponse().Close();
-                Data.GetResponseStream().Close();
-                //1 на линии 2 на заказе 3 перерыв 4 не работает
-                //Если строка good_states содержит подстроку state
-                //То запрос считается удовлетворительным.
-                //Строка good_states имеет вид X,X,X,X где Х - одно из состояний от 1 до 4
-                if (good_states.Contains(state))
+                try
                 {
-                    return 1;
+                    var Data = (HttpWebResponse)Send_Query.GetResponse();
+                    var html = new StreamReader(Data.GetResponseStream(), Encoding.Default).ReadToEnd();
+                    var Doc = new XmlDocument();
+                    Doc.LoadXml(html);
+                    var state = Doc.GetElementsByTagName("id_crew_state")[0].InnerText;
+                    //1 на линии 2 на заказе 3 перерыв 4 не работает
+                    //Если строка good_states содержит подстроку state
+                    //То запрос считается удовлетворительным.
+                    //Строка good_states имеет вид X,X,X,X где Х - одно из состояний от 1 до 4                
+                    // Состояние 0 - запрос прошел успешно, но машина не свободна
+                    logger.MessageWriteLine(String.Format("MAXIMA: {0}", "Got crew info successfully. Crew state is: " + state));
+
+                    return good_states.Contains(state) ? 1 : 0;
                 }
-                // Состояние 0 - запрос прошел успешно, но машина не свободна
-                else
+                finally
                 {
-                    logger.MessageWriteLine(String.Format("MAXIMA: {0}", "There is no need to retranslate that crew (" + car_id + "). It is not free."));
-                    return 0;
+                    Send_Query.GetResponse().Close();
                 }
             }
             catch (Exception ex)
