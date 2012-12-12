@@ -7,8 +7,11 @@ namespace TcpServer.Core
 {
     public class Logger
     {
-        public Logger(EventLog eventLog,string logPath)
+        public Logger(EventLog eventLog,string logPath) : this(eventLog, logPath, "retranslator"){}
+
+        public Logger(EventLog eventLog, string logPath, string logFileNamePrefix)
         {
+            this.logFileNamePrefix = logFileNamePrefix;
             EventLog = eventLog;
             LoggerPath = Path.Combine(Directory.GetCurrentDirectory(), logPath);
             if (!Directory.Exists(LoggerPath))
@@ -18,6 +21,7 @@ namespace TcpServer.Core
         }
 
         private readonly object _thisLock = new object();
+        private readonly string logFileNamePrefix;
 
         public EventLog EventLog { get; private set; }
         public string LoggerPath { get; set; }
@@ -35,7 +39,7 @@ namespace TcpServer.Core
             }
             lock (_thisLock)
             {
-                File.AppendAllText(Path.Combine(LoggerPath, "retranslator-error.log"), log, Encoding.Default);
+                File.AppendAllText(Path.Combine(LoggerPath, logFileNamePrefix+"-error.log"), log, Encoding.Default);
             }
         }
         
@@ -52,7 +56,7 @@ namespace TcpServer.Core
             }
             lock (_thisLock)
             {
-                File.AppendAllText(Path.Combine(LoggerPath, "retranslator-warning.log"), log, Encoding.Default);
+                File.AppendAllText(Path.Combine(LoggerPath, logFileNamePrefix+"-warning.log"), log, Encoding.Default);
             }
         }
 
@@ -65,7 +69,7 @@ namespace TcpServer.Core
             }
             lock (_thisLock)
             {
-                File.AppendAllText(Path.Combine(LoggerPath, "retranslator-message.log"), log, Encoding.Default);
+                File.AppendAllText(Path.Combine(LoggerPath, logFileNamePrefix+"-message.log"), log, Encoding.Default);
             }
         }
 

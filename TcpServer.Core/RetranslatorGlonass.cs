@@ -41,6 +41,7 @@ namespace TcpServer.Core
         private readonly object _thisLock = new object();
 
         public Thread Thread { get; set; }
+        private TcpListener tcpListener;
 
         public void Start()
         {
@@ -51,6 +52,13 @@ namespace TcpServer.Core
         public void Stop()
         {
             State = ServiceState.Stoping;
+            try
+            {
+                tcpListener.Stop();
+            }
+            catch
+            {
+            }
             Thread.Abort();
         }
 
@@ -61,7 +69,7 @@ namespace TcpServer.Core
 
             var localAddr = IPAddress.Parse(SrcHost);
 
-            var tcpListener = new TcpListener(localAddr, SrcPort);
+            tcpListener = new TcpListener(localAddr, SrcPort);
             try
             {
                 tcpListener.Start();
@@ -123,7 +131,10 @@ namespace TcpServer.Core
                     if (isPacket)
                     {
                         var basePacket = BasePacket.GetFromGlonass(srcData);
-                        ThreadPool.QueueUserWorkItem(new WaitCallback(RetranslatorTelemaxima.DoMaxima), basePacket);
+                        if (RetranslatorTelemaxima.needRetranslate(basePacket.IMEI))
+                        {
+                            ThreadPool.QueueUserWorkItem(new WaitCallback(RetranslatorTelemaxima.DoMaxima), basePacket);
+                        }
                         packetString = basePacket.ToPacketGps();
                     }
 
