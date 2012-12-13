@@ -489,46 +489,32 @@ namespace TcpServer.Core.async
 
         private void monSendCloseSocket(SocketAsyncEventArgs saea, SocketGroup socketGroup)
         {
-            try
+            if (saea.AcceptSocket.Connected)
             {
-                if (saea.AcceptSocket.Connected)
-                {
-                    saea.AcceptSocket.Shutdown(SocketShutdown.Both);
-                }
-                saea.AcceptSocket.Close();
+                saea.AcceptSocket.Shutdown(SocketShutdown.Both);
+            }
+            saea.AcceptSocket.Close();
 
-                if (socketGroup.blockReceiveSAEA.AcceptSocket.Connected)
-                {
-                    socketGroup.blockReceiveSAEA.AcceptSocket.Shutdown(SocketShutdown.Both);
-                }
-                socketGroup.blockReceiveSAEA.AcceptSocket.Close();
-            }
-            finally
+            if (socketGroup.blockReceiveSAEA.AcceptSocket.Connected)
             {
-                socketGroup.decrementUsed();
+                socketGroup.blockReceiveSAEA.AcceptSocket.Shutdown(SocketShutdown.Both);
             }
+            socketGroup.blockReceiveSAEA.AcceptSocket.Close();
         }
 
         private void blockSendCloseSocket(SocketAsyncEventArgs saea, SocketGroup socketGroup)
         {
-            try
+            if (saea.AcceptSocket.Connected)
             {
-                if (saea.AcceptSocket.Connected)
-                {
-                    saea.AcceptSocket.Shutdown(SocketShutdown.Both);
-                }
-                saea.AcceptSocket.Close();
+                saea.AcceptSocket.Shutdown(SocketShutdown.Both);
+            }
+            saea.AcceptSocket.Close();
 
-                if (socketGroup.monReceiveSAEA.AcceptSocket.Connected)
-                {
-                    socketGroup.monReceiveSAEA.AcceptSocket.Shutdown(SocketShutdown.Both);
-                }
-                socketGroup.monReceiveSAEA.AcceptSocket.Close();
-            }
-            finally
+            if (socketGroup.monReceiveSAEA.AcceptSocket.Connected)
             {
-                socketGroup.decrementUsed();
+                socketGroup.monReceiveSAEA.AcceptSocket.Shutdown(SocketShutdown.Both);
             }
+            socketGroup.monReceiveSAEA.AcceptSocket.Close();
         }
 
         private void blockReceiveCloseSocket(SocketAsyncEventArgs saea, SocketGroup socketGroup)
@@ -691,14 +677,12 @@ namespace TcpServer.Core.async
                     }
                 }
 
-
                 SocketAsyncEventArgs sendSaea;
                 if (!monSendPool.TryPop(out sendSaea))
                 {
                     sendSaea = createSAEAMonSend();
                 }
                 socketGroup.monSendSAEA = sendSaea;
-                socketGroup.incrementUsed();
                 socketGroup.monSendSAEA.AcceptSocket = socket;
                 ((DataHoldingUserToken)socketGroup.monSendSAEA.UserToken).socketGroup = socketGroup;
 
@@ -716,7 +700,7 @@ namespace TcpServer.Core.async
                 monStartReceive(socketGroup.monReceiveSAEA);
             }
 
-            socketGroup.waitWhileSendToMon.WaitOne();
+            //socketGroup.waitWhileSendToMon.WaitOne();
             monStartSend(socketGroup.monSendSAEA, bytes);
         }
     }
