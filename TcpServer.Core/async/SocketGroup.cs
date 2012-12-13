@@ -11,22 +11,52 @@ namespace TcpServer.Core.async
 {
     class SocketGroup
     {
-        public SocketAsyncEventArgs blockReceiveSAEA = null;
-        public SocketAsyncEventArgs blockSendSAEA = null;
-        public SocketAsyncEventArgs monReceiveSAEA = null;
-        public SocketAsyncEventArgs monSendSAEA = null;
+        public volatile SocketAsyncEventArgs blockReceiveSAEA = null;
+        public volatile SocketAsyncEventArgs blockSendSAEA = null;
+        public volatile SocketAsyncEventArgs monReceiveSAEA = null;
+        public volatile SocketAsyncEventArgs monSendSAEA = null;
 
         public AutoResetEvent waitWhileSendToBlock = new AutoResetEvent(true);
         public AutoResetEvent waitWhileSendToMon = new AutoResetEvent(true);
 
-        public void reset()
-        {
-            blockSendSAEA = null;
-            monReceiveSAEA = null;
-            monSendSAEA = null;
+        private volatile int usedSaeas = 0;
+        private object syncObject = new object();
 
-            waitWhileSendToBlock.Set();
-            waitWhileSendToMon.Set();
+
+        public AutoResetEvent waitUsed = new AutoResetEvent(true);
+
+        public void incrementUsed()
+        {
+            lock (syncObject)
+            {
+                waitUsed.Reset();
+                usedSaeas++;
+            }
         }
+
+        public void decrementUsed()
+        {
+            lock (syncObject)
+            {
+                usedSaeas--;
+                if (usedSaeas == 0)
+                {
+                    waitUsed.Set();
+                }
+            }
+        }
+
+        //public void reset()
+        //{
+        //    blockSendSAEA = null;
+        //    monReceiveSAEA = null;
+        //    monSendSAEA = null;
+
+        //    waitWhileSendToBlock.Set();
+        //    waitWhileSendToMon.Set();
+
+        //    usedSaeas = 0;
+        //    waitUsed.Set();
+        //}
     }
 }
