@@ -34,17 +34,6 @@ namespace TcpServer.Core.async
         private int monPort;
         private IPEndPoint monEndPoint;
 
-        private ConcurrentStack<SocketAsyncEventArgs> blockAcceptPool;
-        private ConcurrentStack<SocketAsyncEventArgs> blockReceivePool;
-        private ConcurrentStack<SocketAsyncEventArgs> blockSendPool;
-        private ConcurrentStack<SocketAsyncEventArgs> monReceivePool;
-        private ConcurrentStack<SocketAsyncEventArgs> monSendPool;
-
-        private BufferManager blockReceiveBufferManager;
-        private BufferManager blockSendBufferManager;
-        private BufferManager monReceiveBufferManager;
-        private BufferManager monSendBufferManager;
-
         private EventHandler<SocketAsyncEventArgs> blockAcceptEventHandler;
         private EventHandler<SocketAsyncEventArgs> blockReceiveEventHandler;
         private EventHandler<SocketAsyncEventArgs> blockSendEventHandler;        
@@ -53,6 +42,14 @@ namespace TcpServer.Core.async
 
         private volatile bool shutdown = false;
 
+        private ConcurrentQueue<KeyValuePair<byte[], SocketAsyncEventArgs>> monSendQueue = new ConcurrentQueue<KeyValuePair<byte[],SocketAsyncEventArgs>>();
+        private ConcurrentQueue<KeyValuePair<byte[], SocketAsyncEventArgs>> blockSendQueue = new ConcurrentQueue<KeyValuePair<byte[],SocketAsyncEventArgs>>();
+
+        private List<SendToMonitoringWorker> listSendToMonWorkers = new List<SendToMonitoringWorker>();
+        private List<SendToBlockWorker> listSendToBlockWorkers = new List<SendToBlockWorker>();
+
+        private readonly int cntSendToMonWorkers = 15;
+        private readonly int cntSendToBlockWorkers = 15;
 
         public ConnectionsAccepter(string listenHost, int listenPort, string monHost, int monPort)
         {
@@ -73,46 +70,27 @@ namespace TcpServer.Core.async
 
         private void init()
         {
-            blockAcceptEventHandler = new EventHandler<SocketAsyncEventArgs>(blockAcceptEvent);
-            blockAcceptPool = new ConcurrentStack<SocketAsyncEventArgs>();
-            for (int i = 0; i < INIT_ACCEPT_BLOCK_POOL_SIZE; i++)
-            {
-                blockAcceptPool.Push(createSAEABlockAccept());
-            }
-
-            blockReceiveEventHandler = new EventHandler<SocketAsyncEventArgs>(blockReceiveEvent);
-            blockReceiveBufferManager = new BufferManager(INIT_BLOCK_POOL_SIZE, RECEIVE_BUFFER_SIZE);
-            blockReceivePool = new ConcurrentStack<SocketAsyncEventArgs>();
-            for (int i = 0; i < INIT_BLOCK_POOL_SIZE; i++)
-            {
-                blockReceivePool.Push(createSAEABlockReceive());
-            }
-
-            blockSendEventHandler = new EventHandler<SocketAsyncEventArgs>(blockSendEvent);
-            blockSendBufferManager = new BufferManager(INIT_BLOCK_POOL_SIZE, SEND_BUFFER_SIZE);
-            blockSendPool = new ConcurrentStack<SocketAsyncEventArgs>();
-            for (int i = 0; i < INIT_BLOCK_POOL_SIZE; i++)
-            {
-                blockSendPool.Push(createSAEABlockSend());
-            }
-
             var monIPAddress = IPAddress.Parse(monHost);
             monEndPoint = new IPEndPoint(monIPAddress, monPort);
 
+            blockAcceptEventHandler = new EventHandler<SocketAsyncEventArgs>(blockAcceptEvent);
+            blockReceiveEventHandler = new EventHandler<SocketAsyncEventArgs>(blockReceiveEvent);
+            blockSendEventHandler = new EventHandler<SocketAsyncEventArgs>(blockSendEvent);
             monSendEventHandler = new EventHandler<SocketAsyncEventArgs>(monSendEvent);
-            monSendBufferManager = new BufferManager(INIT_BLOCK_POOL_SIZE, SEND_BUFFER_SIZE);
-            monSendPool = new ConcurrentStack<SocketAsyncEventArgs>();
-            for (int i = 0; i < INIT_BLOCK_POOL_SIZE; i++)
+            monReceiveEventHandler = new EventHandler<SocketAsyncEventArgs>(monReceiveEvent);
+
+            for (int i = 0; i < cntSendToMonWorkers; i++)
             {
-                monSendPool.Push(createSAEAMonSend());
+                SendToMonitoringWorker w = new SendToMonitoringWorker(monSendQueue);
+                w.start();
+                listSendToMonWorkers.Add(w);
             }
 
-            monReceiveEventHandler = new EventHandler<SocketAsyncEventArgs>(monReceiveEvent);
-            monReceiveBufferManager = new BufferManager(INIT_BLOCK_POOL_SIZE, RECEIVE_BUFFER_SIZE);
-            monReceivePool = new ConcurrentStack<SocketAsyncEventArgs>();
-            for (int i = 0; i < INIT_BLOCK_POOL_SIZE; i++)
+            for (int i = 0; i < cntSendToBlockWorkers; i++)
             {
-                monReceivePool.Push(createSAEAMonReceive());
+                SendToBlockWorker w = new SendToBlockWorker(blockSendQueue);
+                w.start();
+                listSendToBlockWorkers.Add(w);
             }
         }
 
@@ -128,7 +106,7 @@ namespace TcpServer.Core.async
         {
             var saea = new SocketAsyncEventArgs();
             saea.Completed += blockReceiveEvent;
-            blockReceiveBufferManager.setBuffer(saea);
+            saea.SetBuffer(new byte[RECEIVE_BUFFER_SIZE], 0, RECEIVE_BUFFER_SIZE);
 
             var userToken = new DataHoldingUserToken();
             userToken.socketGroup = new SocketGroup();
@@ -142,7 +120,7 @@ namespace TcpServer.Core.async
         {
             var saea = new SocketAsyncEventArgs();
             saea.Completed += blockSendEvent;
-            blockSendBufferManager.setBuffer(saea);
+            saea.SetBuffer(new byte[SEND_BUFFER_SIZE], 0, SEND_BUFFER_SIZE);
             saea.UserToken = new DataHoldingUserToken();
             return saea;
         }
@@ -151,7 +129,7 @@ namespace TcpServer.Core.async
         {
             var saea = new SocketAsyncEventArgs();
             saea.Completed += monSendEvent;
-            monSendBufferManager.setBuffer(saea);
+            saea.SetBuffer(new byte[SEND_BUFFER_SIZE], 0, SEND_BUFFER_SIZE);
             saea.UserToken = new DataHoldingUserToken();
             return saea;
         }
@@ -160,34 +138,34 @@ namespace TcpServer.Core.async
         {
             var saea = new SocketAsyncEventArgs();
             saea.Completed += monReceiveEvent;
-            monReceiveBufferManager.setBuffer(saea);
+            saea.SetBuffer(new byte[SEND_BUFFER_SIZE], 0, RECEIVE_BUFFER_SIZE);
             saea.UserToken = new DataHoldingUserToken();
             return saea;
         }
 
-        private void blockAcceptEvent(object sender, SocketAsyncEventArgs e)
+        private void blockAcceptEvent(object sender, SocketAsyncEventArgs saea)
         {
-            blockProcessAccept(e);
+            blockProcessAccept(saea);
         }
 
-        private void blockReceiveEvent(object sender, SocketAsyncEventArgs e)
+        private void blockReceiveEvent(object sender, SocketAsyncEventArgs saea)
         {
-            blockProcessReceive(e);
+            blockProcessReceive(saea);
         }
 
-        private void blockSendEvent(object sender, SocketAsyncEventArgs e)
+        private void blockSendEvent(object sender, SocketAsyncEventArgs saea)
         {
-            blockProcessSend(e);            
+            blockProcessSend(saea);            
         }
 
-        private void monReceiveEvent(object sender, SocketAsyncEventArgs e)
+        private void monReceiveEvent(object sender, SocketAsyncEventArgs saea)
         {
-            monProcessReceive(e);
+            monProcessReceive(saea);
         }
 
-        private void monSendEvent(object sender, SocketAsyncEventArgs e)
+        private void monSendEvent(object sender, SocketAsyncEventArgs saea)
         {
-            monProcessSend(e);
+            monProcessSend(saea);
         }
 
         public void start()
@@ -219,32 +197,36 @@ namespace TcpServer.Core.async
                 listenSocket.Shutdown(SocketShutdown.Both);
             }
             listenSocket.Close();
+
+            foreach (SendToBlockWorker w in listSendToBlockWorkers)
+            {
+                w.stop();
+            }
+
+            foreach (SendToMonitoringWorker w in listSendToMonWorkers)
+            {
+                w.stop();
+            }
             
-            //Thread.Sleep(2000);
             log.Info("Retranslator stoped.");
         }
 
         private void blockStartAccept()
         {
-            SocketAsyncEventArgs s;
-
-            if (!blockAcceptPool.TryPop(out s))
-            {
-                s = createSAEABlockAccept();
-            }
+            SocketAsyncEventArgs saea = createSAEABlockAccept();
 
             if (listenSocket != null && listenSocket.IsBound)
             {
-                if (!listenSocket.AcceptAsync(s))
+                if (!listenSocket.AcceptAsync(saea))
                 {
-                    blockProcessAccept(s);
+                    blockProcessAccept(saea);
                 }
             }
         }
 
-        private void blockProcessAccept(SocketAsyncEventArgs e)
+        private void blockProcessAccept(SocketAsyncEventArgs saea)
         {
-            if (e.SocketError == SocketError.OperationAborted && shutdown)
+            if (saea.SocketError == SocketError.OperationAborted && shutdown)
             {
                 return;
             }
@@ -252,107 +234,106 @@ namespace TcpServer.Core.async
             {
                 blockStartAccept();
 
-                if (e.SocketError == SocketError.Success)
+                if (saea.SocketError == SocketError.Success)
                 {
-                    SocketAsyncEventArgs rSaea;
-
-                    if (!blockReceivePool.TryPop(out rSaea))
-                    {
-                        rSaea = createSAEABlockReceive();
-                    }
-
-                    rSaea.AcceptSocket = e.AcceptSocket;
-                    e.AcceptSocket = null;
-                    ((DataHoldingUserToken)rSaea.UserToken).socketGroup.incrementUsed();
+                    SocketAsyncEventArgs rSaea = createSAEABlockReceive();
+                    rSaea.AcceptSocket = saea.AcceptSocket;
+                    saea.AcceptSocket = null;
 
                     blockStartReceive(rSaea);
                 }
                 else
                 {
-                    e.AcceptSocket.Close();
+                    saea.AcceptSocket.Close();
                 }
-                blockAcceptPool.Push(e);
             }
         }
 
-        private void blockStartReceive(SocketAsyncEventArgs e)
+        private void blockStartReceive(SocketAsyncEventArgs saea)
         {
-            var userToken = (DataHoldingUserToken)e.UserToken;            
+            var userToken = (DataHoldingUserToken)saea.UserToken;            
             userToken.resetVariableForNewRequest();
 
-            if (!e.AcceptSocket.ReceiveAsync(e))
+            if (!saea.AcceptSocket.ReceiveAsync(saea))
             {
-                blockProcessReceive(e);
+                blockProcessReceive(saea);
             }
         }
 
-        private void blockProcessReceive(SocketAsyncEventArgs rs)
+        private void blockProcessReceive(SocketAsyncEventArgs saea)
         {            
-            var userToken = (DataHoldingUserToken) rs.UserToken;
+            var userToken = (DataHoldingUserToken) saea.UserToken;
 
-            if (rs.SocketError != SocketError.Success || rs.BytesTransferred == 0)
+            if (saea.SocketError != SocketError.Success || saea.BytesTransferred == 0)
             {
                 userToken.reset();
-                blockReceiveCloseSocket(rs, userToken.socketGroup);
+                blockReceiveCloseSocket(saea, userToken.socketGroup);
                 return;
             }
 
-            int bytesToProcess = rs.BytesTransferred;
+            int bytesToProcess = saea.BytesTransferred;
             while (bytesToProcess > 0)
             {
                 if (userToken.prefixBytesDoneCount < RECEIVE_PREFIX_LENGTH)
                 {
-                    bytesToProcess = handlePrefix(rs, userToken, bytesToProcess);
+                    bytesToProcess = handlePrefix(saea, userToken, bytesToProcess);
 
                     if (bytesToProcess < 0)
                     {
                         userToken.reset();
-                        blockReceiveCloseSocket(rs, userToken.socketGroup);
+                        blockReceiveCloseSocket(saea, userToken.socketGroup);
                         return;
                     }
                     else if (bytesToProcess == 0)
                     {
-                        blockStartReceive(rs);
+                        blockStartReceive(saea);
                         return;
                     }
                 }
 
-                bytesToProcess = handleMessage(rs, userToken, bytesToProcess);
+                bytesToProcess = handleMessage(saea, userToken, bytesToProcess);
             }
 
-            blockStartReceive(rs);
+            blockStartReceive(saea);
         }
 
-        private void blockStartSend(SocketAsyncEventArgs e, byte[] bytes)
+        public static void blockStartSend(SocketAsyncEventArgs saea, byte[] bytes)
         {
-            var userToken = (DataHoldingUserToken)e.UserToken;
+            if (!saea.AcceptSocket.Connected)
+            {
+                return;
+            }
+
+            var userToken = (DataHoldingUserToken)saea.UserToken;
+
+            userToken.socketGroup.waitWhileSendToBlock.WaitOne();
 
             userToken.reset();
             userToken.messageBytes = bytes;
-            blockStartSend(e);
+            blockStartSend(saea);
         }
 
-        private void blockStartSend(SocketAsyncEventArgs e)
+        private static void blockStartSend(SocketAsyncEventArgs saea)
         {
-            var userToken = (DataHoldingUserToken)e.UserToken;
+            var userToken = (DataHoldingUserToken)saea.UserToken;
             var socketGroup = userToken.socketGroup;
 
-            Buffer.BlockCopy(userToken.messageBytes, userToken.messageBytesDoneCount, e.Buffer,
-                    e.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
-            e.SetBuffer(e.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
-            if (!e.AcceptSocket.SendAsync(e))
+            Buffer.BlockCopy(userToken.messageBytes, userToken.messageBytesDoneCount, saea.Buffer,
+                    saea.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
+            saea.SetBuffer(saea.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
+            if (!saea.AcceptSocket.SendAsync(saea))
             {
-                blockProcessSend(e);
+                blockProcessSend(saea);
             }
         }
-        
-        private void blockProcessSend(SocketAsyncEventArgs e)
-        {
-            var userToken = (DataHoldingUserToken)e.UserToken;
 
-            if (e.SocketError == SocketError.Success)
+        private static void blockProcessSend(SocketAsyncEventArgs saea)
+        {
+            var userToken = (DataHoldingUserToken)saea.UserToken;
+
+            if (saea.SocketError == SocketError.Success)
             {
-                userToken.messageBytesDoneCount += e.BytesTransferred;
+                userToken.messageBytesDoneCount += saea.BytesTransferred;
 
                 if (userToken.messageBytesDoneCount == userToken.messageBytes.Length)
                 {
@@ -362,132 +343,114 @@ namespace TcpServer.Core.async
                 }
                 else
                 {
-                    blockStartSend(e);
+                    blockStartSend(saea);
                 }
             }
             else
             {
-                blockSendCloseSocket(e, userToken.socketGroup);
+                blockSendCloseSocket(saea, userToken.socketGroup);
                 userToken.socketGroup.waitWhileSendToBlock.Set();
             }
+
         }
 
-        private void monStartReceive(SocketAsyncEventArgs e)
+        private void monStartReceive(SocketAsyncEventArgs saea)
         {
-            var userToken = (DataHoldingUserToken)e.UserToken;
+            var userToken = (DataHoldingUserToken)saea.UserToken;
             userToken.resetVariableForNewRequest();
 
-            if (!e.AcceptSocket.ReceiveAsync(e))
+            if (!saea.AcceptSocket.ReceiveAsync(saea))
             {
-                monProcessReceive(e);
+                monProcessReceive(saea);
             }
         }
 
-        private void monProcessReceive(SocketAsyncEventArgs e)
+        private void monProcessReceive(SocketAsyncEventArgs saea)
         {
-            var userToken = (DataHoldingUserToken)e.UserToken;
+            var userToken = (DataHoldingUserToken)saea.UserToken;
             var socketGroup = userToken.socketGroup;
 
-            if (e.SocketError != SocketError.Success || e.BytesTransferred == 0)
+            if (saea.SocketError != SocketError.Success || saea.BytesTransferred == 0)
             {
-                monReceiveCloseSocket(e, socketGroup);
+                monReceiveCloseSocket(saea, socketGroup);
             }
             else
             {
                 if (socketGroup.blockSendSAEA == null)
                 {
-                    SocketAsyncEventArgs sendSaea;
-                    if (!blockSendPool.TryPop(out sendSaea))
-                    {
-                        sendSaea = createSAEABlockSend();
-                    }
-                    socketGroup.blockSendSAEA = sendSaea;
+                    socketGroup.blockSendSAEA = createSAEABlockSend();
                     socketGroup.blockSendSAEA.AcceptSocket = socketGroup.blockReceiveSAEA.AcceptSocket;
                     ((DataHoldingUserToken)socketGroup.blockSendSAEA.UserToken).socketGroup = socketGroup;
                 }
 
-                byte[] bytes = new byte[e.BytesTransferred];
-                Buffer.BlockCopy(e.Buffer, e.Offset, bytes, 0, e.BytesTransferred);
+                byte[] bytes = new byte[saea.BytesTransferred];
+                Buffer.BlockCopy(saea.Buffer, saea.Offset, bytes, 0, saea.BytesTransferred);
 
-                socketGroup.waitWhileSendToBlock.WaitOne();
-                blockStartSend(socketGroup.blockSendSAEA, bytes);
+                blockSendQueue.Enqueue(new KeyValuePair<byte[], SocketAsyncEventArgs>(bytes, socketGroup.blockSendSAEA));
 
-                monStartReceive(e);
+                monStartReceive(saea);
             }
         }
 
-        private void monStartSend(SocketAsyncEventArgs e, byte[] bytes)
+        public static void monStartSend(SocketAsyncEventArgs saea, byte[] bytes)
         {
-            var userToken = (DataHoldingUserToken)e.UserToken;
+            if (!saea.AcceptSocket.Connected)
+            {
+                return;
+            }
+
+            var userToken = (DataHoldingUserToken)saea.UserToken;
+            userToken.socketGroup.waitWhileSendToMon.WaitOne();
 
             userToken.reset();
             userToken.messageBytes = bytes;
-            monStartSend(e);
+            monStartSend(saea);
         }
 
-        private void monStartSend(SocketAsyncEventArgs e)
+        private static void monStartSend(SocketAsyncEventArgs saea)
         {
-            var userToken = (DataHoldingUserToken)e.UserToken;
+            var userToken = (DataHoldingUserToken)saea.UserToken;
             var socketGroup = userToken.socketGroup;
 
-            Buffer.BlockCopy(userToken.messageBytes, userToken.messageBytesDoneCount, e.Buffer,
-                    e.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
-            e.SetBuffer(e.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
-            if (!e.AcceptSocket.SendAsync(e))
+            Buffer.BlockCopy(userToken.messageBytes, userToken.messageBytesDoneCount, saea.Buffer,
+                    saea.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
+            saea.SetBuffer(saea.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
+            if (!saea.AcceptSocket.SendAsync(saea))
             {
-                monProcessSend(e);
+                monProcessSend(saea);
             }
         }
 
-        private void monProcessSend(SocketAsyncEventArgs e)
+        static int sended = 0;
+        private static void monProcessSend(SocketAsyncEventArgs saea)
         {
-            var userToken = (DataHoldingUserToken)e.UserToken;
+            var userToken = (DataHoldingUserToken)saea.UserToken;
 
-            if (e.SocketError == SocketError.Success)
+            if (saea.SocketError == SocketError.Success)
             {
-                userToken.messageBytesDoneCount += e.BytesTransferred;
+                userToken.messageBytesDoneCount += saea.BytesTransferred;
 
                 if (userToken.messageBytesDoneCount == userToken.messageBytes.Length)
                 {
                     // отправка завершена
+                    sended++;
+                    Console.WriteLine("{0} End send.", sended);
                     userToken.reset();
                     userToken.socketGroup.waitWhileSendToMon.Set();
                 }
                 else
                 {
-                    monStartSend(e);
+                    monStartSend(saea);
                 }
             }
             else
             {
-                monSendCloseSocket(e, userToken.socketGroup);
+                monSendCloseSocket(saea, userToken.socketGroup);
                 userToken.socketGroup.waitWhileSendToMon.Set();
             }
         }
 
         private void monReceiveCloseSocket(SocketAsyncEventArgs saea, SocketGroup socketGroup)
-        {
-            try
-            {
-                if (saea.AcceptSocket.Connected)
-                {
-                    saea.AcceptSocket.Shutdown(SocketShutdown.Both);
-                }
-                saea.AcceptSocket.Close();
-
-                if (socketGroup.blockReceiveSAEA.AcceptSocket.Connected)
-                {
-                    socketGroup.blockReceiveSAEA.AcceptSocket.Shutdown(SocketShutdown.Both);
-                }
-                socketGroup.blockReceiveSAEA.AcceptSocket.Close();
-            }
-            finally
-            {
-                socketGroup.decrementUsed();
-            }
-        }
-
-        private void monSendCloseSocket(SocketAsyncEventArgs saea, SocketGroup socketGroup)
         {
             if (saea.AcceptSocket.Connected)
             {
@@ -502,7 +465,22 @@ namespace TcpServer.Core.async
             socketGroup.blockReceiveSAEA.AcceptSocket.Close();
         }
 
-        private void blockSendCloseSocket(SocketAsyncEventArgs saea, SocketGroup socketGroup)
+        private static void monSendCloseSocket(SocketAsyncEventArgs saea, SocketGroup socketGroup)
+        {
+            if (saea.AcceptSocket.Connected)
+            {
+                saea.AcceptSocket.Shutdown(SocketShutdown.Both);
+            }
+            saea.AcceptSocket.Close();
+
+            if (socketGroup.blockReceiveSAEA.AcceptSocket.Connected)
+            {
+                socketGroup.blockReceiveSAEA.AcceptSocket.Shutdown(SocketShutdown.Both);
+            }
+            socketGroup.blockReceiveSAEA.AcceptSocket.Close();
+        }
+
+        private static void blockSendCloseSocket(SocketAsyncEventArgs saea, SocketGroup socketGroup)
         {
             if (saea.AcceptSocket.Connected)
             {
@@ -521,57 +499,19 @@ namespace TcpServer.Core.async
         {
             if (socketGroup.monSendSAEA != null)
             {
-                try
+                if (socketGroup.monSendSAEA.AcceptSocket.Connected)
                 {
-                    if (socketGroup.monSendSAEA.AcceptSocket.Connected)
-                    {
-                        socketGroup.monSendSAEA.AcceptSocket.Shutdown(SocketShutdown.Both);
-                    }
+                    socketGroup.monSendSAEA.AcceptSocket.Shutdown(SocketShutdown.Both);
                 }
-                catch
-                {
-                }
-                try
-                {
-                    socketGroup.monSendSAEA.AcceptSocket.Close();
-                }
-                catch
-                {
-                }
+
+                socketGroup.monSendSAEA.AcceptSocket.Close();
             }
 
-            try
+            if (saea.AcceptSocket.Connected)
             {
                 saea.AcceptSocket.Shutdown(SocketShutdown.Both);
             }
-            catch (Exception)
-            {
-            }
             saea.AcceptSocket.Close();
-            socketGroup.decrementUsed();
-
-
-            socketGroup.waitUsed.WaitOne();
-            if (!shutdown)
-            {
-                blockReceivePool.Push(saea);
-
-                if (socketGroup.blockSendSAEA != null)
-                {
-                    blockSendPool.Push(socketGroup.blockSendSAEA);
-                    socketGroup.blockSendSAEA = null;
-                }
-                if (socketGroup.monReceiveSAEA != null)
-                {
-                    monReceivePool.Push(socketGroup.monReceiveSAEA);
-                    socketGroup.monReceiveSAEA = null;
-                }
-                if (socketGroup.monSendSAEA != null)
-                {
-                    monSendPool.Push(socketGroup.monSendSAEA);
-                    socketGroup.monSendSAEA = null;
-                }
-            }
         }
 
         private int handlePrefix(SocketAsyncEventArgs rs, DataHoldingUserToken userToken, int bytesToProcess)
@@ -652,7 +592,7 @@ namespace TcpServer.Core.async
             var basePacket = BasePacket.GetFromGlonass(receivedPacket);
             var gpsData = basePacket.ToPacketGps();
             
-            packetLog.Info(String.Format("src: {0}{1}dst: {2}", receivedPacket, Environment.NewLine, gpsData));
+            //packetLog.Info(String.Format("src: {0}{1}dst: {2}", receivedPacket, Environment.NewLine, gpsData));
 
             var bytes = Encoding.ASCII.GetBytes(gpsData);
 
@@ -676,32 +616,22 @@ namespace TcpServer.Core.async
                         log.Error("Cannot connect to remote host.", e);
                     }
                 }
-
-                SocketAsyncEventArgs sendSaea;
-                if (!monSendPool.TryPop(out sendSaea))
-                {
-                    sendSaea = createSAEAMonSend();
-                }
-                socketGroup.monSendSAEA = sendSaea;
+                
+                socketGroup.monSendSAEA = createSAEAMonSend();
                 socketGroup.monSendSAEA.AcceptSocket = socket;
                 ((DataHoldingUserToken)socketGroup.monSendSAEA.UserToken).socketGroup = socketGroup;
 
-
-                SocketAsyncEventArgs receiveSaea;
-                if (!monReceivePool.TryPop(out receiveSaea))
-                {
-                    receiveSaea = createSAEAMonReceive();
-                }
-                socketGroup.monReceiveSAEA = receiveSaea;
-                socketGroup.incrementUsed();
+                socketGroup.monReceiveSAEA = createSAEAMonReceive();
                 socketGroup.monReceiveSAEA.AcceptSocket = socket;
                 ((DataHoldingUserToken)socketGroup.monReceiveSAEA.UserToken).socketGroup = socketGroup;
                 
                 monStartReceive(socketGroup.monReceiveSAEA);
             }
 
-            //socketGroup.waitWhileSendToMon.WaitOne();
-            monStartSend(socketGroup.monSendSAEA, bytes);
+            received++;
+            Console.WriteLine("Received {0}", received);
+            monSendQueue.Enqueue(new KeyValuePair<byte[], SocketAsyncEventArgs>(bytes, socketGroup.monSendSAEA));
         }
+        volatile int received = 0;
     }
 }

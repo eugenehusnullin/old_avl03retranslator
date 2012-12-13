@@ -16,35 +16,8 @@ namespace TcpServer.Core.async
         public volatile SocketAsyncEventArgs monReceiveSAEA = null;
         public volatile SocketAsyncEventArgs monSendSAEA = null;
 
-        public AutoResetEvent waitWhileSendToBlock = new AutoResetEvent(true);
         public AutoResetEvent waitWhileSendToMon = new AutoResetEvent(true);
-
-        private volatile int usedSaeas = 0;
-        private object syncObject = new object();
-
-
-        public AutoResetEvent waitUsed = new AutoResetEvent(true);
-
-        public void incrementUsed()
-        {
-            lock (syncObject)
-            {
-                waitUsed.Reset();
-                usedSaeas++;
-            }
-        }
-
-        public void decrementUsed()
-        {
-            lock (syncObject)
-            {
-                usedSaeas--;
-                if (usedSaeas == 0)
-                {
-                    waitUsed.Set();
-                }
-            }
-        }
+        public AutoResetEvent waitWhileSendToBlock = new AutoResetEvent(true);
 
         //public void reset()
         //{
@@ -52,11 +25,8 @@ namespace TcpServer.Core.async
         //    monReceiveSAEA = null;
         //    monSendSAEA = null;
 
-        //    waitWhileSendToBlock.Set();
         //    waitWhileSendToMon.Set();
-
-        //    usedSaeas = 0;
-        //    waitUsed.Set();
+        //    waitWhileSendToBlock.Set();
         //}
     }
 }

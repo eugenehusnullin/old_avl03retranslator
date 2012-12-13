@@ -56,7 +56,9 @@
   <ItemGroup>
     <Compile Include="async\ConnectionsAccepter.cs" />
     <Compile Include="async\DataHoldingUserToken.cs" />
-    <Compile Include="async\BufferManager.cs" />
+    <Compile Include="async\AbstractSendWorker.cs" />
+    <Compile Include="async\SendToBlockWorker.cs" />
+    <Compile Include="async\SendToMonitoringWorker.cs" />
     <Compile Include="async\SocketGroup.cs" />
     <Compile Include="BasePacket.cs" />
     <Compile Include="ByteHelper.cs" />
