@@ -57,6 +57,9 @@
     <Compile Include="async\AsyncRetranslator.cs" />
     <Compile Include="async\DataHoldingUserToken.cs" />
     <Compile Include="async\AbstractSendWorker.cs" />
+    <Compile Include="async\ReceiveMessageHandler.cs" />
+    <Compile Include="async\ReceivePacketProcessor.cs" />
+    <Compile Include="async\ReceivePrefixHandler.cs" />
     <Compile Include="async\SendToBlockWorker.cs" />
     <Compile Include="async\SendToMonitoringWorker.cs" />
     <Compile Include="async\SocketGroup.cs" />
