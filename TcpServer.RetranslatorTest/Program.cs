@@ -15,7 +15,7 @@ namespace TcpServer.RetranslatorTest
             //retranslator.Start();
 
             //ConnectionsAccepter async = new ConnectionsAccepter("31.31.20.193", 20141, "77.74.50.78", 20141);
-            ConnectionsAccepter async = new ConnectionsAccepter("127.0.0.1", 20141, "127.0.0.1", 20142);
+            AsyncRetranslator async = new AsyncRetranslator("127.0.0.1", 20141, "127.0.0.1", 20142);
 
             //Thread thread = new Thread(() => async.start());
             //thread.Start();

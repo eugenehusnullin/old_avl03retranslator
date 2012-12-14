@@ -12,9 +12,9 @@ using System.Threading;
 
 namespace TcpServer.Core.async
 {
-    public class ConnectionsAccepter
+    public class AsyncRetranslator
     {
-        private const int INIT_ACCEPT_BLOCK_POOL_SIZE = 50;        
+        private const int INIT_ACCEPT_BLOCK_POOL_SIZE = 50;
         private const int BACKLOG = 500;
 
         private const int INIT_BLOCK_POOL_SIZE = 1000;
@@ -23,9 +23,11 @@ namespace TcpServer.Core.async
         
         private const int RECEIVE_PREFIX_LENGTH = 4;
 
-        private static ILog log = LogManager.GetLogger(typeof(ConnectionsAccepter));
+        private const int ATTEMPT_CONNECT_TO_MONITORING = 3;
+        private const int TIMEOUT_BETWEEN_ATTEMPT_CONNECT_TO_MONITORING = 7000;
+
+        private static ILog log = LogManager.GetLogger(typeof(AsyncRetranslator));
         private static ILog packetLog = LogManager.GetLogger("packet");
-        private static ILog debugLog = LogManager.GetLogger("debug");
 
         private Socket listenSocket;
         private string listenHost;
@@ -51,15 +53,14 @@ namespace TcpServer.Core.async
         private readonly int cntSendToMonWorkers = 15;
         private readonly int cntSendToBlockWorkers = 15;
 
-        public ConnectionsAccepter(string listenHost, int listenPort, string monHost, int monPort)
+        public AsyncRetranslator(string listenHost, int listenPort, string monHost, int monPort)
         {
             string appPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             string log4netConfigPath = Path.Combine(appPath, "log4net.config");
             FileInfo fi = new FileInfo(log4netConfigPath);
             XmlConfigurator.ConfigureAndWatch(fi);
-            log = LogManager.GetLogger(typeof(ConnectionsAccepter));
+            log = LogManager.GetLogger(typeof(AsyncRetranslator));
             packetLog = LogManager.GetLogger("packet");
-            debugLog = LogManager.GetLogger("debug");
 
             this.listenHost = listenHost;
             this.listenPort = listenPort;
@@ -387,6 +388,10 @@ namespace TcpServer.Core.async
                 Buffer.BlockCopy(saea.Buffer, saea.Offset, bytes, 0, saea.BytesTransferred);
 
                 blockSendQueue.Enqueue(new KeyValuePair<byte[], SocketAsyncEventArgs>(bytes, socketGroup.blockSendSAEA));
+                //lock (blockSendQueue)
+                //{
+                //    Monitor.PulseAll(blockSendQueue);
+                //}
 
                 monStartReceive(saea);
             }
@@ -421,7 +426,6 @@ namespace TcpServer.Core.async
             }
         }
 
-        static int sended = 0;
         private static void monProcessSend(SocketAsyncEventArgs saea)
         {
             var userToken = (DataHoldingUserToken)saea.UserToken;
@@ -433,8 +437,6 @@ namespace TcpServer.Core.async
                 if (userToken.messageBytesDoneCount == userToken.messageBytes.Length)
                 {
                     // отправка завершена
-                    sended++;
-                    Console.WriteLine("{0} End send.", sended);
                     userToken.reset();
                     userToken.socketGroup.waitWhileSendToMon.Set();
                 }
@@ -592,7 +594,7 @@ namespace TcpServer.Core.async
             var basePacket = BasePacket.GetFromGlonass(receivedPacket);
             var gpsData = basePacket.ToPacketGps();
             
-            //packetLog.Info(String.Format("src: {0}{1}dst: {2}", receivedPacket, Environment.NewLine, gpsData));
+            packetLog.DebugFormat("src: {0}{1}dst: {2}", receivedPacket, Environment.NewLine, gpsData);
 
             var bytes = Encoding.ASCII.GetBytes(gpsData);
 
@@ -600,21 +602,26 @@ namespace TcpServer.Core.async
             {
                 Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 int attempt = 0;
-                while (!socket.Connected && attempt < 3)
+                while (!socket.Connected && attempt < ATTEMPT_CONNECT_TO_MONITORING)
                 {
                     if (attempt > 0)
                     {
-                        Thread.Sleep(7000);
+                        Thread.Sleep(TIMEOUT_BETWEEN_ATTEMPT_CONNECT_TO_MONITORING);
                     }
                     attempt++;                    
                     try
                     {
                         socket.Connect(monEndPoint);
                     }
-                    catch (Exception e)
+                    catch
                     {
-                        log.Error("Cannot connect to remote host.", e);
                     }
+                }
+                if (!socket.Connected)
+                {
+                    log.Error("Cannot establish connection to monitoring.");
+                    blockReceiveCloseSocket(socketGroup.blockReceiveSAEA, socketGroup);
+                    return;
                 }
                 
                 socketGroup.monSendSAEA = createSAEAMonSend();
@@ -627,11 +634,12 @@ namespace TcpServer.Core.async
                 
                 monStartReceive(socketGroup.monReceiveSAEA);
             }
-
-            received++;
-            Console.WriteLine("Received {0}", received);
+            
             monSendQueue.Enqueue(new KeyValuePair<byte[], SocketAsyncEventArgs>(bytes, socketGroup.monSendSAEA));
+            //lock (monSendQueue)
+            //{
+            //    Monitor.PulseAll(monSendQueue);
+            //}
         }
-        volatile int received = 0;
     }
 }

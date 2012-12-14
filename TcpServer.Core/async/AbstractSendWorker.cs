@@ -14,7 +14,7 @@ namespace TcpServer.Core.async
         private ConcurrentQueue<KeyValuePair<byte[], SocketAsyncEventArgs>> queue;
         private Thread thread;
         private volatile bool running = true;
-        private readonly int timeout = 3000;
+        private readonly int timeout = 200;
 
         public AbstractSendWorker(ConcurrentQueue<KeyValuePair<byte[], SocketAsyncEventArgs>> queue)
         {
@@ -49,6 +49,10 @@ namespace TcpServer.Core.async
                     try
                     {
                         Thread.Sleep(timeout);
+                        //lock (queue)
+                        //{
+                        //    Monitor.Wait(queue);
+                        //}
                     }
                     catch (ThreadInterruptedException)
                     {

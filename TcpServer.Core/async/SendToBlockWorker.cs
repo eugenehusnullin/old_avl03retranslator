@@ -14,7 +14,7 @@ namespace TcpServer.Core.async
 
         public override void send(KeyValuePair<byte[], System.Net.Sockets.SocketAsyncEventArgs> pair)
         {
-            ConnectionsAccepter.blockStartSend(pair.Value, pair.Key);
+            AsyncRetranslator.blockStartSend(pair.Value, pair.Key);
         }
     }
 }

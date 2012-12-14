@@ -54,7 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="async\ConnectionsAccepter.cs" />
+    <Compile Include="async\AsyncRetranslator.cs" />
     <Compile Include="async\DataHoldingUserToken.cs" />
     <Compile Include="async\AbstractSendWorker.cs" />
     <Compile Include="async\SendToBlockWorker.cs" />
