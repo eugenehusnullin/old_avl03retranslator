@@ -31,7 +31,7 @@ namespace TcpServer.Core.async
         
         private ConcurrentQueue<KeyValuePair<byte[], SocketAsyncEventArgs>> blockSendQueue;
         private List<SendWorker> listSendToBlockWorkers;
-        private readonly int cntSendToBlockWorkers = 15;
+        private readonly int cntSendToBlockWorkers = 50;
 
         public BlockConnector(string listenHost, int listenPort, AsyncRetranslator.MessageReady messageReady)
         {

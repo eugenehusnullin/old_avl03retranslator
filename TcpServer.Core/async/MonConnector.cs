@@ -30,7 +30,7 @@ namespace TcpServer.Core.async
         private ConcurrentQueue<KeyValuePair<byte[], SocketAsyncEventArgs>> monSendQueue;
         private List<SendWorker> listSendToMonWorkers;
 
-        private readonly int cntSendToMonWorkers = 15;
+        private readonly int cntSendToMonWorkers = 100;
 
         public MonConnector(string monHost, int monPort, AsyncRetranslator.MessageReady messageReady)
         {

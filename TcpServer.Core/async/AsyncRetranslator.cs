@@ -61,11 +61,18 @@ namespace TcpServer.Core.async
         {
             byte[] gpsFormatBytes = receivePacketProcessor.processMessage(message);
 
-            if (!monConnector.setSendSaea(socketGroup))
+            if (gpsFormatBytes != null)
+            {
+                if (!monConnector.setSendSaea(socketGroup))
+                {
+                    blockConnector.blockReceiveCloseSocket(socketGroup.blockReceiveSAEA, socketGroup);
+                }
+                monConnector.enqueueForSend(new KeyValuePair<byte[], SocketAsyncEventArgs>(gpsFormatBytes, socketGroup.monSendSAEA));
+            }
+            else
             {
                 blockConnector.blockReceiveCloseSocket(socketGroup.blockReceiveSAEA, socketGroup);
             }
-            monConnector.enqueueForSend(new KeyValuePair<byte[], SocketAsyncEventArgs>(gpsFormatBytes, socketGroup.monSendSAEA));
         }
 
         private void monMessageReadyFunc(byte[] message, SocketGroup socketGroup)

@@ -14,10 +14,10 @@ namespace TcpServer.Retranslator.Service
 
             InitializeComponent();
 
-            if (!System.Diagnostics.EventLog.SourceExists("Retranslator Service"))
-            {
-                System.Diagnostics.EventLog.CreateEventSource("Retranslator Service", "Glonass Log");
-            }
+            //if (!System.Diagnostics.EventLog.SourceExists("Retranslator Service"))
+            //{
+            //    System.Diagnostics.EventLog.CreateEventSource("Retranslator Service", "Glonass Log");
+            //}
             eventLog.Source = "Retranslator Service";
             eventLog.Log = "Glonass Log";
 

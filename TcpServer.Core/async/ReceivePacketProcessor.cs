@@ -12,21 +12,31 @@ namespace TcpServer.Core.async
     class ReceivePacketProcessor
     {
         private static ILog packetLog;
+        private static ILog log;
 
         public ReceivePacketProcessor()
         {
             packetLog = LogManager.GetLogger("packet");
+            log = LogManager.GetLogger(typeof(ReceivePacketProcessor));
         }
 
         public byte[] processMessage(byte[] message)
         {
-            var receivedPacket = Encoding.ASCII.GetString(message);
-            var basePacket = BasePacket.GetFromGlonass(receivedPacket);
-            var gpsData = basePacket.ToPacketGps();
+            try
+            {
+                var receivedPacket = Encoding.ASCII.GetString(message);
+                var basePacket = BasePacket.GetFromGlonass(receivedPacket);
+                var gpsData = basePacket.ToPacketGps();
 
-            packetLog.DebugFormat("src: {0}{1}dst: {2}", receivedPacket, Environment.NewLine, gpsData);
+                packetLog.DebugFormat("src: {0}{1}dst: {2}", receivedPacket, Environment.NewLine, gpsData);
 
-            return Encoding.ASCII.GetBytes(gpsData);
+                return Encoding.ASCII.GetBytes(gpsData);
+            }
+            catch(Exception e)
+            {
+                log.Warn("processMessage", e);
+                return null;
+            }
         }
     }
 }
