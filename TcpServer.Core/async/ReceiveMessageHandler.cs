@@ -9,9 +9,7 @@ namespace TcpServer.Core.async
 {
     class ReceiveMessageHandler
     {
-        public delegate void ProccessMessage(string prefix, string message, SocketGroup socketGroup);
-
-        public static int handleMessage(SocketAsyncEventArgs rs, DataHoldingUserToken userToken, int bytesToProcess, ProccessMessage processMessageCallback)
+        public int handleMessage(SocketAsyncEventArgs rs, DataHoldingUserToken userToken, int bytesToProcess, out byte[] message)
         {
             if (userToken.messageBytesDoneCount == 0)
             {
@@ -30,11 +28,14 @@ namespace TcpServer.Core.async
             if (userToken.messageBytesDoneCount == userToken.messageLength)
             {
                 //// сообщение готово
-                var prefix = Encoding.ASCII.GetString(userToken.prefixBytes);
-                var message = Encoding.ASCII.GetString(userToken.messageBytes);
-                processMessageCallback(prefix, message, userToken.socketGroup);
-
+                message = new byte[userToken.prefixBytes.Length + userToken.messageBytes.Length];
+                Buffer.BlockCopy(userToken.prefixBytes, 0, message, 0, userToken.prefixBytes.Length);
+                Buffer.BlockCopy(userToken.messageBytes, 0, message, userToken.prefixBytes.Length, userToken.messageBytes.Length);
                 userToken.reset();
+            }
+            else
+            {
+                message = null;
             }
 
             return bytesToProcess - length;

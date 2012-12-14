@@ -67,11 +67,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Glonass.cs">
+    <Compile Include="GlonassAsync.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Glonass.Designer.cs">
-      <DependentUpon>Glonass.cs</DependentUpon>
+    <Compile Include="GlonassAsync.Designer.cs">
+      <DependentUpon>GlonassAsync.cs</DependentUpon>
     </Compile>
     <Compile Include="AppOptions.cs" />
     <Compile Include="Program.cs" />
@@ -84,8 +84,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Glonass.resx">
-      <DependentUpon>Glonass.cs</DependentUpon>
+    <EmbeddedResource Include="GlonassAsync.resx">
+      <DependentUpon>GlonassAsync.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ProjectInstaller.resx">
       <DependentUpon>ProjectInstaller.cs</DependentUpon>

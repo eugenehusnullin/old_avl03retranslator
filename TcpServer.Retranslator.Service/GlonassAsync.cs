@@ -2,12 +2,13 @@
 using System.ServiceProcess;
 using System.Threading;
 using TcpServer.Core;
+using TcpServer.Core.async;
 
 namespace TcpServer.Retranslator.Service
 {
-    public partial class Glonass : ServiceBase
+    public partial class GlonassAsync : ServiceBase
     {
-        public Glonass()
+        public GlonassAsync()
         {
             var appOptions = new AppOptions();
 
@@ -25,19 +26,23 @@ namespace TcpServer.Retranslator.Service
             options.UseFeedBack = appOptions.UseFeedBack;
 
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-Us");
-            RetranslatorGlonass = new RetranslatorGlonass(appOptions.SrcHost, appOptions.SrcPort, appOptions.DstHost, appOptions.DstPort, eventLog, options);
+            //RetranslatorGlonass = new RetranslatorGlonass(appOptions.SrcHost, appOptions.SrcPort, appOptions.DstHost, appOptions.DstPort, eventLog, options);
+            asyncRetranslator = new AsyncRetranslator(appOptions.SrcHost, appOptions.SrcPort, appOptions.DstHost, appOptions.DstPort);
         }
 
-        private RetranslatorGlonass RetranslatorGlonass { get; set; }
+        //private RetranslatorGlonass RetranslatorGlonass { get; set; }
+        private AsyncRetranslator asyncRetranslator;
 
         protected override void OnStart(string[] args)
         {
-            RetranslatorGlonass.Start();
+            //RetranslatorGlonass.Start();
+            asyncRetranslator.start();
         }
 
         protected override void OnStop()
         {
-            RetranslatorGlonass.Stop();
+            //RetranslatorGlonass.Stop();
+            asyncRetranslator.stop();
         }
     }
 }

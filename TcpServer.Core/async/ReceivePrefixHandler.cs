@@ -11,12 +11,22 @@ namespace TcpServer.Core.async
 {
     class ReceivePrefixHandler
     {
-        public static int RECEIVE_PREFIX_LENGTH = 4;
+        private const int RECEIVE_PREFIX_LENGTH = 4;
 
-        private static ILog log = LogManager.GetLogger(typeof(ReceivePrefixHandler));
+        private ILog log;
 
-        public static int handlePrefix(SocketAsyncEventArgs rs, DataHoldingUserToken userToken, int bytesToProcess)
+        public ReceivePrefixHandler()
         {
+            log = LogManager.GetLogger(typeof(ReceivePrefixHandler));
+        }
+
+        public int handlePrefix(SocketAsyncEventArgs rs, DataHoldingUserToken userToken, int bytesToProcess)
+        {
+            if (userToken.prefixBytesDoneCount >= RECEIVE_PREFIX_LENGTH)
+            {
+                return bytesToProcess;
+            }
+
             if (userToken.prefixBytesDoneCount == 0)
             {
                 userToken.prefixBytes = new byte[RECEIVE_PREFIX_LENGTH];

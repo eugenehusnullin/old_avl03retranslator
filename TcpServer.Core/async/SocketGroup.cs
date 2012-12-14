@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace TcpServer.Core.async
 {
-    class SocketGroup
+    public class SocketGroup
     {
         public volatile SocketAsyncEventArgs blockReceiveSAEA = null;
         public volatile SocketAsyncEventArgs blockSendSAEA = null;

@@ -11,7 +11,7 @@ namespace TcpServer.Retranslator.Service
         {
             var ServicesToRun = new ServiceBase[]
             { 
-                new Glonass()
+                new GlonassAsync()
             };
             ServiceBase.Run(ServicesToRun);
         }

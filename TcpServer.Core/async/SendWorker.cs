@@ -9,16 +9,18 @@ using System.Threading.Tasks;
 
 namespace TcpServer.Core.async
 {
-    abstract class AbstractSendWorker
+    class SendWorker
     {
         private ConcurrentQueue<KeyValuePair<byte[], SocketAsyncEventArgs>> queue;
         private Thread thread;
         private volatile bool running = true;
         private readonly int timeout = 200;
+        private BaseConnector baseConnector;
 
-        public AbstractSendWorker(ConcurrentQueue<KeyValuePair<byte[], SocketAsyncEventArgs>> queue)
+        public SendWorker(ConcurrentQueue<KeyValuePair<byte[], SocketAsyncEventArgs>> queue, BaseConnector baseConnector)
         {
             this.queue = queue;
+            this.baseConnector = baseConnector;
         }
 
         public void start()
@@ -42,17 +44,13 @@ namespace TcpServer.Core.async
             {
                 if (queue.TryDequeue(out pair))
                 {
-                    send(pair);
+                    baseConnector.startSend(pair.Value, pair.Key);
                 }
                 else
                 {
                     try
                     {
                         Thread.Sleep(timeout);
-                        //lock (queue)
-                        //{
-                        //    Monitor.Wait(queue);
-                        //}
                     }
                     catch (ThreadInterruptedException)
                     {
@@ -61,7 +59,5 @@ namespace TcpServer.Core.async
                 }
             }
         }
-
-        public abstract void send(KeyValuePair<byte[], SocketAsyncEventArgs> pair);
     }
 }

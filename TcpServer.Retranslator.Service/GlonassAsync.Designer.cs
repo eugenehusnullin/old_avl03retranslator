@@ -1,6 +1,6 @@
 ﻿namespace TcpServer.Retranslator.Service
 {
-    partial class Glonass
+    partial class GlonassAsync
     {
         /// <summary> 
         /// Required designer variable.
@@ -31,9 +31,9 @@
             this.eventLog = new System.Diagnostics.EventLog();
             ((System.ComponentModel.ISupportInitialize)(this.eventLog)).BeginInit();
             // 
-            // Glonass
+            // GlonassAsync
             // 
-            this.ServiceName = "Glonass";
+            this.ServiceName = "GlonassAsync";
             ((System.ComponentModel.ISupportInitialize)(this.eventLog)).EndInit();
 
         }
