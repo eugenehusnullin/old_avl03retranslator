@@ -16,7 +16,7 @@ namespace TcpServer.Core.async
     {
         private ILog log;
         
-        private BlockConnector blockConnector;
+        private BlockAcceptor blockAcceptor;
         private MonConnector monConnector;
         private ReceivePacketProcessor receivePacketProcessor;
 
@@ -36,7 +36,7 @@ namespace TcpServer.Core.async
             monMessageReady = monMessageReadyFunc;
 
             receivePacketProcessor = new ReceivePacketProcessor();
-            blockConnector = new BlockConnector(listenHost, listenPort, blockMessageReady);
+            blockAcceptor = new BlockAcceptor(listenHost, listenPort, blockMessageReady);
             monConnector = new MonConnector(monHost, monPort, monMessageReady);
         }
 
@@ -44,14 +44,14 @@ namespace TcpServer.Core.async
         {
             log.Info("Starting retranslator...");
             monConnector.start();
-            blockConnector.start();
+            blockAcceptor.start();
             log.Info("Retranslator started.");
         }
 
         public void stop()
         {
             log.Info("Stoping retranslator...");
-            blockConnector.stop();
+            blockAcceptor.stop();
             monConnector.stop();
             Thread.Sleep(2000);
             log.Info("Retranslator stoped.");
@@ -65,20 +65,20 @@ namespace TcpServer.Core.async
             {
                 if (!monConnector.setSendSaea(socketGroup))
                 {
-                    blockConnector.blockReceiveCloseSocket(socketGroup.blockReceiveSAEA, socketGroup);
+                    blockAcceptor.blockReceiveCloseSocket(socketGroup.blockReceiveSAEA, socketGroup);
                 }
                 monConnector.enqueueForSend(new KeyValuePair<byte[], SocketAsyncEventArgs>(gpsFormatBytes, socketGroup.monSendSAEA));
             }
             else
             {
-                blockConnector.blockReceiveCloseSocket(socketGroup.blockReceiveSAEA, socketGroup);
+                blockAcceptor.blockReceiveCloseSocket(socketGroup.blockReceiveSAEA, socketGroup);
             }
         }
 
         private void monMessageReadyFunc(byte[] message, SocketGroup socketGroup)
         {
-            blockConnector.setSendSaea(socketGroup);
-            blockConnector.enqueueForSend(new KeyValuePair<byte[], SocketAsyncEventArgs>(message, socketGroup.blockSendSAEA));
+            blockAcceptor.setSendSaea(socketGroup);
+            blockAcceptor.enqueueForSend(new KeyValuePair<byte[], SocketAsyncEventArgs>(message, socketGroup.blockSendSAEA));
         }
     }
 }

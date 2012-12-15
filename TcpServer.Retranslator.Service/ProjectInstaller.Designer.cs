@@ -39,9 +39,9 @@
             // 
             // GlonassInstaller
             // 
-            this.GlonassInstaller.Description = "GlonassAsync";
-            this.GlonassInstaller.DisplayName = "GlonassAsync";
-            this.GlonassInstaller.ServiceName = "GlonassAsync";
+            this.GlonassInstaller.Description = "Retranslator Glonass Async";
+            this.GlonassInstaller.DisplayName = "Retranslator Glonass Async";
+            this.GlonassInstaller.ServiceName = "Retranslator Glonass Async";
             this.GlonassInstaller.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
             // 
             // ProjectInstaller

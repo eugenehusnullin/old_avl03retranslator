@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace TcpServer.Core.async
 {
-    class BlockConnector : BaseConnector
+    class BlockAcceptor : BaseConnector
     {
         private const int BACKLOG = 500;
         private const int BUFFER_SIZE = 512;
@@ -33,7 +33,7 @@ namespace TcpServer.Core.async
         private List<SendWorker> listSendToBlockWorkers;
         private readonly int cntSendToBlockWorkers = 50;
 
-        public BlockConnector(string listenHost, int listenPort, AsyncRetranslator.MessageReady messageReady)
+        public BlockAcceptor(string listenHost, int listenPort, AsyncRetranslator.MessageReady messageReady)
         {
             this.listenHost = listenHost;
             this.listenPort = listenPort;
