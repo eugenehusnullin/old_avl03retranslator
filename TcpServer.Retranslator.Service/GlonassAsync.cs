@@ -2,7 +2,7 @@
 using System.ServiceProcess;
 using System.Threading;
 using TcpServer.Core;
-using TcpServer.Core.async;
+using TcpServer.Core.async.retranslator;
 
 namespace TcpServer.Retranslator.Service
 {

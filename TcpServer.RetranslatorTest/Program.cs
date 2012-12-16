@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using System.Threading;
 using TcpServer.Core;
-using TcpServer.Core.async;
+using TcpServer.Core.async.retranslator;
 
 namespace TcpServer.RetranslatorTest
 {
