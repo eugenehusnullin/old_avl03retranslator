@@ -118,6 +118,7 @@ namespace TcpServer.Core.async.retranslator
 
             if (processedBytes == null)
             {
+                decrementCountConnectionsToBlock();
                 blocksAcceptor.closeSocket(socketGroup.blockReceiveSAEA);
                 return;
             }
@@ -137,6 +138,7 @@ namespace TcpServer.Core.async.retranslator
                 }
                 else
                 {
+                    decrementCountConnectionsToBlock();
                     blocksAcceptor.closeSocket(socketGroup.blockReceiveSAEA);
                     return;
                 }

@@ -45,24 +45,35 @@ namespace TcpServer.Core.async.block
             if (userToken.prefixBytesDoneCount == RECEIVE_PREFIX_LENGTH)
             {
                 // заголовок готов, проверяем его, если он нормальный устанавливаем длину ожидаемого сообщения
-                var prefix = Encoding.ASCII.GetString(userToken.prefixBytes);
-                if (!prefix.StartsWith("$$"))
-                {
-                    log.WarnFormat("Someone sended us a bad packet with prefix={0} his IP={1}", prefix, ((IPEndPoint)rs.AcceptSocket.RemoteEndPoint).Address);
-                    return -1;
-                }
 
-                try
+                if (userToken.prefixBytes[0] == 0x0D && userToken.prefixBytes[1] == 0x0A)
                 {
-                    userToken.messageLength = Convert.ToInt32(prefix.Substring(2), 16) - 4;
-                    if (userToken.messageLength <= 0)
-                    {
-                        return -2;
-                    }
+                    userToken.prefixBytesDoneCount -= 2;
+                    Buffer.BlockCopy(userToken.prefixBytes, 2, userToken.prefixBytes, 0, 2);
+
+                    return handlePrefix(rs, userToken, bytesToProcess - length);
                 }
-                catch
+                else
                 {
-                    log.WarnFormat("Someone sended us a bad packet size prefix={0} his IP={1}", prefix, ((IPEndPoint)rs.AcceptSocket.RemoteEndPoint).Address);
+                    var prefix = Encoding.ASCII.GetString(userToken.prefixBytes);
+                    if (!prefix.StartsWith("$$"))
+                    {
+                        log.WarnFormat("Someone sended us a bad packet with prefix={0} his IP={1}", prefix, ((IPEndPoint)rs.AcceptSocket.RemoteEndPoint).Address);
+                        return -1;
+                    }
+
+                    try
+                    {
+                        userToken.messageLength = Convert.ToInt32(prefix.Substring(2), 16) - 4;
+                        if (userToken.messageLength <= 0)
+                        {
+                            return -2;
+                        }
+                    }
+                    catch
+                    {
+                        log.WarnFormat("Someone sended us a bad packet size prefix={0} his IP={1}", prefix, ((IPEndPoint)rs.AcceptSocket.RemoteEndPoint).Address);
+                    }
                 }
             }
 
