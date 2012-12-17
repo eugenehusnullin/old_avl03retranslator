@@ -175,7 +175,7 @@ namespace TcpServer.Core.async.block
 
             if (saea.SocketError != SocketError.Success || saea.BytesTransferred == 0)
             {
-                log.DebugFormat("Process receive from block failed. SocketError={0}.", saea.SocketError);
+                log.DebugFormat("Process receive from block failed. SocketError={0} or BytesTransferred={1}.", saea.SocketError, saea.BytesTransferred);
                 userToken.resetAll();
                 receiveFailed(saea);
                 closeSocket(saea);

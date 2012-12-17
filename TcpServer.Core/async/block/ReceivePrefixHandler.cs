@@ -46,10 +46,18 @@ namespace TcpServer.Core.async.block
             {
                 // заголовок готов, проверяем его, если он нормальный устанавливаем длину ожидаемого сообщения
 
-                if (userToken.prefixBytes[0] == 0x0D && userToken.prefixBytes[1] == 0x0A)
+                if (userToken.prefixBytes[0] == 0x0D && userToken.prefixBytes[1] == 0x0A
+                    && userToken.prefixBytes[2] == 0x24 && userToken.prefixBytes[3] == 0x24)
                 {
                     userToken.prefixBytesDoneCount -= 2;
                     Buffer.BlockCopy(userToken.prefixBytes, 2, userToken.prefixBytes, 0, 2);
+
+                    return handlePrefix(rs, userToken, bytesToProcess - length);
+                }
+                else if (userToken.prefixBytes[0] == 0x0A && userToken.prefixBytes[1] == 0x24 && userToken.prefixBytes[2] == 0x24)
+                {
+                    userToken.prefixBytesDoneCount -= 1;
+                    Buffer.BlockCopy(userToken.prefixBytes, 1, userToken.prefixBytes, 0, 3);
 
                     return handlePrefix(rs, userToken, bytesToProcess - length);
                 }
