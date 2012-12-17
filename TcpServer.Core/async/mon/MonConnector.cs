@@ -13,7 +13,7 @@ using TcpServer.Core.async.retranslator;
 
 namespace TcpServer.Core.async.mon
 {
-    class MonConnector : BaseConnector
+    public class MonConnector : BaseConnector
     {
         private const int ATTEMPT_CONNECT_TO_MONITORING = 3;
         private const int TIMEOUT_BETWEEN_ATTEMPT_CONNECT_TO_MONITORING = 7000;
@@ -29,7 +29,7 @@ namespace TcpServer.Core.async.mon
         private IPEndPoint monEndPoint;
 
         public MonConnector(string monHost, int monPort, MessageReceived messageReceived, BaseConnector.MessageSended messageSended,
-            ConnectionFailed connectionFailed)
+            ReceiveFailed receiveFailed, SendFailed sendFailed)
         {
             this.monHost = monHost;
             this.monPort = monPort;
@@ -38,7 +38,8 @@ namespace TcpServer.Core.async.mon
 
             this.messageReceived = messageReceived;
             this.messageSended = messageSended;
-            this.connectionFailed = connectionFailed;
+            this.receiveFailed = receiveFailed;
+            this.sendFailed = sendFailed;
 
             sendEventHandler = new EventHandler<SocketAsyncEventArgs>(sendEvent);
             receiveEventHandler = new EventHandler<SocketAsyncEventArgs>(receiveEvent);
@@ -58,9 +59,25 @@ namespace TcpServer.Core.async.mon
 
         public void startReceive(SocketAsyncEventArgs saea)
         {
-            if (!saea.AcceptSocket.ReceiveAsync(saea))
+            if (!saea.AcceptSocket.Connected)
             {
-                processReceive(saea);
+                receiveFailed(saea);
+                closeSocket(saea);
+                return;
+            }
+
+            try
+            {
+                if (!saea.AcceptSocket.ReceiveAsync(saea))
+                {
+                    processReceive(saea);
+                }
+            }
+            catch (Exception e)
+            {
+                log.Debug("Start receive from monitoring failed.", e);
+                receiveFailed(saea);
+                closeSocket(saea);
             }
         }
 
@@ -70,7 +87,9 @@ namespace TcpServer.Core.async.mon
 
             if (saea.SocketError != SocketError.Success || saea.BytesTransferred == 0)
             {
-                closeSocketInner(saea);
+                log.DebugFormat("Process receive from monitoring failed. SocketError={0} or BytesTransferred={1}.", saea.SocketError, saea.BytesTransferred);
+                receiveFailed(saea);
+                closeSocket(saea);
             }
             else
             {
@@ -96,6 +115,15 @@ namespace TcpServer.Core.async.mon
             Buffer.BlockCopy(userToken.messageBytes, userToken.messageBytesDoneCount, saea.Buffer,
                     saea.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
             saea.SetBuffer(saea.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
+
+            if (!saea.AcceptSocket.Connected)
+            {
+                log.Debug("Start send to monitoring failed. Socket not connected.");
+                sendFailed(saea);
+                closeSocket(saea);
+                return;
+            }
+
             try
             {
                 if (!saea.AcceptSocket.SendAsync(saea))
@@ -103,9 +131,11 @@ namespace TcpServer.Core.async.mon
                     processSend(saea);
                 }
             }
-            catch
+            catch (Exception e)
             {
-                closeSocketInner(saea);
+                log.Debug("Start send to monitoring failed.", e);
+                sendFailed(saea);
+                closeSocket(saea);
             }
         }
 
@@ -130,19 +160,16 @@ namespace TcpServer.Core.async.mon
             }
             else
             {
+                log.DebugFormat("Process send to monitoring failed. SocketError={0}", saea.SocketError);
                 userToken.resetAll();
-                closeSocketInner(saea);
+                sendFailed(saea);
+                closeSocket(saea);
             }
-        }
-
-        private void closeSocketInner(SocketAsyncEventArgs saea)
-        {
-            closeSocket(saea);
-            connectionFailed(saea);
         }
 
         public void closeSocket(SocketAsyncEventArgs saea)
         {
+            log.Debug("Close socket to monitoring.");
             try
             {
                 if (saea.AcceptSocket.Connected)
@@ -156,10 +183,10 @@ namespace TcpServer.Core.async.mon
             }
         }
 
-        public bool createConnection(out SocketAsyncEventArgs monReceive, out SocketAsyncEventArgs monSend)
+        public bool createConnection(out SocketAsyncEventArgs receiveSaea, out SocketAsyncEventArgs sendSaea)
         {
-            monReceive = null;
-            monSend = null;
+            receiveSaea = null;
+            sendSaea = null;
 
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             int attempt = 0;
@@ -184,13 +211,11 @@ namespace TcpServer.Core.async.mon
                 return false;
             }
 
-            monReceive = createSaea(receiveEventHandler, BUFFER_SIZE);
-            monReceive.AcceptSocket = socket;
+            receiveSaea = createSaea(receiveEventHandler, BUFFER_SIZE);
+            receiveSaea.AcceptSocket = socket;
 
-            monSend = createSaea(sendEventHandler, BUFFER_SIZE);
-            monSend.AcceptSocket = socket;
-
-            startReceive(monReceive);
+            sendSaea = createSaea(sendEventHandler, BUFFER_SIZE);
+            sendSaea.AcceptSocket = socket;
 
             return true;
         }

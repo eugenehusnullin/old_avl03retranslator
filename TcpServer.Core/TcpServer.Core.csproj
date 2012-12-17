@@ -60,7 +60,7 @@
     <Compile Include="async\common\DataHoldingUserToken.cs" />
     <Compile Include="async\mon\MonConnector.cs" />
     <Compile Include="async\block\ReceiveMessageHandler.cs" />
-    <Compile Include="async\ReceivePacketProcessor.cs" />
+    <Compile Include="async\retranslator\ReceivePacketProcessor.cs" />
     <Compile Include="async\block\ReceivePrefixHandler.cs" />
     <Compile Include="async\common\SocketGroup.cs" />
     <Compile Include="BasePacket.cs" />

@@ -7,15 +7,17 @@ using System.Threading.Tasks;
 
 namespace TcpServer.Core.async.common
 {
-    class BaseConnector
+    public class BaseConnector
     {
         public delegate void MessageReceived(byte[] message, SocketAsyncEventArgs saea);
         public delegate void MessageSended(SocketAsyncEventArgs saea);
-        public delegate void ConnectionFailed(SocketAsyncEventArgs saea);
+        public delegate void ReceiveFailed(SocketAsyncEventArgs saea);
+        public delegate void SendFailed(SocketAsyncEventArgs saea);
 
         protected MessageReceived messageReceived;
         protected MessageSended messageSended;
-        protected ConnectionFailed connectionFailed;
+        protected ReceiveFailed receiveFailed;
+        protected SendFailed sendFailed;
 
         protected SocketAsyncEventArgs createSaea(EventHandler<SocketAsyncEventArgs> eventHandler, int bufferSize)
         {

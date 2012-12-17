@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ using TcpServer.Core.async.common;
 
 namespace TcpServer.Core.async.block
 {
-    class BlocksAcceptor : BaseConnector
+    public class BlocksAcceptor : BaseConnector
     {
         private const int BACKLOG = 500;
         private const int BUFFER_SIZE = 512;
@@ -31,16 +32,21 @@ namespace TcpServer.Core.async.block
         private ReceivePrefixHandler receivePrefixHandler;
         private ReceiveMessageHandler receiveMessageHandler;
 
+        private ILog log;
+
         public BlocksAcceptor(string listenHost, int listenPort, MessageReceived messageReceived, MessageSended messageSended,
-            ConnectionFailed connectionFailed, ConnectionAccepted connectionAccepted)
+            ConnectionAccepted connectionAccepted, ReceiveFailed receiveFailed, SendFailed sendFailed)
         {
+            log = LogManager.GetLogger(typeof(BlocksAcceptor));
+
             this.listenHost = listenHost;
             this.listenPort = listenPort;
 
             this.messageReceived = messageReceived;
             this.messageSended = messageSended;
-            this.connectionFailed = connectionFailed;
             this.connectionAccepted = connectionAccepted;
+            this.receiveFailed = receiveFailed;
+            this.sendFailed = sendFailed;
 
             receivePrefixHandler = new ReceivePrefixHandler();
             receiveMessageHandler = new ReceiveMessageHandler();
@@ -114,10 +120,9 @@ namespace TcpServer.Core.async.block
 
                 if (saea.SocketError == SocketError.Success)
                 {
-                    SocketAsyncEventArgs receiveSaea = createSaea(receiveEventHandler, BUFFER_SIZE);
-                    receiveSaea.AcceptSocket = saea.AcceptSocket;
-                    connectionAccepted(receiveSaea);
-                    startReceive(receiveSaea);
+                    SocketAsyncEventArgs saeaForReceive = createSaea(receiveEventHandler, BUFFER_SIZE);
+                    saeaForReceive.AcceptSocket = saea.AcceptSocket;
+                    connectionAccepted(saeaForReceive);
 
                     saea.AcceptSocket = null;
                 }
@@ -130,15 +135,33 @@ namespace TcpServer.Core.async.block
 
         public void startReceive(SocketAsyncEventArgs saea)
         {
+            if (!saea.AcceptSocket.Connected)
+            {
+                receiveFailed(saea);
+                closeSocket(saea);
+                return;
+            }
+            
             var userToken = (DataHoldingUserToken)saea.UserToken;
 
             if ((userToken.prefixBytesDoneCountThisOp + userToken.messageBytesDoneCountThisOp) == saea.BytesTransferred)
             {
                 userToken.resetVariableForNewRequest();
-                if (!saea.AcceptSocket.ReceiveAsync(saea))
+
+                try
                 {
-                    processReceive(saea);
+                    if (!saea.AcceptSocket.ReceiveAsync(saea))
+                    {
+                        processReceive(saea);
+                    }
                 }
+                catch (Exception e)
+                {
+                    log.Debug("Start Receive from block failed.", e);
+                    receiveFailed(saea);
+                    closeSocket(saea);
+                }
+                
             }
             else
             {
@@ -152,8 +175,10 @@ namespace TcpServer.Core.async.block
 
             if (saea.SocketError != SocketError.Success || saea.BytesTransferred == 0)
             {
+                log.DebugFormat("Process receive from block failed. SocketError={0}.", saea.SocketError);
                 userToken.resetAll();
-                closeSocketInner(saea);
+                receiveFailed(saea);
+                closeSocket(saea);
                 return;
             }
 
@@ -162,7 +187,8 @@ namespace TcpServer.Core.async.block
             if (bytesToProcess < 0)
             {
                 userToken.resetAll();
-                closeSocketInner(saea);
+                receiveFailed(saea);
+                closeSocket(saea);
                 return;
             }
             else if (bytesToProcess == 0)
@@ -202,6 +228,14 @@ namespace TcpServer.Core.async.block
             Buffer.BlockCopy(userToken.messageBytes, userToken.messageBytesDoneCount, saea.Buffer,
                     saea.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
             saea.SetBuffer(saea.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
+
+            if (!saea.AcceptSocket.Connected)
+            {
+                sendFailed(saea);
+                closeSocket(saea);
+                return;
+            }
+
             try
             {
                 if (!saea.AcceptSocket.SendAsync(saea))
@@ -209,9 +243,11 @@ namespace TcpServer.Core.async.block
                     processSend(saea);
                 }
             }
-            catch
+            catch (Exception e)
             {
-                closeSocketInner(saea);
+                log.Debug("Start send to block failed.", e);
+                sendFailed(saea);
+                closeSocket(saea);
             }
         }
 
@@ -236,19 +272,16 @@ namespace TcpServer.Core.async.block
             }
             else
             {
+                log.DebugFormat("Process send to block failed. SocketError={0}.", saea.SocketError);
                 userToken.resetAll();
-                closeSocketInner(saea);
+                sendFailed(saea);
+                closeSocket(saea);
             }
-        }
-
-        private void closeSocketInner(SocketAsyncEventArgs saea)
-        {
-            closeSocket(saea);
-            connectionFailed(saea);
         }
 
         public void closeSocket(SocketAsyncEventArgs saea)
         {
+            log.Debug("Close socket to block.");
             try
             {
                 if (saea.AcceptSocket.Connected)
