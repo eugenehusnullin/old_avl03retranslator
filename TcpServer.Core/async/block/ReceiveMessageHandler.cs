@@ -10,7 +10,7 @@ namespace TcpServer.Core.async.block
 {
     class ReceiveMessageHandler
     {
-        public byte[] handleMessage(SocketAsyncEventArgs rs, DataHoldingUserToken userToken, int bytesToProcess)
+        public int handleMessage(SocketAsyncEventArgs saea, DataHoldingUserToken userToken, int bytesToProcess, out byte[] readyMessage)
         {
             if (userToken.messageBytesDoneCount == 0)
             {
@@ -19,23 +19,22 @@ namespace TcpServer.Core.async.block
 
             int length = Math.Min(userToken.messageLength - userToken.messageBytesDoneCount, bytesToProcess);
 
-            Buffer.BlockCopy(rs.Buffer, rs.Offset +
-                userToken.prefixBytesDoneCountThisOp + userToken.messageBytesDoneCountThisOp,
+            Buffer.BlockCopy(saea.Buffer, saea.Offset + userToken.bytesDoneCountThisOp,
                 userToken.messageBytes, userToken.messageBytesDoneCount, length);
 
             userToken.messageBytesDoneCount += length;
-            userToken.messageBytesDoneCountThisOp += length;
+            userToken.bytesDoneCountThisOp += length;
 
-            byte[] message = null;
+            readyMessage = null;
             if (userToken.messageBytesDoneCount == userToken.messageLength)
             {
                 //// сообщение готово
-                message = new byte[userToken.prefixBytes.Length + userToken.messageBytes.Length];
-                Buffer.BlockCopy(userToken.prefixBytes, 0, message, 0, userToken.prefixBytes.Length);
-                Buffer.BlockCopy(userToken.messageBytes, 0, message, userToken.prefixBytes.Length, userToken.messageBytes.Length);
+                readyMessage = new byte[userToken.prefixBytes.Length + userToken.messageBytes.Length];
+                Buffer.BlockCopy(userToken.prefixBytes, 0, readyMessage, 0, userToken.prefixBytes.Length);
+                Buffer.BlockCopy(userToken.messageBytes, 0, readyMessage, userToken.prefixBytes.Length, userToken.messageBytes.Length);
             }
             //return bytesToProcess - length;
-            return message;
+            return 0;
         }
     }
 }

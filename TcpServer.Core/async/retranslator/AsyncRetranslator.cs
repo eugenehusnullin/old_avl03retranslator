@@ -120,6 +120,10 @@ namespace TcpServer.Core.async.retranslator
             {
                 decrementCountConnectionsToBlock();
                 blocksAcceptor.closeSocket(socketGroup.blockReceiveSAEA);
+                if (socketGroup.monSendSAEA != null)
+                {
+                    monConnector.closeSocket(socketGroup.monSendSAEA);
+                }
                 return;
             }
 

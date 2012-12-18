@@ -24,13 +24,21 @@ namespace TcpServer.Core.async.retranslator
         {
             try
             {
-                var receivedPacket = Encoding.ASCII.GetString(message);
-                var basePacket = BasePacket.GetFromGlonass(receivedPacket);
-                var gpsData = basePacket.ToPacketGps();
+                var receivedData = Encoding.ASCII.GetString(message);
+                if (receivedData.StartsWith("$$"))
+                {
 
-                packetLog.DebugFormat("src: {0}{1}dst: {2}", receivedPacket, Environment.NewLine, gpsData);
+                    var basePacket = BasePacket.GetFromGlonass(receivedData);
+                    var gpsData = basePacket.ToPacketGps();
 
-                return Encoding.ASCII.GetBytes(gpsData);
+                    packetLog.DebugFormat("src: {0}{1}dst: {2}", receivedData, Environment.NewLine, gpsData);
+
+                    return Encoding.ASCII.GetBytes(gpsData);
+                }
+                else
+                {
+                    return message;
+                }
             }
             catch(Exception e)
             {

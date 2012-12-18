@@ -6,7 +6,7 @@ using System.Text;
 
 namespace TcpServer.Core.async.common
 {
-    class DataHoldingUserToken
+    public class DataHoldingUserToken
     {
         public SocketGroup socketGroup;
         
@@ -17,8 +17,9 @@ namespace TcpServer.Core.async.common
         public int messageBytesDoneCount = 0;
         public int messageLength = 0;
 
-        public int prefixBytesDoneCountThisOp = 0;
-        public int messageBytesDoneCountThisOp = 0;
+        public int bytesDoneCountThisOp = 0;
+
+        public int dataTypeId = 0;
 
         public DataHoldingUserToken()
         {
@@ -31,13 +32,14 @@ namespace TcpServer.Core.async.common
 
             prefixBytesDoneCount = 0;
             messageBytesDoneCount = 0;
-            messageLength = 0;            
+            messageLength = 0;
+
+            dataTypeId = 0;
         }
 
         public void resetVariableForNewRequest()
         {
-            prefixBytesDoneCountThisOp = 0;
-            messageBytesDoneCountThisOp = 0;
+            bytesDoneCountThisOp = 0;
         }
 
         public void resetAll()

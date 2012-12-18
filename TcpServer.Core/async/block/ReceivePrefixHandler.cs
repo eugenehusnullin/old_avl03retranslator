@@ -23,7 +23,7 @@ namespace TcpServer.Core.async.block
 
         public int handlePrefix(SocketAsyncEventArgs rs, DataHoldingUserToken userToken, int bytesToProcess)
         {
-            if (userToken.prefixBytesDoneCount >= RECEIVE_PREFIX_LENGTH)
+            if (bytesToProcess == 0 || userToken.prefixBytesDoneCount >= RECEIVE_PREFIX_LENGTH)
             {
                 return bytesToProcess;
             }
@@ -35,55 +35,12 @@ namespace TcpServer.Core.async.block
 
             int length = Math.Min(RECEIVE_PREFIX_LENGTH - userToken.prefixBytesDoneCount, bytesToProcess);
 
-            Buffer.BlockCopy(rs.Buffer, rs.Offset
-                + userToken.prefixBytesDoneCountThisOp + userToken.messageBytesDoneCountThisOp,
+            Buffer.BlockCopy(rs.Buffer, rs.Offset + userToken.bytesDoneCountThisOp,
                 userToken.prefixBytes, userToken.prefixBytesDoneCount, length);
 
             userToken.prefixBytesDoneCount += length;
-            userToken.prefixBytesDoneCountThisOp += length;
+            userToken.bytesDoneCountThisOp += length;
 
-            if (userToken.prefixBytesDoneCount == RECEIVE_PREFIX_LENGTH)
-            {
-                // заголовок готов, проверяем его, если он нормальный устанавливаем длину ожидаемого сообщения
-
-                if (userToken.prefixBytes[0] == 0x0D && userToken.prefixBytes[1] == 0x0A
-                    && userToken.prefixBytes[2] == 0x24 && userToken.prefixBytes[3] == 0x24)
-                {
-                    userToken.prefixBytesDoneCount -= 2;
-                    Buffer.BlockCopy(userToken.prefixBytes, 2, userToken.prefixBytes, 0, 2);
-
-                    return handlePrefix(rs, userToken, bytesToProcess - length);
-                }
-                else if (userToken.prefixBytes[0] == 0x0A && userToken.prefixBytes[1] == 0x24 && userToken.prefixBytes[2] == 0x24)
-                {
-                    userToken.prefixBytesDoneCount -= 1;
-                    Buffer.BlockCopy(userToken.prefixBytes, 1, userToken.prefixBytes, 0, 3);
-
-                    return handlePrefix(rs, userToken, bytesToProcess - length);
-                }
-                else
-                {
-                    var prefix = Encoding.ASCII.GetString(userToken.prefixBytes);
-                    if (!prefix.StartsWith("$$"))
-                    {
-                        log.WarnFormat("Someone sended us a bad packet with prefix={0} his IP={1}", prefix, ((IPEndPoint)rs.AcceptSocket.RemoteEndPoint).Address);
-                        return -1;
-                    }
-
-                    try
-                    {
-                        userToken.messageLength = Convert.ToInt32(prefix.Substring(2), 16) - 4;
-                        if (userToken.messageLength <= 0)
-                        {
-                            return -2;
-                        }
-                    }
-                    catch
-                    {
-                        log.WarnFormat("Someone sended us a bad packet size prefix={0} his IP={1}", prefix, ((IPEndPoint)rs.AcceptSocket.RemoteEndPoint).Address);
-                    }
-                }
-            }
 
             return bytesToProcess - length;
         }

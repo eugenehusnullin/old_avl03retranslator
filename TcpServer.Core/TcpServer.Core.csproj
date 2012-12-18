@@ -54,6 +54,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="async\block\ReceiveResponseHandler.cs" />
+    <Compile Include="async\block\ReceiveTypeSelector.cs" />
     <Compile Include="async\retranslator\AsyncRetranslator.cs" />
     <Compile Include="async\common\BaseConnector.cs" />
     <Compile Include="async\block\BlocksAcceptor.cs" />

@@ -31,6 +31,8 @@ namespace TcpServer.Core.async.block
 
         private ReceivePrefixHandler receivePrefixHandler;
         private ReceiveMessageHandler receiveMessageHandler;
+        private ReceiveTypeSelector receiveTypeSelector;
+        private ReceiveResponseHandler receiveResponseHandler;
 
         private ILog log;
 
@@ -50,6 +52,8 @@ namespace TcpServer.Core.async.block
 
             receivePrefixHandler = new ReceivePrefixHandler();
             receiveMessageHandler = new ReceiveMessageHandler();
+            receiveTypeSelector = new ReceiveTypeSelector();
+            receiveResponseHandler = new ReceiveResponseHandler();
 
             blockAcceptEventHandler = new EventHandler<SocketAsyncEventArgs>(acceptEvent);
             receiveEventHandler = new EventHandler<SocketAsyncEventArgs>(receiveEvent);
@@ -144,10 +148,9 @@ namespace TcpServer.Core.async.block
             
             var userToken = (DataHoldingUserToken)saea.UserToken;
 
-            if ((userToken.prefixBytesDoneCountThisOp + userToken.messageBytesDoneCountThisOp) == saea.BytesTransferred)
+            if (userToken.bytesDoneCountThisOp == saea.BytesTransferred)
             {
                 userToken.resetVariableForNewRequest();
-
                 try
                 {
                     if (!saea.AcceptSocket.ReceiveAsync(saea))
@@ -161,7 +164,6 @@ namespace TcpServer.Core.async.block
                     receiveFailed(saea);
                     closeSocket(saea);
                 }
-                
             }
             else
             {
@@ -182,33 +184,60 @@ namespace TcpServer.Core.async.block
                 return;
             }
 
-            int bytesToProcess = saea.BytesTransferred - (userToken.prefixBytesDoneCountThisOp + userToken.messageBytesDoneCountThisOp);
+            receiveTypeSelector.clearFromCRLF(saea, userToken);
+
+            int bytesToProcess = saea.BytesTransferred - userToken.bytesDoneCountThisOp;
             bytesToProcess = receivePrefixHandler.handlePrefix(saea, userToken, bytesToProcess);
-            if (bytesToProcess < 0)
-            {
-                userToken.resetAll();
-                receiveFailed(saea);
-                closeSocket(saea);
-                return;
-            }
-            else if (bytesToProcess == 0)
+            if (bytesToProcess == 0)
             {
                 startReceive(saea);
                 return;
             }
             else
             {
-                byte[] message = receiveMessageHandler.handleMessage(saea, userToken, bytesToProcess);
-                if (message != null)
+                if (userToken.dataTypeId == 0)
                 {
-                    userToken.resetReadyMessage();
-                    messageReceived(message, saea);
+                    receiveTypeSelector.defineTypeData(saea, userToken);
+                    if (userToken.dataTypeId == 0)
+                    {
+                        userToken.resetAll();
+                        receiveFailed(saea);
+                        closeSocket(saea);
+                        return;
+                    }
+                }
+
+                byte[] message = null;
+                int code = 0;
+                if (userToken.dataTypeId == 1)
+                {
+                    code = receiveMessageHandler.handleMessage(saea, userToken, bytesToProcess, out message);
+                }
+                else if (userToken.dataTypeId == 2)
+                {
+                    code = receiveResponseHandler.handleResponse(saea, userToken, out message);
+                }
+
+                if (code < 0)
+                {
+                    userToken.resetAll();
+                    receiveFailed(saea);
+                    closeSocket(saea);
                     return;
                 }
                 else
                 {
-                    startReceive(saea);
-                    return;
+                    if (message != null)
+                    {
+                        userToken.resetReadyMessage();
+                        messageReceived(message, saea);
+                        return;
+                    }
+                    else
+                    {
+                        startReceive(saea);
+                        return;
+                    }
                 }
             }
         }
