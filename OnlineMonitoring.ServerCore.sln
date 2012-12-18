@@ -1,15 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2012 for Windows Desktop
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineMonitoring.ServerCore", "OnlineMonitoring.ServerCore\OnlineMonitoring.ServerCore.csproj", "{F700D023-A243-49C8-BB15-6514657D5AAB}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineMonitoring.Listner.Wialon", "OnlineMonitoring.Listner.Wialon\OnlineMonitoring.Listner.Wialon.csproj", "{F1F194AF-AE69-417C-8F00-F235B5CCB021}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpServer.Core", "TcpServer.Core\TcpServer.Core.csproj", "{33B629CC-3417-4228-B608-4EF22CA0571D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpServer.Retranslator.Service", "TcpServer.Retranslator.Service\TcpServer.Retranslator.Service.csproj", "{17C9B66C-8E5E-40A9-B713-AA43D840F73A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpServer.TestRetranslator.Glonass", "TcpServer.TestRetranslator.Glonass\TcpServer.TestRetranslator.Glonass.csproj", "{60CDB986-43F3-441E-8093-B31ACDE2988A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpServer.TestRetranslatorGlonass", "TcpServer.RetranslatorTest\TcpServer.TestRetranslatorGlonass.csproj", "{306E8732-F9EC-4038-96C3-934B3B0118B2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,26 +17,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F700D023-A243-49C8-BB15-6514657D5AAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F700D023-A243-49C8-BB15-6514657D5AAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F700D023-A243-49C8-BB15-6514657D5AAB}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{F700D023-A243-49C8-BB15-6514657D5AAB}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{F700D023-A243-49C8-BB15-6514657D5AAB}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{F700D023-A243-49C8-BB15-6514657D5AAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F700D023-A243-49C8-BB15-6514657D5AAB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F700D023-A243-49C8-BB15-6514657D5AAB}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{F700D023-A243-49C8-BB15-6514657D5AAB}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{F700D023-A243-49C8-BB15-6514657D5AAB}.Release|x86.ActiveCfg = Release|Any CPU
-		{F1F194AF-AE69-417C-8F00-F235B5CCB021}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{F1F194AF-AE69-417C-8F00-F235B5CCB021}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{F1F194AF-AE69-417C-8F00-F235B5CCB021}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{F1F194AF-AE69-417C-8F00-F235B5CCB021}.Debug|x86.ActiveCfg = Debug|x86
-		{F1F194AF-AE69-417C-8F00-F235B5CCB021}.Debug|x86.Build.0 = Debug|x86
-		{F1F194AF-AE69-417C-8F00-F235B5CCB021}.Release|Any CPU.ActiveCfg = Release|x86
-		{F1F194AF-AE69-417C-8F00-F235B5CCB021}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{F1F194AF-AE69-417C-8F00-F235B5CCB021}.Release|Mixed Platforms.Build.0 = Release|x86
-		{F1F194AF-AE69-417C-8F00-F235B5CCB021}.Release|x86.ActiveCfg = Release|x86
-		{F1F194AF-AE69-417C-8F00-F235B5CCB021}.Release|x86.Build.0 = Release|x86
 		{33B629CC-3417-4228-B608-4EF22CA0571D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{33B629CC-3417-4228-B608-4EF22CA0571D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33B629CC-3417-4228-B608-4EF22CA0571D}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -71,6 +47,16 @@ Global
 		{60CDB986-43F3-441E-8093-B31ACDE2988A}.Release|Mixed Platforms.Build.0 = Release|x86
 		{60CDB986-43F3-441E-8093-B31ACDE2988A}.Release|x86.ActiveCfg = Release|x86
 		{60CDB986-43F3-441E-8093-B31ACDE2988A}.Release|x86.Build.0 = Release|x86
+		{306E8732-F9EC-4038-96C3-934B3B0118B2}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{306E8732-F9EC-4038-96C3-934B3B0118B2}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{306E8732-F9EC-4038-96C3-934B3B0118B2}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{306E8732-F9EC-4038-96C3-934B3B0118B2}.Debug|x86.ActiveCfg = Debug|x86
+		{306E8732-F9EC-4038-96C3-934B3B0118B2}.Debug|x86.Build.0 = Debug|x86
+		{306E8732-F9EC-4038-96C3-934B3B0118B2}.Release|Any CPU.ActiveCfg = Release|x86
+		{306E8732-F9EC-4038-96C3-934B3B0118B2}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{306E8732-F9EC-4038-96C3-934B3B0118B2}.Release|Mixed Platforms.Build.0 = Release|x86
+		{306E8732-F9EC-4038-96C3-934B3B0118B2}.Release|x86.ActiveCfg = Release|x86
+		{306E8732-F9EC-4038-96C3-934B3B0118B2}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

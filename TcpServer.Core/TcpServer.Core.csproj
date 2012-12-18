@@ -10,9 +10,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TcpServer.Core</RootNamespace>
     <AssemblyName>TcpServer.Core</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,8 +32,13 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup />
   <ItemGroup>
+    <Reference Include="log4net">
+      <HintPath>..\..\..\Libs\log4net-1.2.11\bin\net\4.0\release\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="MySql.Data, Version=6.3.4.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Debug\MySql.Data.dll</HintPath>
@@ -47,6 +54,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="async\block\ReceiveResponseHandler.cs" />
+    <Compile Include="async\block\ReceiveTypeSelector.cs" />
+    <Compile Include="async\retranslator\AsyncRetranslator.cs" />
+    <Compile Include="async\common\BaseConnector.cs" />
+    <Compile Include="async\block\BlocksAcceptor.cs" />
+    <Compile Include="async\common\DataHoldingUserToken.cs" />
+    <Compile Include="async\mon\MonConnector.cs" />
+    <Compile Include="async\block\ReceiveMessageHandler.cs" />
+    <Compile Include="async\retranslator\ReceivePacketProcessor.cs" />
+    <Compile Include="async\block\ReceivePrefixHandler.cs" />
+    <Compile Include="async\common\SocketGroup.cs" />
     <Compile Include="BasePacket.cs" />
     <Compile Include="ByteHelper.cs" />
     <Compile Include="Crc16.cs" />
@@ -98,7 +116,13 @@
     </WebReferenceUrl>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="log4net.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -109,6 +133,7 @@
     </None>
     <None Include="Web References\TelemetryService\TelemetryService.wsdl" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
