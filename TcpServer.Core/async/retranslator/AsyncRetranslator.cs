@@ -71,6 +71,7 @@ namespace TcpServer.Core.async.retranslator
         public void start()
         {
             log.Info("Starting retranslator...");
+            receivePacketProcessor.start();
             blocksAcceptor.start();
             log.Info("Retranslator started.");
         }
@@ -79,6 +80,7 @@ namespace TcpServer.Core.async.retranslator
         {
             log.Info("Stoping retranslator...");
             blocksAcceptor.stop();
+            receivePacketProcessor.stop();
             log.Info("Retranslator stoped.");
         }
 

@@ -14,10 +14,24 @@ namespace TcpServer.Core.async.retranslator
         private static ILog packetLog;
         private static ILog log;
 
+        private RetranslatorTelemaxima retranslatorTelemaxima;
+
         public ReceivePacketProcessor()
         {
             packetLog = LogManager.GetLogger("packet");
             log = LogManager.GetLogger(typeof(ReceivePacketProcessor));
+
+            retranslatorTelemaxima = new RetranslatorTelemaxima();
+        }
+
+        public void start()
+        {
+            retranslatorTelemaxima.start();
+        }
+
+        public void stop()
+        {
+            retranslatorTelemaxima.stop();
         }
 
         public byte[] processMessage(byte[] message)
@@ -29,6 +43,9 @@ namespace TcpServer.Core.async.retranslator
                 {
 
                     var basePacket = BasePacket.GetFromGlonass(receivedData);
+
+                    retranslatorTelemaxima.checkAndRetranslate(basePacket);
+
                     var gpsData = basePacket.ToPacketGps();
 
                     packetLog.DebugFormat("src: {0}{1}dst: {2}", receivedData, Environment.NewLine, gpsData);

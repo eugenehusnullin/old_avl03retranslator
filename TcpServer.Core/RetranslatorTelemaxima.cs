@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -9,156 +10,160 @@ using System.Xml;
 using System.Data;
 using System.Data.OleDb;
 using System.Threading;
+using log4net;
 
 namespace TcpServer.Core
 {
-
     public class RetranslatorTelemaxima
     {
-        private static Dictionary<String, Int32> carsIDs = new Dictionary<String, Int32>();
-        private static Logger logger;
-        private static Logger mainLogger;
+        private Dictionary<String, Int32> carsIDs;
+        private ConcurrentQueue<BasePacket> packets;
+        private ILog log;
+        private int workersCount = 5;
+        private List<Thread> workersList;
+        private int attemptsRetranslate = 3;
+        private int sleepTimeout = 4000;
+        private volatile bool stoped = false;
+        private int webRequestTimeout = 10000;
 
-        public static void Init(Logger mainLogger)
+        public RetranslatorTelemaxima()
         {
-            RetranslatorTelemaxima.mainLogger = mainLogger;
+            log = LogManager.GetLogger(typeof(RetranslatorTelemaxima));
+            carsIDs = new Dictionary<String, Int32>();
+            packets = new ConcurrentQueue<BasePacket>();
+            workersList = new List<Thread>();
+        }
 
+        public void start()
+        {
             try
             {
                 string servicePath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
-                RetranslatorTelemaxima.logger = new Logger(null, servicePath, "telemaxima");
-
                 string mdbPath = Path.Combine(servicePath, "maxima_taxi.mdb");
                 OleDbConnection con = new OleDbConnection("Provider=Microsoft.Jet.OLEDB.4.0; Data Source=" + mdbPath + ";");
                 con.Open();
                 OleDbCommand select = new OleDbCommand("select imei,id from main", con);
                 OleDbDataReader reader = select.ExecuteReader();
-                int i = 0;
+                int carsCount = 0;
                 while (reader.Read())
                 {
-                    i++;
+                    carsCount++;
                     carsIDs.Add(reader[0].ToString(), int.Parse(reader[1].ToString()));
                 }
                 con.Close();
 
-                logger.MessageWriteLine(String.Format("Init complete. Loaded {0} carIDs.", i));
+                log.InfoFormat("RetranslatorTelemaxima starting. Loaded {0} carIDs.", carsCount);
+
+                for (int i = 0; i < workersCount; i++)
+                {
+                    Thread worker = new Thread(() => process());
+                    worker.Start();
+                    workersList.Add(worker);
+                }
+
+                log.Info("RetranslatorTelemaxima started.");
             }
             catch (Exception e)
             {
-                mainLogger.ErrorWriteLine(e);
+                log.Error("Error in constructor RetranslatorTelemaxima", e);
+                throw e;
             }
         }
 
-        public static bool needRetranslate(string IMEI)
+        public void stop()
         {
-            return carsIDs.ContainsKey(IMEI);
+            stoped = true;
+
+            foreach (Thread worker in workersList)
+            {
+                worker.Interrupt();
+            }
+
+            foreach (Thread worker in workersList)
+            {
+                worker.Join();
+            }
+
+            log.Info("RetranslatorTelemaxima stoped.");
         }
 
-        private static bool Retranslate_To_Maxima(string ip, int port, int car_id, double lat, double lon)
+        public void checkAndRetranslate(BasePacket packet)
         {
-            try
+            if (carsIDs.ContainsKey(packet.IMEI))
             {
-                //1 на линии 2 на заказе 3 перерыв 4 не работает
-                var real_lat = lat.ToString().Replace(".", ",");
-                var real_lon = lon.ToString().Replace(".", ",");
-                HttpWebRequest Send_Query = (HttpWebRequest)WebRequest.Create("http://" + ip + ":" + port + "//??type=set_car_gps&id_car=" + car_id.ToString() + "&lat=" + real_lat + "&lon=" + real_lon);
-                Send_Query.Timeout = 10000;
-                Send_Query.Method = "GET";
-                try
-                {
-                    var Data = (HttpWebResponse)Send_Query.GetResponse();
-                    string HTML = new StreamReader(Data.GetResponseStream(), Encoding.Default).ReadToEnd();
-                    logger.MessageWriteLine(String.Format("MAXIMA: {0}", "Answer on Maxima's retranslation try is: " + HTML));
-                    return HTML == "OK";
-                }
-                finally
-                {
-                    Send_Query.GetResponse().Close();
-                }
-            }
-            catch (Exception ex)
-            {
-                mainLogger.ErrorWriteLine(ex);
-                return false;
+                packets.Enqueue(packet);
             }
         }
-        
-        private static int Get_Crew_State(string ip, int port, int car_id, string good_states)
+
+        private bool retranslate(int carID, double lat, double lon)
         {
             try
             {
-                var Send_Query = (HttpWebRequest)WebRequest.Create("http://" + ip + ":" + port + "//??type=get_car_info&id_car=" + car_id);
-                Send_Query.Timeout = 10000;
-                Send_Query.Method = "GET";
+                var normLat = lat.ToString().Replace(".", ",");
+                var normLon = lon.ToString().Replace(".", ",");
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(
+                    String.Format("http://93.191.61.125:27000//??type=set_car_gps&id_car={0}&lat={1}&lon={2}", carID, normLat, normLon));
+                webRequest.Timeout = webRequestTimeout;
+                webRequest.Method = "GET";
                 try
                 {
-                    var Data = (HttpWebResponse)Send_Query.GetResponse();
-                    var html = new StreamReader(Data.GetResponseStream(), Encoding.Default).ReadToEnd();
-                    var Doc = new XmlDocument();
-                    Doc.LoadXml(html);
-                    var state = Doc.GetElementsByTagName("id_crew_state")[0].InnerText;
-                    //1 на линии 2 на заказе 3 перерыв 4 не работает
-                    //Если строка good_states содержит подстроку state
-                    //То запрос считается удовлетворительным.
-                    //Строка good_states имеет вид X,X,X,X где Х - одно из состояний от 1 до 4                
-                    // Состояние 0 - запрос прошел успешно, но машина не свободна
-                    logger.MessageWriteLine(String.Format("MAXIMA: {0}", "Got crew info successfully. Crew state is: " + state));
+                    var webResponse = (HttpWebResponse)webRequest.GetResponse();
+                    string stringResponse = new StreamReader(webResponse.GetResponseStream(), Encoding.Default).ReadToEnd();
+                    bool retranslated = stringResponse.Equals("OK");
 
-                    return good_states.Contains(state) ? 1 : 0;
-                }
-                finally
-                {
-                    Send_Query.GetResponse().Close();
-                }
-            }
-            catch (Exception ex)
-            {
-                mainLogger.ErrorWriteLine(ex);
-                return -1;
-            }
-        }
-
-        public static void DoMaxima(object stateInfo)
-        {
-            var Packet = (BasePacket)stateInfo;
-
-            int max_try = 3;
-            int crew_state = -1;
-            bool retranslated = false;
-            int car_id = -1;
-
-            if (carsIDs.TryGetValue(Packet.IMEI, out car_id))
-            {
-                //1 на линии 2 на заказе 3 перерыв 4 не работает
-                do
-                {
-                    logger.MessageWriteLine(String.Format("MAXIMA: {0}", "Try to get crew state in Maxima API. Crew ID: " + car_id));
-                    crew_state = Get_Crew_State("93.191.61.125", 27000, car_id, "1,2,3");
-                    if (crew_state > -1)
+                    if (retranslated)
                     {
-                        break;
+                        log.InfoFormat("Retranlated carID = {0}, geo = {1}, {2}", carID, normLat, normLon);
                     }
-                    max_try--;
-                }
-                while (max_try > 0);
-                max_try = 3;
-                if (crew_state == 1)
-                {
-                    do
+                    else
                     {
-                        logger.MessageWriteLine(String.Format("MAXIMA: {0}", "Try to set coordinates in Maxima API. Lon: " + Packet.Longitude / 100 + " Lat: " + Packet.Latitude / 100));
-                        retranslated = Retranslate_To_Maxima("93.191.61.125", 27000, car_id, Packet.Latitude / 100, Packet.Longitude / 100);
-                        if (retranslated)
+                        log.ErrorFormat("Not retranslated carID = {0}, geo = {1}, {2} - error is: {3}", carID, normLat, normLon, stringResponse);
+                    }
+                    return retranslated;
+                }
+                finally
+                {
+                    webRequest.GetResponse().Close();
+                }
+            }
+            catch (Exception e)
+            {
+                log.Error(String.Format("Error retranslate telemaxima carID = {0}, geo = {1}, {2}", carID, lat, lon), e);
+            }
+            return false;
+        }
+
+        private void process()
+        {
+            while (!stoped)
+            {
+                BasePacket packet;
+                if (packets.TryDequeue(out packet))
+                {
+                    int carID;
+                    if (carsIDs.TryGetValue(packet.IMEI, out carID))
+                    {
+                        int attempt = 0;
+                        while (attempt < attemptsRetranslate)
                         {
-                            logger.MessageWriteLine(String.Format("MAXIMA: {0}", "Packet successfully RETRANSLATED. IMEI: " + Packet.IMEI));
-                            break;
+                            if (retranslate(carID, packet.Latitude / 100, packet.Longitude / 100))
+                            {
+                                break;
+                            }
+                            attempt++;
                         }
                     }
-                    while (max_try > 0);
                 }
-
-                if (car_id != -1 && !retranslated && crew_state == 1)
-                    logger.MessageWriteLine(String.Format("MAXIMA: {0}", Environment.NewLine, "Packet IS NOT RETRANSLATED, BUT SHOULD BE."));
+                else
+                {
+                    try
+                    {
+                        Thread.Sleep(sleepTimeout);
+                    }
+                    catch
+                    {
+                    }
+                }
             }
         }
     }

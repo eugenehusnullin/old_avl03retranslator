@@ -64,9 +64,6 @@ namespace TcpServer.Core
 
         private void DoWork()
         {
-            // TeleMaxima
-            RetranslatorTelemaxima.Init(Logger);
-
             var localAddr = IPAddress.Parse(SrcHost);
 
             tcpListener = new TcpListener(localAddr, SrcPort);
@@ -131,10 +128,6 @@ namespace TcpServer.Core
                     if (isPacket)
                     {
                         var basePacket = BasePacket.GetFromGlonass(srcData);
-                        if (RetranslatorTelemaxima.needRetranslate(basePacket.IMEI))
-                        {
-                            ThreadPool.QueueUserWorkItem(new WaitCallback(RetranslatorTelemaxima.DoMaxima), basePacket);
-                        }
                         packetString = basePacket.ToPacketGps();
                     }
 
