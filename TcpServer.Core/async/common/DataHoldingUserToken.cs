@@ -17,7 +17,7 @@ namespace TcpServer.Core.async.common
         public int messageBytesDoneCount = 0;
         public int messageLength = 0;
 
-        public int bytesDoneCountThisOp = 0;
+        public int bytesDoneThisOp = 0;
 
         public int dataTypeId = 0;
 
@@ -39,7 +39,7 @@ namespace TcpServer.Core.async.common
 
         public void resetVariableForNewRequest()
         {
-            bytesDoneCountThisOp = 0;
+            bytesDoneThisOp = 0;
         }
 
         public void resetAll()

@@ -23,12 +23,12 @@ namespace TcpServer.Core.async.block
         {
             // допустим что это старт, начало новой команды или новой посылки от блока
 
-            while (saea.BytesTransferred > userToken.bytesDoneCountThisOp)
+            while (saea.BytesTransferred > userToken.bytesDoneThisOp)
             {
-                if (saea.Buffer[userToken.bytesDoneCountThisOp] == 0x0D
-                    || saea.Buffer[userToken.bytesDoneCountThisOp] == 0x0A)
+                if (saea.Buffer[userToken.bytesDoneThisOp] == 0x0D
+                    || saea.Buffer[userToken.bytesDoneThisOp] == 0x0A)
                 {
-                    userToken.bytesDoneCountThisOp++;
+                    userToken.bytesDoneThisOp++;
                 }
                 else
                 {
@@ -63,6 +63,10 @@ namespace TcpServer.Core.async.block
                 // это ответ на команду
                 // например Receive:'015'ok*000000,015,0,195.206.252.247,40181#
                 userToken.dataTypeId = 2;
+            }
+            else if (prefix.StartsWith("AT+C"))
+            {
+                userToken.dataTypeId = 3;
             }
             else
             {

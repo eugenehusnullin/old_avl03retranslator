@@ -33,6 +33,7 @@ namespace TcpServer.Core.async.block
         private ReceiveMessageHandler receiveMessageHandler;
         private ReceiveTypeSelector receiveTypeSelector;
         private ReceiveResponseHandler receiveResponseHandler;
+        private ReceiveAllReadedHandler receiveAllReadedHandler;
 
         private ILog log;
 
@@ -54,6 +55,7 @@ namespace TcpServer.Core.async.block
             receiveMessageHandler = new ReceiveMessageHandler();
             receiveTypeSelector = new ReceiveTypeSelector();
             receiveResponseHandler = new ReceiveResponseHandler();
+            receiveAllReadedHandler = new ReceiveAllReadedHandler();
 
             blockAcceptEventHandler = new EventHandler<SocketAsyncEventArgs>(acceptEvent);
             receiveEventHandler = new EventHandler<SocketAsyncEventArgs>(receiveEvent);
@@ -148,7 +150,7 @@ namespace TcpServer.Core.async.block
             
             var userToken = (DataHoldingUserToken)saea.UserToken;
 
-            if (userToken.bytesDoneCountThisOp == saea.BytesTransferred)
+            if (userToken.bytesDoneThisOp == saea.BytesTransferred)
             {
                 userToken.resetVariableForNewRequest();
                 try
@@ -186,7 +188,7 @@ namespace TcpServer.Core.async.block
 
             receiveTypeSelector.clearFromCRLF(saea, userToken);
 
-            int bytesToProcess = saea.BytesTransferred - userToken.bytesDoneCountThisOp;
+            int bytesToProcess = saea.BytesTransferred - userToken.bytesDoneThisOp;
             bytesToProcess = receivePrefixHandler.handlePrefix(saea, userToken, bytesToProcess);
             if (bytesToProcess == 0)
             {
@@ -216,6 +218,10 @@ namespace TcpServer.Core.async.block
                 else if (userToken.dataTypeId == 2)
                 {
                     code = receiveResponseHandler.handleResponse(saea, userToken, out message);
+                }
+                else if (userToken.dataTypeId == 3)
+                {
+                    code = receiveAllReadedHandler.handle(saea, userToken, out message);
                 }
 
                 if (code < 0)

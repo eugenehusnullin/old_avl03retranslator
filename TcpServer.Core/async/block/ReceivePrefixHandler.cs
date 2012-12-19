@@ -35,11 +35,11 @@ namespace TcpServer.Core.async.block
 
             int length = Math.Min(RECEIVE_PREFIX_LENGTH - userToken.prefixBytesDoneCount, bytesToProcess);
 
-            Buffer.BlockCopy(rs.Buffer, rs.Offset + userToken.bytesDoneCountThisOp,
+            Buffer.BlockCopy(rs.Buffer, rs.Offset + userToken.bytesDoneThisOp,
                 userToken.prefixBytes, userToken.prefixBytesDoneCount, length);
 
             userToken.prefixBytesDoneCount += length;
-            userToken.bytesDoneCountThisOp += length;
+            userToken.bytesDoneThisOp += length;
 
 
             return bytesToProcess - length;
