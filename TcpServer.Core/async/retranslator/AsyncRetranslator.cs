@@ -82,16 +82,6 @@ namespace TcpServer.Core.async.retranslator
             log.Info("Retranslator stoped.");
         }
 
-        private void blockConnectionAccepted(SocketAsyncEventArgs saea)
-        {
-            incrementCountConnectionsToBlock();
-            var userToken = (DataHoldingUserToken)saea.UserToken;
-            userToken.socketGroup = new SocketGroup();
-            userToken.socketGroup.blockReceiveSAEA = saea;
-
-            blocksAcceptor.startReceive(saea);
-        }
-
         private void incrementCountConnectionsToBlock()
         {
             lock (syncCntToBlock)
@@ -107,6 +97,32 @@ namespace TcpServer.Core.async.retranslator
             {
                 connectionsToBlock--;
                 log.DebugFormat("Block connections: {0}", connectionsToBlock);
+            }
+        }
+
+        private void blockConnectionAccepted(SocketAsyncEventArgs saea)
+        {
+            var userToken = (DataHoldingUserToken)saea.UserToken;
+            userToken.socketGroup = new SocketGroup();
+            userToken.socketGroup.blockReceiveSAEA = saea;
+
+            // создаем соединение в мониторинг за ранее, т.к. может быть мониторинг в ауте, а блок отправит нам пакет который будет потерян
+            SocketAsyncEventArgs monReceive, monSend;
+            if (monConnector.createConnection(out monReceive, out monSend))
+            {
+                userToken.socketGroup.monSendSAEA = monSend;
+                ((DataHoldingUserToken)userToken.socketGroup.monSendSAEA.UserToken).socketGroup = userToken.socketGroup;
+                userToken.socketGroup.monReceiveSAEA = monReceive;
+                ((DataHoldingUserToken)userToken.socketGroup.monReceiveSAEA.UserToken).socketGroup = userToken.socketGroup;
+                monConnector.startReceive(monReceive);
+
+                blocksAcceptor.startReceive(saea);
+                incrementCountConnectionsToBlock();
+            }
+            else
+            {
+                blocksAcceptor.closeSocket(saea);
+                return;
             }
         }
 
@@ -127,26 +143,6 @@ namespace TcpServer.Core.async.retranslator
                 return;
             }
 
-            if (socketGroup.monSendSAEA == null)
-            {
-                SocketAsyncEventArgs monReceive, monSend;
-                if (monConnector.createConnection(out monReceive, out monSend))
-                {
-                    socketGroup.monSendSAEA = monSend;
-                    ((DataHoldingUserToken)socketGroup.monSendSAEA.UserToken).socketGroup = socketGroup;
-
-                    socketGroup.monReceiveSAEA = monReceive;
-                    ((DataHoldingUserToken)socketGroup.monReceiveSAEA.UserToken).socketGroup = socketGroup;
-
-                    monConnector.startReceive(monReceive);
-                }
-                else
-                {
-                    decrementCountConnectionsToBlock();
-                    blocksAcceptor.closeSocket(socketGroup.blockReceiveSAEA);
-                    return;
-                }
-            }
             monConnector.startSend(socketGroup.monSendSAEA, processedBytes);
         }
 
