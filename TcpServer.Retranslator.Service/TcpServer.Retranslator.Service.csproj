@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{17C9B66C-8E5E-40A9-B713-AA43D840F73A}</ProjectGuid>
+    <ProjectGuid>{B746F621-4753-45DB-8554-406F0C17FC66}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TcpServer.Retranslator.Service</RootNamespace>

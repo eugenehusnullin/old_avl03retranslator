@@ -14,9 +14,9 @@ namespace TcpServer.Core.async.block
         {
             int cnt = 0;
 
-            while (saea.BytesTransferred > (userToken.bytesDoneCountThisOp + cnt))
+            while (saea.BytesTransferred > (userToken.bytesDoneThisOp + cnt))
             {
-                if (saea.Buffer[userToken.bytesDoneCountThisOp + cnt] == 0x23)
+                if (saea.Buffer[userToken.bytesDoneThisOp + cnt] == 0x23)
                 {
                     cnt++;
                     break;
@@ -30,11 +30,11 @@ namespace TcpServer.Core.async.block
             {
                 Buffer.BlockCopy(userToken.messageBytes, 0, message, 0, userToken.messageBytesDoneCount);
             }
-            Buffer.BlockCopy(saea.Buffer, userToken.bytesDoneCountThisOp, message, userToken.messageBytesDoneCount, cnt);
+            Buffer.BlockCopy(saea.Buffer, userToken.bytesDoneThisOp, message, userToken.messageBytesDoneCount, cnt);
             userToken.messageBytes = message;
 
             userToken.messageBytesDoneCount += cnt;
-            userToken.bytesDoneCountThisOp += cnt;
+            userToken.bytesDoneThisOp += cnt;
 
             readyMessage = null;
             if (userToken.messageBytes[userToken.messageBytes.Length - 1] == 0x23)

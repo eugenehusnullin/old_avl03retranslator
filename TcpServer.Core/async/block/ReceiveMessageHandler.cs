@@ -19,11 +19,11 @@ namespace TcpServer.Core.async.block
 
             int length = Math.Min(userToken.messageLength - userToken.messageBytesDoneCount, bytesToProcess);
 
-            Buffer.BlockCopy(saea.Buffer, saea.Offset + userToken.bytesDoneCountThisOp,
+            Buffer.BlockCopy(saea.Buffer, saea.Offset + userToken.bytesDoneThisOp,
                 userToken.messageBytes, userToken.messageBytesDoneCount, length);
 
             userToken.messageBytesDoneCount += length;
-            userToken.bytesDoneCountThisOp += length;
+            userToken.bytesDoneThisOp += length;
 
             readyMessage = null;
             if (userToken.messageBytesDoneCount == userToken.messageLength)
