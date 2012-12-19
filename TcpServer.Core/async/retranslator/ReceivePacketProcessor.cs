@@ -22,9 +22,11 @@ namespace TcpServer.Core.async.retranslator
 
         public byte[] processMessage(byte[] message)
         {
+            string receivedData = string.Empty;
             try
             {
-                var receivedData = Encoding.ASCII.GetString(message);
+                receivedData = Encoding.ASCII.GetString(message);
+                log.Warn(String.Format("Process packet={0}", receivedData));
                 if (receivedData.StartsWith("$$"))
                 {
 
@@ -42,7 +44,7 @@ namespace TcpServer.Core.async.retranslator
             }
             catch(Exception e)
             {
-                log.Warn("processMessage", e);
+                log.Error(String.Format("ProcessMessage packet={0}", receivedData), e);
                 return null;
             }
         }
