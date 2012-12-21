@@ -26,10 +26,9 @@ namespace TcpServer.Core.async.retranslator
             try
             {
                 receivedData = Encoding.ASCII.GetString(message);
-                log.Warn(String.Format("Process packet={0}", receivedData));
+                
                 if (receivedData.StartsWith("$$"))
                 {
-
                     var basePacket = BasePacket.GetFromGlonass(receivedData);
                     var gpsData = basePacket.ToPacketGps();
 
