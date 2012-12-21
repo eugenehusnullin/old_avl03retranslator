@@ -17,7 +17,7 @@ namespace TcpServer.Core
     public class RetranslatorTelemaxima
     {
         private Dictionary<String, Int32> carsIDs;
-        private ConcurrentQueue<BasePacket> packets;
+        private volatile ConcurrentQueue<BasePacket> packets;
         private ILog log;
         private int workersCount = 5;
         private List<Thread> workersList;
