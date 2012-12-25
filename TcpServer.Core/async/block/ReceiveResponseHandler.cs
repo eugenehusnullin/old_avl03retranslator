@@ -12,6 +12,7 @@ namespace TcpServer.Core.async.block
     {
         public int handleResponse(SocketAsyncEventArgs saea, DataHoldingUserToken userToken, out byte[] readyMessage)
         {
+            readyMessage = null;
             int cnt = 0;
 
             while (saea.BytesTransferred > (userToken.bytesDoneThisOp + cnt))
@@ -22,6 +23,12 @@ namespace TcpServer.Core.async.block
                     break;
                 }
                 cnt++;
+
+                if (cnt > 200)
+                {
+                    // гипотетически ответ не больше 200 байт, нужно закрыть сокет ином случае
+                    return -1;
+                }
             }
 
             byte[] message = new byte[cnt + userToken.messageBytesDoneCount];
@@ -35,22 +42,12 @@ namespace TcpServer.Core.async.block
 
             userToken.messageBytesDoneCount += cnt;
             userToken.bytesDoneThisOp += cnt;
-
-            readyMessage = null;
+            
             if (userToken.messageBytes[userToken.messageBytes.Length - 1] == 0x23)
             {
                 readyMessage = new byte[userToken.prefixBytes.Length + userToken.messageBytes.Length];
                 Buffer.BlockCopy(userToken.prefixBytes, 0, readyMessage, 0, userToken.prefixBytes.Length);
                 Buffer.BlockCopy(userToken.messageBytes, 0, readyMessage, userToken.prefixBytes.Length, userToken.messageBytes.Length);
-                return 0;
-            }
-            else
-            {
-                if (userToken.messageBytes.Length > 200)
-                {
-                    // гипотетически ответ не больше 200 байт, нужно закрыть сокет ином случае
-                    return -1;
-                }
             }
 
             return 0;
