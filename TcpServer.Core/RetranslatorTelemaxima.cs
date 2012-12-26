@@ -124,6 +124,7 @@ namespace TcpServer.Core
                 finally
                 {
                     webRequest.GetResponse().Close();
+                    webRequest.GetResponse().Dispose();
                 }
             }
             catch (Exception e)
