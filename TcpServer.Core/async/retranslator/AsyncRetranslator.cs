@@ -176,9 +176,11 @@ namespace TcpServer.Core.async.retranslator
         {
             decrementCountConnectionsToBlock();
             var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
-            if (socketGroup.monReceiveSAEA != null)
+            if (socketGroup.monSendSAEA != null)
             {
-                monConnector.closeSocket(socketGroup.monReceiveSAEA);
+                monConnector.closeSocket(socketGroup.monSendSAEA);
+                (socketGroup.monSendSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
+                socketGroup.monSendSAEA.Dispose();
             }
         }
 
@@ -188,15 +190,19 @@ namespace TcpServer.Core.async.retranslator
             if (socketGroup.monReceiveSAEA != null)
             {
                 monConnector.closeSocket(socketGroup.monReceiveSAEA);
+                (socketGroup.monReceiveSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
+                socketGroup.monReceiveSAEA.Dispose();
             }
         }
 
         private void monReceiveFailed(SocketAsyncEventArgs saea)
         {
             var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
-            if (socketGroup.blockReceiveSAEA != null)
+            if (socketGroup.blockSendSAEA != null)
             {
-                blocksAcceptor.closeSocket(socketGroup.blockReceiveSAEA);
+                blocksAcceptor.closeSocket(socketGroup.blockSendSAEA);
+                (socketGroup.blockSendSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
+                socketGroup.blockSendSAEA.Dispose();
             }
         }
 
@@ -207,6 +213,8 @@ namespace TcpServer.Core.async.retranslator
             if (socketGroup.blockReceiveSAEA != null)
             {
                 blocksAcceptor.closeSocket(socketGroup.blockReceiveSAEA);
+                (socketGroup.blockReceiveSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
+                socketGroup.blockReceiveSAEA.Dispose();
             }
         }
     }
