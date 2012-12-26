@@ -59,13 +59,6 @@ namespace TcpServer.Core.async.mon
 
         public void startReceive(SocketAsyncEventArgs saea)
         {
-            if (!saea.AcceptSocket.Connected)
-            {
-                receiveFailed(saea);
-                closeSocket(saea);
-                return;
-            }
-
             try
             {
                 if (!saea.AcceptSocket.ReceiveAsync(saea))
@@ -78,6 +71,8 @@ namespace TcpServer.Core.async.mon
                 log.Debug("Start receive from monitoring failed.", e);
                 receiveFailed(saea);
                 closeSocket(saea);
+                (saea.UserToken as DataHoldingUserToken).socketGroup = null;
+                saea.Dispose();
             }
         }
 
@@ -90,6 +85,8 @@ namespace TcpServer.Core.async.mon
                 log.DebugFormat("Process receive from monitoring failed. SocketError={0} or BytesTransferred={1}.", saea.SocketError, saea.BytesTransferred);
                 receiveFailed(saea);
                 closeSocket(saea);
+                userToken.socketGroup = null;
+                saea.Dispose();
             }
             else
             {
@@ -116,14 +113,6 @@ namespace TcpServer.Core.async.mon
                     saea.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
             saea.SetBuffer(saea.Offset, userToken.messageBytes.Length - userToken.messageBytesDoneCount);
 
-            if (!saea.AcceptSocket.Connected)
-            {
-                log.Debug("Start send to monitoring failed. Socket not connected.");
-                sendFailed(saea);
-                closeSocket(saea);
-                return;
-            }
-
             try
             {
                 if (!saea.AcceptSocket.SendAsync(saea))
@@ -134,8 +123,10 @@ namespace TcpServer.Core.async.mon
             catch (Exception e)
             {
                 log.Debug("Start send to monitoring failed.", e);
-                sendFailed(saea);
+                sendFailed(saea);                
                 closeSocket(saea);
+                userToken.socketGroup = null;
+                saea.Dispose();
             }
         }
 
@@ -164,6 +155,8 @@ namespace TcpServer.Core.async.mon
                 userToken.resetAll();
                 sendFailed(saea);
                 closeSocket(saea);
+                userToken.socketGroup = null;
+                saea.Dispose();
             }
         }
 
