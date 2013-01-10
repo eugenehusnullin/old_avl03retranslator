@@ -10,7 +10,7 @@ namespace TcpServer.Core
 {
     public class BasePacket
     {
-        public BasePacket()
+        private BasePacket()
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-Us");
 
@@ -44,8 +44,6 @@ namespace TcpServer.Core
             MagneticVariationLetter = 'N';
             Mode = 'A';
         }
-
-        #region init methods
 
         public static BasePacket GetFromWialon(byte[] bytes)
         {
@@ -81,6 +79,7 @@ namespace TcpServer.Core
 
             return result;
         }
+
         private static string GetWialonStringData(IEnumerable<WialonBlockData> data, string name)
         {
             var result = string.Empty;
@@ -93,6 +92,7 @@ namespace TcpServer.Core
 
             return result;
         }
+
         private static double GetWialonDoubleData(IEnumerable<WialonBlockData> data, string name)
         {
             double result = 0;
@@ -106,6 +106,7 @@ namespace TcpServer.Core
 
             return result;
         }
+
         private static WialonPosInfo GetPosInfo(IEnumerable<WialonBlockData> data)
         {
             var posinfoBlock = data.FirstOrDefault(_ => _.Name.Equals("posinfo", StringComparison.InvariantCultureIgnoreCase));
@@ -123,6 +124,7 @@ namespace TcpServer.Core
             }
             return posInfo;
         }
+
         private static IEnumerable<WialonBlockData> GetWialonBlockData(IList<byte> bytes, int startIndex)
         {
             var result = new List<WialonBlockData>();
@@ -159,7 +161,6 @@ namespace TcpServer.Core
 
             return result;
         }
-
 
         public static BasePacket GetFromAdv(byte[] bytes)
         {
@@ -209,6 +210,7 @@ namespace TcpServer.Core
 
             return result;
         }
+
         private static string GetStatus(bool isAlarm, int inputs, int outputs)
         {
             var sb = new StringBuilder();
@@ -219,6 +221,7 @@ namespace TcpServer.Core
 
             return sb.ToString();
         }
+
         private static byte[] GetAdvDataBytes(IEnumerable<byte> bytes)
         {
             return bytes.Skip(21).Take(87).ToArray();
@@ -299,29 +302,53 @@ namespace TcpServer.Core
 
             result.Status = matchGroups["Status"].Value;
 
-            var rtcSttring = matchGroups["RTC"].Value;
+            //Datetime
+            var datetimeString = matchGroups["DateTime"].Value;
+
+            int datetimeYear;
+            int.TryParse(datetimeString.Substring(0, 4), out datetimeYear);
+
+            int datetimeMonth;
+            int.TryParse(datetimeString.Substring(4, 2), out datetimeMonth);
+
+            int datetimeDay;
+            int.TryParse(datetimeString.Substring(6, 2), out datetimeDay);
+
+            int datetimeHour;
+            int.TryParse(datetimeString.Substring(8, 2), out datetimeHour);
+
+            int datetimeMinute;
+            int.TryParse(datetimeString.Substring(10, 2), out datetimeMinute);
+
+            int datetimeSeconds;
+            int.TryParse(datetimeString.Substring(12, 2), out datetimeSeconds);
+
+            result.RTC = new DateTime(datetimeYear, datetimeMonth, datetimeDay, datetimeHour, datetimeMinute, datetimeSeconds);
+
+            // RTC
+            var rtcString = matchGroups["RTC"].Value;
 
             int rtcYear;
-            int.TryParse(rtcSttring.Substring(0, 4), out rtcYear);
+            int.TryParse(rtcString.Substring(0, 4), out rtcYear);
 
             int rtcMonth;
-            int.TryParse(rtcSttring.Substring(4, 2), out rtcMonth);
+            int.TryParse(rtcString.Substring(4, 2), out rtcMonth);
 
             int rtcDay;
-            int.TryParse(rtcSttring.Substring(6, 2), out rtcDay);
+            int.TryParse(rtcString.Substring(6, 2), out rtcDay);
 
             int rtcHour;
-            int.TryParse(rtcSttring.Substring(8, 2), out rtcHour);
+            int.TryParse(rtcString.Substring(8, 2), out rtcHour);
 
             int rtcMinute;
-            int.TryParse(rtcSttring.Substring(10, 2), out rtcMinute);
+            int.TryParse(rtcString.Substring(10, 2), out rtcMinute);
 
             int rtcSeconds;
-            int.TryParse(rtcSttring.Substring(12, 2), out rtcSeconds);
+            int.TryParse(rtcString.Substring(12, 2), out rtcSeconds);
 
-            result.RTC = new DateTime(rtcYear, rtcMonth, rtcDay, rtcHour, rtcMinute, rtcSeconds);
             result.ValidNavigDateTime = new DateTime(rtcYear, rtcMonth, rtcDay, rtcHour, rtcMinute, rtcSeconds);
 
+            //Voltage and etc.
             result.Voltage = matchGroups["Voltage"].Value;
             result.ADC = matchGroups["ADC"].Value;
             result.LACCI = matchGroups["LACCI"].Value;
@@ -350,12 +377,14 @@ namespace TcpServer.Core
 
             return result;
         }
+
         private static float ConvertGlonassToBaseCoordinat(float coordinate)
         {
             var degrees = Math.Floor(coordinate);
             var result = degrees * 100 + 60 * (coordinate - degrees);
             return (float)result;
         }
+
         public static string GetIntToString(int inputs, int i)
         {
             var result = Convert.ToString(inputs, 10);
@@ -367,10 +396,6 @@ namespace TcpServer.Core
 
             return result;
         }
-
-        #endregion
-
-        #region to packet methods
 
         public string ToPacketGlonass()
         {
@@ -417,7 +442,6 @@ namespace TcpServer.Core
 
             return sb.ToString();
         }
-
 
         public string ToPacketGps()
         {
@@ -467,6 +491,7 @@ namespace TcpServer.Core
 
             return sb.ToString();
         }
+
         private string BuildNmea()
         {
             var sb = new StringBuilder();
@@ -498,10 +523,6 @@ namespace TcpServer.Core
 
             return sb.ToString();
         }
-
-        #endregion
-
-        #region properties
 
         /// <summary>
         /// Уникальный идентификатор модема
@@ -599,7 +620,5 @@ namespace TcpServer.Core
         public char MagneticVariationLetter { get; set; }
 
         public char Mode { get; set; }
-
-        #endregion
     }
 }
