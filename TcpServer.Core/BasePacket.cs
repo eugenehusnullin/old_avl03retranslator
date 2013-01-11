@@ -302,29 +302,6 @@ namespace TcpServer.Core
 
             result.Status = matchGroups["Status"].Value;
 
-            //Datetime
-            var datetimeString = matchGroups["DateTime"].Value;
-
-            int datetimeYear;
-            int.TryParse(datetimeString.Substring(0, 4), out datetimeYear);
-
-            int datetimeMonth;
-            int.TryParse(datetimeString.Substring(4, 2), out datetimeMonth);
-
-            int datetimeDay;
-            int.TryParse(datetimeString.Substring(6, 2), out datetimeDay);
-
-            int datetimeHour;
-            int.TryParse(datetimeString.Substring(8, 2), out datetimeHour);
-
-            int datetimeMinute;
-            int.TryParse(datetimeString.Substring(10, 2), out datetimeMinute);
-
-            int datetimeSeconds;
-            int.TryParse(datetimeString.Substring(12, 2), out datetimeSeconds);
-
-            result.RTC = new DateTime(datetimeYear, datetimeMonth, datetimeDay, datetimeHour, datetimeMinute, datetimeSeconds);
-
             // RTC
             var rtcString = matchGroups["RTC"].Value;
 
@@ -347,6 +324,35 @@ namespace TcpServer.Core
             int.TryParse(rtcString.Substring(12, 2), out rtcSeconds);
 
             result.ValidNavigDateTime = new DateTime(rtcYear, rtcMonth, rtcDay, rtcHour, rtcMinute, rtcSeconds);
+
+            //Datetime
+            var datetimeString = matchGroups["DateTime"].Value;
+
+            int datetimeYear;
+            int.TryParse(datetimeString.Substring(0, 4), out datetimeYear);
+
+            int datetimeMonth;
+            int.TryParse(datetimeString.Substring(4, 2), out datetimeMonth);
+
+            int datetimeDay;
+            int.TryParse(datetimeString.Substring(6, 2), out datetimeDay);
+
+            int datetimeHour;
+            int.TryParse(datetimeString.Substring(8, 2), out datetimeHour);
+
+            int datetimeMinute;
+            int.TryParse(datetimeString.Substring(10, 2), out datetimeMinute);
+
+            int datetimeSeconds;
+            int.TryParse(datetimeString.Substring(12, 2), out datetimeSeconds);
+
+            try
+            {
+                result.RTC = new DateTime(datetimeYear, datetimeMonth, datetimeDay, datetimeHour, datetimeMinute, datetimeSeconds);
+            } catch 
+            {
+                result.RTC = result.ValidNavigDateTime;
+            }
 
             //Voltage and etc.
             result.Voltage = matchGroups["Voltage"].Value;
