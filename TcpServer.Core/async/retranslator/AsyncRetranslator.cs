@@ -106,7 +106,7 @@ namespace TcpServer.Core.async.retranslator
             userToken.socketGroup = new SocketGroup();
             userToken.socketGroup.blockReceiveSAEA = saea;
 
-            // создаем соединение в мониторинг за ранее, т.к. может быть мониторинг в ауте, а блок отправит нам пакет который будет потерян
+            // создаем заранее соединение с мониторингом
             SocketAsyncEventArgs monReceive, monSend;
             if (monConnector.createConnection(out monReceive, out monSend))
             {
