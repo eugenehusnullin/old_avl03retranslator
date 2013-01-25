@@ -61,12 +61,7 @@ namespace TcpServer.Core
 
         private void DoWork()
         {
-            //var advPacket = GetAdvPacket(2033, 42, new byte[0]);
-            //var packet = GetPppPacket(advPacket);
-            //Console.WriteLine("packet > " + packet);
-
             var localAddr = IPAddress.Parse(SrcHost);
-            Console.WriteLine("Start listing > ");
 
             tcpListener = new TcpListener(localAddr, SrcPort);
             try
@@ -89,9 +84,6 @@ namespace TcpServer.Core
             {
                 tcpListener.Stop();
             }
-
-            Console.WriteLine("\nHit enter to continue...");
-            Console.Read();
         }
 
         private void DoProcess(object blockClientObject)
