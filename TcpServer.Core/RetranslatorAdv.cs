@@ -54,7 +54,10 @@ namespace TcpServer.Core
         public void Stop()
         {
             State = ServiceState.Stoping;
+            tcpListener.Stop();
         }
+
+        private TcpListener tcpListener;
 
         private void DoWork()
         {
@@ -65,7 +68,7 @@ namespace TcpServer.Core
             var localAddr = IPAddress.Parse(SrcHost);
             Console.WriteLine("Start listing > ");
 
-            var tcpListener = new TcpListener(localAddr, SrcPort);
+            tcpListener = new TcpListener(localAddr, SrcPort);
             try
             {
                 // Start listening for client requests.
@@ -98,8 +101,6 @@ namespace TcpServer.Core
 
             TcpClient serverClient = null;
             NetworkStream serverStream = null;
-
-
 
             try
             {
