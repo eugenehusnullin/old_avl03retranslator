@@ -144,25 +144,30 @@ namespace TcpServer.Core
                     }
 
                     // попытаться вычитать системный журнал за пропущенный месяц
-                    int sjNumber = sjNumbers.ContainsKey(deviceId) ? sjNumbers[deviceId] : getSJNumber(deviceId, blockStream);
+                    //int sjNumber = sjNumbers.ContainsKey(deviceId) ? sjNumbers[deviceId] : getSJNumber(deviceId, blockStream);
+                    //if (sjNumber != -1 && sjNumber > 1000)
+                    //{
+                    //    // поиск номера регистра SJ с которого надо начать считывать пропущенный месяц
+                    //    sjNumber = searchSJNumber(deviceId, sjNumber, blockStream, sjNumber, 1001);
+                    //}
 
                     while (State != ServiceState.Stoping)
                     {
-                        int cntSJ = 0;
-                        while (true)
-                        {
-                            // вытягиваем в цикле более 30 записей
-                            if (sjNumber != -1 && sjNumber > 1000 && cntSJ < 30)
-                            {
-                                int newSJNumber = processSJ(deviceId, sjNumber, blockStream, serverStream);
-                                cntSJ += sjNumber - newSJNumber;
-                                sjNumber = sjNumber == newSJNumber ? -1 : newSJNumber;
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
+                        //int cntSJ = 0;
+                        //while (true)
+                        //{
+                        //    // вытягиваем в цикле более 30 записей
+                        //    if (sjNumber != -1 && sjNumber > 1000 && cntSJ < 30)
+                        //    {
+                        //        int newSJNumber = processSJ(deviceId, sjNumber, blockStream, serverStream);
+                        //        cntSJ += sjNumber - newSJNumber;
+                        //        sjNumber = sjNumber == newSJNumber ? -1 : newSJNumber;
+                        //    }
+                        //    else
+                        //    {
+                        //        break;
+                        //    }
+                        //}
 
                         var advPacket = GetAdvPacket(deviceId, 01, 42, new byte[0]);
                         var packet = GetPppPacket(advPacket);
@@ -186,10 +191,10 @@ namespace TcpServer.Core
                         serverStream.Write(dstData, 0, dstData.Length);
                         log.Info(gpsPacket);
 
-                        if (sjNumber == -1 || sjNumber <= 1000)
-                        {
+                        //if (sjNumber == -1 || sjNumber <= 1000)
+                        //{
                             Thread.Sleep(interval);
-                        }
+                        //}
                     }
                 }
                 else
@@ -209,34 +214,86 @@ namespace TcpServer.Core
             if (serverClient != null) serverClient.Close();
         }
 
-        private int processSJ(int deviceId, int sjNumber, NetworkStream blockStream, NetworkStream serverStream)
+        private int searchSJNumber(int deviceId, int sjNumber, NetworkStream blockStream, int top, int bottom)
         {
-            var advPacket = GetAdvPacket(deviceId, 01, sjNumber, new byte[0]);
+            if (sjNumber < 10000)
+            {
+                return -1;
+            }
+
+            int startIndex;
+            var receiveBuffer = new Byte[10000];
+            int countReg = readRegister(deviceId, sjNumber, blockStream, receiveBuffer, out startIndex);
+
+            if (countReg > 0)
+            {
+                try
+                {
+                    var basePacket = BasePacket.GetFromAdvSJ(deviceId, receiveBuffer, (startIndex + 21));
+
+                    log.InfoFormat("search sjnumber={0}, for deviceId={1}, date is {2}", sjNumber, deviceId, basePacket.RTC);
+
+                    if (basePacket.RTC > restoreTo)
+                    {
+                        int i = (sjNumber + bottom) / 2;
+                        return searchSJNumber(deviceId, i, blockStream, sjNumber, bottom);
+                    }
+                    else if (basePacket.RTC < restoreFrom)
+                    {
+                        int i = (top + sjNumber) / 2;
+                        return searchSJNumber(deviceId, i, blockStream, top, sjNumber);
+                    }
+                    else
+                    {
+                        int dif = top - sjNumber;
+                        if (dif < 200)
+                        {
+                            log.InfoFormat("found sjnumber={0}, for deviceId={1}, date is {2}", sjNumber, deviceId, basePacket.RTC);
+                            return sjNumber;
+                        }
+                        else
+                        {
+                            int i = (top + sjNumber) / 2;
+                            return searchSJNumber(deviceId, i, blockStream, top, sjNumber);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    log.ErrorFormat("error GetFromAdvSJ for deviceId={0}. {1}", deviceId, e);
+                }
+            }
+            
+            return searchSJNumber(deviceId, (top + sjNumber) / 2, blockStream, top, bottom);
+        }
+
+        private int readRegister(int deviceId, int register, NetworkStream blockStream, byte[] receiveBuffer, out int startIndex)
+        {
+            var advPacket = GetAdvPacket(deviceId, 01, register, new byte[0]);
             var packet = GetPppPacket(advPacket);
             var login = PPP.GetBytesFromByteString(packet);
             blockStream.Write(login, 0, login.Length);
-            log.DebugFormat("try reading sj line for deviceid={0}, sjnumber={1}", deviceId, sjNumber);
+            log.DebugFormat("try reading register for deviceid={0}, sjnumber={1}", deviceId, register);
 
-            var receiveBuffer = new Byte[10000];
+            //var receiveBuffer = new Byte[10000];
             var size = blockStream.Read(receiveBuffer, 0, receiveBuffer.Length);
             var data = ByteHelper.GetStringFromBytes(receiveBuffer.Take(size));
-            log.DebugFormat("get reading sj line for deviceid={0}, sjnumber={1}, value = {2}", deviceId, sjNumber, data);
+            log.DebugFormat("get reading register for deviceid={0}, sjnumber={1}, value = {2}", deviceId, register, data);
 
-            bool begin = false;
-            int startIndex = -1;
+            
+            startIndex = -1;
             for (int i = 0; i < size; i++)
             {
                 if (receiveBuffer[i] == 0x7E)
                 {
                     // найдено начало пакета
-                    begin = true;
                     startIndex = i;
                     break;
                 }
             }
 
             int countReg = 0;
-            if (begin)
+            if (startIndex != -1)
             {
                 if ((startIndex + 13) < size)
                 {
@@ -245,46 +302,57 @@ namespace TcpServer.Core
                         // удачное чтение регистра на устройстве
 
                         // узнаем кол-во считаных записей системного журнала
-                        countReg = Convert.ToInt32(receiveBuffer[startIndex + 18]);
-                        for (int i = 0; i < countReg; i++)
-                        {
-                            BasePacket basePacket;
-                            try
-                            {
-                                basePacket = BasePacket.GetFromAdvSJ(deviceId, receiveBuffer, (startIndex + 21) + i * 60);
-                            }
-                            catch (Exception e)
-                            {
-                                log.ErrorFormat("error GetFromAdvSJ for deviceId={0}, trying number={1}. {2}", deviceId, i, e);
-                                continue;
-                            }
-
-                            if (basePacket.RTC <= restoreTo && basePacket.RTC >= restoreFrom)
-                            {
-                                var gpsPacket = basePacket.ToPacketGps();
-                                var dstData = Encoding.ASCII.GetBytes(gpsPacket);
-                                serverStream.Write(dstData, 0, dstData.Length);
-                                log.InfoFormat("!!!retranslated sj line = {0}, date={1}, for deviceId={2}", gpsPacket, basePacket.RTC, deviceId);
-                            }
-                            else
-                            {
-                                log.InfoFormat("dont retranslate sj line for deviceid={0}, because date is {1}", deviceId, basePacket.RTC);
-
-                                if (basePacket.RTC < restoreFrom)
-                                {
-                                    countReg = sjNumber;
-                                    break;
-                                }
-                            }
-                        }
+                        countReg = Convert.ToInt32(receiveBuffer[startIndex + 18]);                        
                     }
                     else
                     {
                         // не удачное чтение регистра
-                        log.WarnFormat("error reading sj line for deviceid={0}, sjnumber={1}", deviceId, sjNumber);
+                        log.WarnFormat("error reading register for deviceid={0}, sjnumber={1}", deviceId, register);
                     }
                 }
             }
+
+            return countReg;
+        }
+
+        private int processSJ(int deviceId, int sjNumber, NetworkStream blockStream, NetworkStream serverStream)
+        {
+            int startIndex;
+            var receiveBuffer = new Byte[10000];
+            int countReg = readRegister(deviceId, sjNumber, blockStream, receiveBuffer, out startIndex);
+            
+            for (int i = 0; i < countReg; i++)
+            {
+                BasePacket basePacket;
+                try
+                {
+                    basePacket = BasePacket.GetFromAdvSJ(deviceId, receiveBuffer, (startIndex + 21) + i * 60);
+                }
+                catch (Exception e)
+                {
+                    log.ErrorFormat("error GetFromAdvSJ for deviceId={0}, trying number={1}. {2}", deviceId, i, e);
+                    continue;
+                }
+
+                if (basePacket.RTC <= restoreTo && basePacket.RTC >= restoreFrom)
+                {
+                    var gpsPacket = basePacket.ToPacketGps();
+                    var dstData = Encoding.ASCII.GetBytes(gpsPacket);
+                    serverStream.Write(dstData, 0, dstData.Length);
+                    log.InfoFormat("!!!retranslated sj line = {0}, date={1}, for deviceId={2}", gpsPacket, basePacket.RTC, deviceId);
+                }
+                else
+                {
+                    log.InfoFormat("dont retranslate sj line for deviceid={0}, because date is {1}", deviceId, basePacket.RTC);
+
+                    if (basePacket.RTC < restoreFrom)
+                    {
+                        countReg = sjNumber;
+                        break;
+                    }
+                }
+            }
+        
 
             int newSJNumber = sjNumber - countReg - 1;
             lock (syncRoot)
@@ -296,56 +364,15 @@ namespace TcpServer.Core
 
         private int getSJNumber(int deviceId, NetworkStream blockStream)
         {
-            var advPacket = GetAdvPacket(deviceId, 01, 314, new byte[0]);
-            var packet = GetPppPacket(advPacket);
-            var login = PPP.GetBytesFromByteString(packet);
-            blockStream.Write(login, 0, login.Length);
-            log.DebugFormat("try reading 314 register for deviceid = {0}", deviceId);
-
+            int startIndex;
             var receiveBuffer = new Byte[10000];
-            var size = blockStream.Read(receiveBuffer, 0, receiveBuffer.Length);
-            var data = ByteHelper.GetStringFromBytes(receiveBuffer.Take(size));
-            log.DebugFormat("get reading 314 register from deviceid = {0}, value = {1}", deviceId, data);
-
-            bool begin = false;
-            int startIndex = -1;
-            for (int k = 0; k < size; k++)
-            {
-                if (receiveBuffer[k] == 0x7E)
-                {
-                    // найдено начало пакета
-                    begin = true;
-                    startIndex = k;
-                    break;
-                }
-            }
+            readRegister(deviceId, 314, blockStream, receiveBuffer, out startIndex);
 
             int sjNumber = -1;
-            if (begin)
+            if (startIndex != -1)
             {
-                if ((startIndex + 13) < size)
-                {
-                    if (receiveBuffer[startIndex + 13] == 0x81)
-                    {
-                        // удачное чтение регистра на устройстве
-
-                        // узнаем длину данных
-                        int dataLen = BitConverter.ToInt16(receiveBuffer, startIndex + 19);
-                        sjNumber = BitConverter.ToInt32(receiveBuffer, startIndex + 21);
-                        log.InfoFormat("get reading register #314: sjNumber = {0}, deviceid = {1}, data size = {2}",
-                            sjNumber, deviceId, dataLen);
-
-                        
-                    }
-                    else
-                    {
-                        // не удачное чтение регистра
-                        log.WarnFormat("error reading register #314: {0}, deviceid = {1}",
-                            receiveBuffer[startIndex + 13].ToString("X2"), deviceId);
-                    }
-                }
+                sjNumber = BitConverter.ToInt32(receiveBuffer, startIndex + 21);                        
             }
-
             return sjNumber - 1;
         }
 
