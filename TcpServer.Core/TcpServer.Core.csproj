@@ -68,6 +68,7 @@
     <Compile Include="Crc16Ibm.cs" />
     <Compile Include="CrcNmea.cs" />
     <Compile Include="DateTimeHelper.cs" />
+    <Compile Include="DictionarySaver.cs" />
     <Compile Include="Listner.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Options.cs" />

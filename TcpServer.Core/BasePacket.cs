@@ -211,6 +211,50 @@ namespace TcpServer.Core
             return result;
         }
 
+        public static BasePacket GetFromAdvSJ(int deviceId, byte[] bytes, int offset)
+        {
+            var basePacket = new BasePacket();
+
+            basePacket.IMEI = (600000000000000 + deviceId).ToString();
+
+            basePacket.RTC = new DateTime(2000 + bytes[offset + 5], bytes[offset + 6], bytes[offset + 7],
+                bytes[offset + 9], bytes[offset + 10], bytes[offset + 11]);
+            basePacket.RTC = basePacket.RTC.AddHours(4);
+
+            basePacket.ValidNavigDateTime = new DateTime(2000 + bytes[offset + 12], bytes[offset + 13], bytes[offset + 14], 
+                bytes[offset + 16], bytes[offset + 17], bytes[offset + 18]);
+            basePacket.ValidNavigDateTime = basePacket.ValidNavigDateTime.AddHours(4);
+
+            var lat = BitConverter.ToSingle(new[] { bytes[offset + 21], bytes[offset + 22], bytes[offset + 23], bytes[offset + 24] }, 0);
+            basePacket.Latitude = Math.Abs(lat);
+            basePacket.LatitudeLetter = lat < 0 ? 'N' : 'S';
+
+            var lon = BitConverter.ToSingle(new[] { bytes[offset + 25], bytes[offset + 26], bytes[offset + 27], bytes[offset + 28] }, 0);
+            basePacket.Longitude = Math.Abs(lon);
+            basePacket.LongitudeLetter = lon < 0 ? 'E' : 'W';
+
+            var direction = BitConverter.ToSingle(new[] { bytes[offset + 29], bytes[offset + 30], bytes[offset + 31], bytes[offset + 32] }, 0);
+            basePacket.Direction = direction;
+
+            var sog = BitConverter.ToSingle(new[] { bytes[offset + 33], bytes[offset + 34], bytes[offset + 35], bytes[offset + 36] }, 0);
+            basePacket.Speed = sog;
+
+            float altitude = 0F;
+            basePacket.Altitude = altitude;
+
+            var isAlarm = false;
+            var inputs = Convert.ToInt32(bytes[offset + 45]);
+            var outputs = Convert.ToInt32(bytes[offset + 46]);
+
+            basePacket.Status = GetStatus(isAlarm, inputs, outputs);
+
+            basePacket.Voltage = "00000000";
+
+            basePacket.State = 'A';
+
+            return basePacket;
+        }
+
         private static string GetStatus(bool isAlarm, int inputs, int outputs)
         {
             var sb = new StringBuilder();
