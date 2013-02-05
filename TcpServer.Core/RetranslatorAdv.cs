@@ -269,6 +269,11 @@ namespace TcpServer.Core
                             else
                             {
                                 log.InfoFormat("dont retranslate sj line for deviceid={0}, because date is {1}", deviceId, basePacket.RTC);
+
+                                if (basePacket.RTC < restoreFrom)
+                                {
+                                    return sjNumber;
+                                }
                             }
                         }
                     }
