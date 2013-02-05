@@ -264,7 +264,7 @@ namespace TcpServer.Core
                                 var gpsPacket = basePacket.ToPacketGps();
                                 var dstData = Encoding.ASCII.GetBytes(gpsPacket);
                                 serverStream.Write(dstData, 0, dstData.Length);
-                                log.InfoFormat("retranslate sj line = {0}", gpsPacket);
+                                log.InfoFormat("!!!retranslated sj line = {0}, date={1}, for deviceId={2}", gpsPacket, basePacket.RTC, deviceId);
                             }
                             else
                             {
@@ -272,7 +272,8 @@ namespace TcpServer.Core
 
                                 if (basePacket.RTC < restoreFrom)
                                 {
-                                    return sjNumber;
+                                    countReg = sjNumber;
+                                    break;
                                 }
                             }
                         }
@@ -285,11 +286,12 @@ namespace TcpServer.Core
                 }
             }
 
+            int newSJNumber = sjNumber - countReg - 1;
             lock (syncRoot)
             {
-                sjNumbers[deviceId] = sjNumber - countReg;
+                sjNumbers[deviceId] = newSJNumber;
             }
-            return sjNumber - countReg;
+            return newSJNumber;
         }
 
         private int getSJNumber(int deviceId, NetworkStream blockStream)
