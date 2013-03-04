@@ -294,9 +294,9 @@ namespace TcpServer.Core
 
             var result = new BasePacket();
 
-            long imei;
-            if (!long.TryParse(matchGroups["Imei"].Value, out imei)) throw new Exception("В пакете не верный IMEI");
-            result.IMEI = imei.ToString();
+            long imeiCheck;
+            if (!long.TryParse(matchGroups["Imei"].Value, out imeiCheck)) throw new Exception("В пакете не верный IMEI");
+            result.IMEI = matchGroups["Imei"].Value;
 
             result.AlarmType = matchGroups["AlarmType"].Value;
 
