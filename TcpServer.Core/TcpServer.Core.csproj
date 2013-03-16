@@ -81,6 +81,7 @@
     </Compile>
     <Compile Include="RetranslatorGlonass.cs" />
     <Compile Include="RetranslatorAdv.cs" />
+    <Compile Include="RetranslatorTelemaxima.cs" />
     <Compile Include="RetranslatorTeltonika.cs" />
     <Compile Include="RetranslatorWialon.cs" />
     <Compile Include="RetranslatorWsdl.cs" />
