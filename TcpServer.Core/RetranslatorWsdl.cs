@@ -58,6 +58,8 @@ namespace TcpServer.Core
                 while (State != ServiceState.Stoping)
                 {
                     var tcpClients = tcpListener.AcceptTcpClient();
+                    tcpClients.ReceiveTimeout = 10 * 60 * 1000;
+                    tcpClients.SendTimeout = 2 * 60 * 1000;
                     var thread = new Thread(() => DoTcpClient(tcpClients));
                     thread.Start();
                 }
