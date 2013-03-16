@@ -24,10 +24,11 @@ namespace TcpServer.TestRetranslatorAdv
             var options = new Options();
             options.UseFeedBack = true;
             options.LogPath = "RetranslatorAdvLog";
-            //var retranslator = new RetranslatorAdv("192.168.1.5", 20142, "77.74.50.78", 20141, null, options);
-            var retranslator = new RetranslatorAdv("195.206.252.247", 20142, "77.74.50.78", 20141, null, options);
+            var retranslator = new RetranslatorAdv("127.0.0.1", 20142, "77.74.50.78", 20141, null, options);
+            //var retranslator = new RetranslatorAdv("195.206.252.247", 20142, "77.74.50.78", 20141, null, options);
             retranslator.Start();
-            Console.ReadKey();
+            //Console.ReadKey();
+            Console.ReadLine();
             retranslator.Stop();
         }
     }

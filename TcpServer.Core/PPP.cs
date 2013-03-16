@@ -9,7 +9,8 @@ namespace TcpServer.Core
         private const int PPPINITFCS = 0xffff; /* Initial FCS value */
         private const int PPPGOODFCS = 0xf0b8; /* Good final FCS value */
 
-        static readonly ushort[] fcstab =   {   0x0000, 0x1189, 0x2312, 0x329b, 0x4624, 0x57ad, 0x6536, 0x74bf,
+        private static readonly ushort[] fcstab =
+                                            {   0x0000, 0x1189, 0x2312, 0x329b, 0x4624, 0x57ad, 0x6536, 0x74bf,
                                                 0x8c48, 0x9dc1, 0xaf5a, 0xbed3, 0xca6c, 0xdbe5, 0xe97e, 0xf8f7,
                                                 0x1081, 0x0108, 0x3393, 0x221a, 0x56a5, 0x472c, 0x75b7, 0x643e,
                                                 0x9cc9, 0x8d40, 0xbfdb, 0xae52, 0xdaed, 0xcb64, 0xf9ff, 0xe876,
@@ -96,16 +97,16 @@ namespace TcpServer.Core
             return sDest;
         }
 
-        public int Check_FCS(byte[] pBuf, int wLen)
-        {
-            if (pBuf.Length == 0 || wLen == 0) return 0;
-            int wFSC = CalculateFCS(pBuf, PPPINITFCS);
-            wFSC = ~wFSC;
-            if (wFSC == PPPGOODFCS) return wFSC;
-            else return 0;
-        }
+        //public int Check_FCS(byte[] pBuf, int wLen)
+        //{
+        //    if (pBuf.Length == 0 || wLen == 0) return 0;
+        //    int wFSC = CalculateFCS(pBuf, PPPINITFCS);
+        //    wFSC = ~wFSC;
+        //    if (wFSC == PPPGOODFCS) return wFSC;
+        //    else return 0;
+        //}
 
-        public ushort CalculateFCS(byte[] pBuf, int FCS)
+        private ushort CalculateFCS(byte[] pBuf, int FCS)
         {
             foreach (var b in pBuf)
             {
@@ -154,7 +155,7 @@ namespace TcpServer.Core
             return result.ToArray();
         }
 
-        public static int ConvertCharToNum(char p)
+        private static int ConvertCharToNum(char p)
         {
             var result = 0;
             if (p >= 48 && p < 58)

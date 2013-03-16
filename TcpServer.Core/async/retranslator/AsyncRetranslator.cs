@@ -18,6 +18,7 @@ namespace TcpServer.Core.async.retranslator
     public class AsyncRetranslator
     {
         private ILog log;
+        private ILog commandLog;
         
         private BlocksAcceptor blocksAcceptor;
         private MonConnector monConnector;
@@ -47,6 +48,7 @@ namespace TcpServer.Core.async.retranslator
             FileInfo fi = new FileInfo(log4netConfigPath);
             XmlConfigurator.ConfigureAndWatch(fi);
             log = LogManager.GetLogger(typeof(AsyncRetranslator));
+            commandLog = LogManager.GetLogger("command");
 
             messageReceivedFromBlockDelegate = messageReceivedFromBlock;
             messageReceivedFromMonDelegate = messageReceivedFromMon;
@@ -108,7 +110,7 @@ namespace TcpServer.Core.async.retranslator
             userToken.socketGroup = new SocketGroup();
             userToken.socketGroup.blockReceiveSAEA = saea;
 
-            // создаем соединение в мониторинг за ранее, т.к. может быть мониторинг в ауте, а блок отправит нам пакет который будет потерян
+            // создаем заранее соединение с мониторингом
             SocketAsyncEventArgs monReceive, monSend;
             if (monConnector.createConnection(out monReceive, out monSend))
             {
@@ -156,6 +158,12 @@ namespace TcpServer.Core.async.retranslator
 
         private void messageReceivedFromMon(byte[] message, SocketAsyncEventArgs saea)
         {
+            // log command
+            {
+                string str = Encoding.ASCII.GetString(message);
+                commandLog.Debug(str);
+            }
+
             SocketGroup socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
             if (socketGroup.blockSendSAEA == null)
             {

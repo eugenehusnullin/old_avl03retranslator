@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("TcpServer.TestRetranslator.Glonass")]
+[assembly: AssemblyTitle("Retranslator Glonass")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("TcpServer.TestRetranslator.Glonass")]
-[assembly: AssemblyCopyright("Copyright ©  2012")]
+[assembly: AssemblyCompany("Glonass Online")]
+[assembly: AssemblyProduct("Retranslator Glonass")]
+[assembly: AssemblyCopyright("Copyright © Glonass Online 2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("f6cc6690-08fb-4539-b20f-a5bfba5a0886")]
+[assembly: Guid("9d851815-2fee-407e-b3f5-9fecbdf5d12b")]
 
 // Version information for an assembly consists of the following four values:
 //
