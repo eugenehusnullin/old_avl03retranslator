@@ -194,13 +194,13 @@ namespace TcpServer.Core.async.mon
                 {
                     socket.Connect(monEndPoint);
                 }
-                catch
+                catch(Exception e)
                 {
+                    log.Error("Cannot establish connection to monitoring.", e);
                 }
             }
             if (!socket.Connected)
             {
-                log.Error("Cannot establish connection to monitoring.");
                 return false;
             }
 
