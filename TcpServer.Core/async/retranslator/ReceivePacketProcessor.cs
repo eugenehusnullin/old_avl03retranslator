@@ -1,11 +1,7 @@
 ﻿using log4net;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using TcpServer.Core.Mintrans;
 
 namespace TcpServer.Core.async.retranslator
 {
@@ -15,6 +11,7 @@ namespace TcpServer.Core.async.retranslator
         private static ILog log;
 
         private RetranslatorTelemaxima retranslatorTelemaxima;
+        private MintransSink mintransSink;
 
         public ReceivePacketProcessor()
         {
@@ -22,6 +19,7 @@ namespace TcpServer.Core.async.retranslator
             log = LogManager.GetLogger(typeof(ReceivePacketProcessor));
 
             retranslatorTelemaxima = new RetranslatorTelemaxima();
+            this.mintransSink = MintransSink.GetInstance(log);
         }
 
         public void start()
@@ -43,7 +41,7 @@ namespace TcpServer.Core.async.retranslator
                 if (receivedData.StartsWith("$$"))
                 {
                     var basePacket = BasePacket.GetFromGlonass(receivedData);
-
+                    this.mintransSink.SendLocationAndState(basePacket);
                     retranslatorTelemaxima.checkAndRetranslate(basePacket);
 
                     var gpsData = basePacket.ToPacketGps();

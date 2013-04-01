@@ -1,0 +1,35 @@
+﻿using log4net;
+using Moq;
+using NUnit.Framework;
+using System.Threading.Tasks;
+using TcpServer.Core;
+using TcpServer.Core.Mintrans;
+
+namespace TcpServer.IntegrationTests.Mintrans.MintransSinkTest
+{
+    [TestFixture]
+    public class SendLocationAndStateTest
+    {
+        private string PACKET = "$$9F359772038626256|AAUA0855.99485N038.37350E000000|01.6|01.0|01.3|20130324200047|20130324200047|000100000000|14122425|08580121|13DAC2AB|0000|0.0000|0167||580F";
+        private MintransSink target;
+
+        [SetUp]
+        public void Setup()
+        {
+            Mock<ILog> log = new Mock<ILog>();
+            SoapSink soapSink = new SoapSink(new SoapSinkSettings());
+            MessageBuilder builder = new MessageBuilder(new MintransMapper());
+            this.target = new MintransSink(log.Object, soapSink, builder);
+        }
+
+        [Test]
+        public void Test()
+        {
+            BasePacket packet = BasePacket.GetFromGlonass(PACKET);
+            Task task = this.target.SendLocationAndState(packet);
+            task.Wait();
+            Assert.IsNull(task.Exception);
+            Assert.IsFalse(task.IsFaulted);
+        }
+    }
+}

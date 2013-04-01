@@ -71,6 +71,16 @@
     <Compile Include="DictionarySaver.cs" />
     <Compile Include="Listner.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="Mintrans\MessageBuilder.cs" />
+    <Compile Include="Mintrans\MintransMapper.cs" />
+    <Compile Include="Mintrans\MintransSink.cs" />
+    <Compile Include="Mintrans\SoapSinkSettings.cs" />
+    <Compile Include="Mintrans\SoapSink.cs" />
+    <Compile Include="Mintrans\SoapTemplates.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SoapTemplates.resx</DependentUpon>
+    </Compile>
     <Compile Include="Options.cs" />
     <Compile Include="PPP.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -131,7 +141,13 @@
     </None>
     <None Include="Web References\TelemetryService\TelemetryService.wsdl" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Mintrans\SoapTemplates.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>SoapTemplates.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
