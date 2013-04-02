@@ -42,45 +42,36 @@ namespace TcpServer.Core.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("userm")]
         public string Mintrans_UserName {
             get {
                 return ((string)(this["Mintrans_UserName"]));
             }
-            set {
-                this["Mintrans_UserName"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("passm")]
         public string Mintrans_Password {
             get {
                 return ((string)(this["Mintrans_Password"]));
             }
-            set {
-                this["Mintrans_Password"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("MintransImeiExclusionList.txt")]
         public string Mintrans_ImeiExclusionFileName {
             get {
                 return ((string)(this["Mintrans_ImeiExclusionFileName"]));
             }
-            set {
-                this["Mintrans_ImeiExclusionFileName"] = value;
-            }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool Mintrans_Enabled {
             get {
                 return ((bool)(this["Mintrans_Enabled"]));

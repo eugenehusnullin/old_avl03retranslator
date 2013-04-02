@@ -29,10 +29,7 @@ namespace TcpServer.IntegrationTests.Mintrans.MintransSinkTest
         public void Test()
         {
             BasePacket packet = BasePacket.GetFromGlonass(PACKET);
-            Task task = this.target.SendLocationAndState(packet);
-            task.Wait();
-            Assert.IsNull(task.Exception);
-            Assert.IsFalse(task.IsFaulted);
+            this.target.SendLocationAndState(packet);
         }
 
         [Test]

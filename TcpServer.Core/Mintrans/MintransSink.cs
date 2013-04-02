@@ -1,4 +1,5 @@
 ﻿using log4net;
+using System;
 using System.Threading.Tasks;
 
 namespace TcpServer.Core.Mintrans
@@ -31,20 +32,22 @@ namespace TcpServer.Core.Mintrans
             this.imeiExclusionList = imeiExclusionList;
         }
 
-        public async Task SendLocationAndState(BasePacket packet)
+        public async void SendLocationAndState(BasePacket packet)
         {
-            if (false == this.settings.Enabled ||
+            try
+            {
+                if (false == this.settings.Enabled ||
                 this.imeiExclusionList.IsExclusion(packet.IMEI))
-            {
-                return;
-            }
+                {
+                    return;
+                }
 
-            byte[] messageBytes = this.builder.CreateLocationAndStateMessage(packet);
-            Task task = this.sink.PostSoapMessage(messageBytes);
-            await task;
-            if (task.IsFaulted)
+                byte[] messageBytes = this.builder.CreateLocationAndStateMessage(packet);
+                await this.sink.PostSoapMessage(messageBytes);
+            }
+            catch(Exception ex)
             {
-                this.log.Error("MintransSink.SendLocationAndState " + task.Exception.ToString());
+                this.log.Error("MintransSink.SendLocationAndState " + ex.ToString());
             }
         }
     }
