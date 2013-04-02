@@ -1,7 +1,7 @@
-﻿using log4net;
+﻿using System.Threading.Tasks;
+using log4net;
 using Moq;
 using NUnit.Framework;
-using System.Threading.Tasks;
 using TcpServer.Core;
 using TcpServer.Core.Mintrans;
 

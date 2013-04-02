@@ -74,6 +74,7 @@
     <Compile Include="Mintrans\MessageBuilder.cs" />
     <Compile Include="Mintrans\MintransMapper.cs" />
     <Compile Include="Mintrans\MintransSink.cs" />
+    <Compile Include="Mintrans\ObjectPool.cs" />
     <Compile Include="Mintrans\SoapSinkSettings.cs" />
     <Compile Include="Mintrans\SoapSink.cs" />
     <Compile Include="Mintrans\SoapTemplates.Designer.cs">
