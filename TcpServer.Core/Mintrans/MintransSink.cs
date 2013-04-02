@@ -37,7 +37,7 @@ namespace TcpServer.Core.Mintrans
             try
             {
                 if (false == this.settings.Enabled ||
-                this.imeiExclusionList.IsExclusion(packet.IMEI))
+                    this.imeiExclusionList.IsExclusion(packet.IMEI))
                 {
                     return;
                 }

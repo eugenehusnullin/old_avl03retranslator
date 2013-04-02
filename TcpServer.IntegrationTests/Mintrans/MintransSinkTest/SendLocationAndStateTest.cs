@@ -43,14 +43,6 @@ namespace TcpServer.IntegrationTests.Mintrans.MintransSinkTest
             }
 
             Task.WaitAll(tasks);
-            System.Console.WriteLine("ERROR CHECKING");
-            foreach (Task t in tasks)
-            {
-                if (t.IsFaulted)
-                {
-                    System.Console.WriteLine(t.Exception);
-                }
-            }
 
             tasks = new Task[50];
             for (int i = 0; i < 50; i++)
@@ -59,14 +51,6 @@ namespace TcpServer.IntegrationTests.Mintrans.MintransSinkTest
             }
 
             Task.WaitAll(tasks);
-            System.Console.WriteLine("ERROR CHECKING");
-            foreach (Task t in tasks)
-            {
-                if (t.IsFaulted)
-                {
-                    System.Console.WriteLine(t.Exception);
-                }
-            }
         }
     }
 }
