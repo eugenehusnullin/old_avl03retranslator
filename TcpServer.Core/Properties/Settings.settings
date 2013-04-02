@@ -5,5 +5,20 @@
     <Setting Name="TcpServer_Core_TelemetryService_TelemetryService" Type="(Web Service URL)" Scope="Application">
       <Value Profile="(Default)">http://ods.mos.ru:80/telemetry/telemetryWebService</Value>
     </Setting>
+    <Setting Name="Mintrans_Url" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://89.175.171.150:6400/gate2</Value>
+    </Setting>
+    <Setting Name="Mintrans_UserName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">userm</Value>
+    </Setting>
+    <Setting Name="Mintrans_Password" Type="System.String" Scope="User">
+      <Value Profile="(Default)">passm</Value>
+    </Setting>
+    <Setting Name="Mintrans_ImeiExclusionFileName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">MintransImeiExclusionList.txt</Value>
+    </Setting>
+    <Setting Name="Mintrans_Enabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

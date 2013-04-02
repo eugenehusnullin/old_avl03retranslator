@@ -7,9 +7,9 @@ namespace TcpServer.Core.Mintrans
 {
     public class SoapSink
     {
-        private SoapSinkSettings settings;
+        private MintransSettings settings;
 
-        public SoapSink(SoapSinkSettings settings)
+        public SoapSink(MintransSettings settings)
         {
             this.settings = settings;
         }

@@ -17,10 +17,12 @@ namespace TcpServer.IntegrationTests.Mintrans.MintransSinkTest
         [SetUp]
         public void Setup()
         {
+            MintransSettings settings = new MintransSettings();
             Mock<ILog> log = new Mock<ILog>();
-            SoapSink soapSink = new SoapSink(new SoapSinkSettings());
+            SoapSink soapSink = new SoapSink(settings);
             MessageBuilder builder = new MessageBuilder(new MintransMapper());
-            this.target = new MintransSink(log.Object, soapSink, builder);
+            ImeiExclusionList imeiExclusionList = new ImeiExclusionList(settings);
+            this.target = new MintransSink(log.Object, settings, soapSink, builder, imeiExclusionList);
         }
 
         [Test]
