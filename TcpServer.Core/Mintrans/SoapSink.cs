@@ -49,13 +49,5 @@ namespace TcpServer.Core.Mintrans
                 }
             });
         }
-
-        private void AssertTask(Task task)
-        {
-            if (task.IsFaulted)
-            {
-                throw new ApplicationException("SoapSink", task.Exception);
-            }
-        }
     }
 }
