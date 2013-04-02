@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using log4net;
 using Moq;
 using NUnit.Framework;
@@ -30,6 +31,43 @@ namespace TcpServer.IntegrationTests.Mintrans.MintransSinkTest
             task.Wait();
             Assert.IsNull(task.Exception);
             Assert.IsFalse(task.IsFaulted);
+        }
+
+        [Test]
+        public void Stress()
+        {
+            BasePacket packet = BasePacket.GetFromGlonass(PACKET);
+            Task[] tasks = new Task[50];
+            for (int i = 0; i < 50; i++)
+            {
+                tasks[i] = Task.Run(() => { this.target.SendLocationAndState(packet); });
+            }
+
+            Task.WaitAll(tasks);
+            System.Console.WriteLine("ERROR CHECKING");
+            foreach (Task t in tasks)
+            {
+                if (t.IsFaulted)
+                {
+                    System.Console.WriteLine(t.Exception);
+                }
+            }
+
+            tasks = new Task[50];
+            for (int i = 0; i < 50; i++)
+            {
+                tasks[i] = Task.Run(() => { this.target.SendLocationAndState(packet); });
+            }
+
+            Task.WaitAll(tasks);
+            System.Console.WriteLine("ERROR CHECKING");
+            foreach (Task t in tasks)
+            {
+                if (t.IsFaulted)
+                {
+                    System.Console.WriteLine(t.Exception);
+                }
+            }
         }
     }
 }

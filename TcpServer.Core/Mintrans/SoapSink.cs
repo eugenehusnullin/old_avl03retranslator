@@ -13,7 +13,7 @@ namespace TcpServer.Core.Mintrans
         public SoapSink(SoapSinkSettings settings)
         {
             this.settings = settings;
-            this.pool = new ObjectPool<WebRequest>(10, () => WebRequest.Create(this.settings.Url));
+            this.pool = new ObjectPool<WebRequest>(40, () => WebRequest.Create(this.settings.Url));
         }
 
         public async Task PostSoapMessage(byte[] message)
@@ -23,7 +23,6 @@ namespace TcpServer.Core.Mintrans
                 WebRequest request = this.pool.GetFromPool();
                 try
                 {
-                    int a = System.Threading.Thread.CurrentThread.ManagedThreadId;
                     request.Method = "POST";
                     request.ContentType = "application/soap+xml";
                     request.ContentLength = message.Length;
@@ -37,16 +36,15 @@ namespace TcpServer.Core.Mintrans
                             using (Stream responseStream = response.GetResponseStream()) { }
                         }
                     }
+
+                    request.Abort();
+                    this.pool.ReturnToPool(request);
                 }
                 catch
                 {
                     request.Abort();
                     this.pool.DestroyOne();
                     throw;
-                }
-                finally
-                {
-                    this.pool.ReturnToPool(request);
                 }
             });
         }
