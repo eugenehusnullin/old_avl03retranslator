@@ -3,12 +3,12 @@ using System.IO;
 
 namespace TcpServer.Core.Mintrans
 {
-    public class ImeiExclusionList
+    public class ImeiList
     {
         private MintransSettings settings;
         private HashSet<string> imeiList;
 
-        public ImeiExclusionList(MintransSettings settings)
+        public ImeiList(MintransSettings settings)
         {
             this.settings = settings;
             this.LoadList();
@@ -17,12 +17,12 @@ namespace TcpServer.Core.Mintrans
         private void LoadList()
         {
             this.imeiList = new HashSet<string>();
-            if (false == File.Exists(this.settings.ImeiExclusionFileName))
+            if (false == File.Exists(this.settings.ImeiFileName))
             {
                 return;
             }
 
-            using (StreamReader reader = new StreamReader(File.OpenRead(this.settings.ImeiExclusionFileName)))
+            using (StreamReader reader = new StreamReader(File.OpenRead(this.settings.ImeiFileName)))
             {
                 while(!reader.EndOfStream)
                 {
@@ -35,7 +35,7 @@ namespace TcpServer.Core.Mintrans
             }
         }
 
-        public bool IsExclusion(string imei)
+        public bool Contains(string imei)
         {
             return this.imeiList.Contains(imei);
         }

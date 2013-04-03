@@ -10,12 +10,12 @@ namespace TcpServer.Core.Mintrans
         private MintransSettings settings;
         private SoapSink sink;
         private MessageBuilder builder;
-        private ImeiExclusionList imeiExclusionList;
+        private ImeiList imeiList;
 
         public static MintransSink GetInstance(ILog log)
         {
             MintransSettings settings = new MintransSettings();
-            return new MintransSink(log, settings, new SoapSink(settings), new MessageBuilder(new MintransMapper()), new ImeiExclusionList(settings));
+            return new MintransSink(log, settings, new SoapSink(settings), new MessageBuilder(new MintransMapper()), new ImeiList(settings));
         }
 
         public MintransSink(
@@ -23,21 +23,20 @@ namespace TcpServer.Core.Mintrans
             MintransSettings settings,
             SoapSink sink,
             MessageBuilder builder,
-            ImeiExclusionList imeiExclusionList)
+            ImeiList imeiList)
         {
             this.log = log;
             this.settings = settings;
             this.sink = sink;
             this.builder = builder;
-            this.imeiExclusionList = imeiExclusionList;
+            this.imeiList = imeiList;
         }
 
         public async void SendLocationAndState(BasePacket packet)
         {
             try
             {
-                if (false == this.settings.Enabled ||
-                this.imeiExclusionList.IsExclusion(packet.IMEI))
+                if (!this.settings.Enabled || !this.imeiList.Contains(packet.IMEI))
                 {
                     return;
                 }
