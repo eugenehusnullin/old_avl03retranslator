@@ -14,8 +14,8 @@
     <Setting Name="Mintrans_Password" Type="System.String" Scope="Application">
       <Value Profile="(Default)">passm</Value>
     </Setting>
-    <Setting Name="Mintrans_ImeiExclusionFileName" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">MintransImeiExclusionList.txt</Value>
+    <Setting Name="Mintrans_ImeiListFileName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">MintransImeiList.txt</Value>
     </Setting>
     <Setting Name="Mintrans_Enabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>

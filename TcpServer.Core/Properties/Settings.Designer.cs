@@ -62,10 +62,10 @@ namespace TcpServer.Core.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("MintransImeiExclusionList.txt")]
-        public string Mintrans_ImeiExclusionFileName {
+        [global::System.Configuration.DefaultSettingValueAttribute("MintransImeiList.txt")]
+        public string Mintrans_ImeiListFileName {
             get {
-                return ((string)(this["Mintrans_ImeiExclusionFileName"]));
+                return ((string)(this["Mintrans_ImeiListFileName"]));
             }
         }
         

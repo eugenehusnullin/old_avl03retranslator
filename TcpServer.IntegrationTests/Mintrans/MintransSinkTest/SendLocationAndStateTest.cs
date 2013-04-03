@@ -21,8 +21,8 @@ namespace TcpServer.IntegrationTests.Mintrans.MintransSinkTest
             Mock<ILog> log = new Mock<ILog>();
             SoapSink soapSink = new SoapSink(settings);
             MessageBuilder builder = new MessageBuilder(new MintransMapper());
-            ImeiExclusionList imeiExclusionList = new ImeiExclusionList(settings);
-            this.target = new MintransSink(log.Object, settings, soapSink, builder, imeiExclusionList);
+            ImeiList imeiExclusionList = new ImeiList(settings);
+            this.target = new MintransSink(log.Object, settings, builder, imeiExclusionList);
         }
 
         [Test]
@@ -43,14 +43,7 @@ namespace TcpServer.IntegrationTests.Mintrans.MintransSinkTest
             }
 
             Task.WaitAll(tasks);
-
-            tasks = new Task[50];
-            for (int i = 0; i < 50; i++)
-            {
-                tasks[i] = Task.Run(() => { this.target.SendLocationAndState(packet); });
-            }
-
-            Task.WaitAll(tasks);
+            
         }
     }
 }

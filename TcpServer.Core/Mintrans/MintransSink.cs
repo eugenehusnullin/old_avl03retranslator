@@ -8,46 +8,48 @@ namespace TcpServer.Core.Mintrans
     {
         private ILog log;
         private MintransSettings settings;
-        private SoapSink sink;
+        private ObjectPool<SoapSink> soapSinkPool;
         private MessageBuilder builder;
-        private ImeiExclusionList imeiExclusionList;
+        private ImeiList imeiList;
 
         public static MintransSink GetInstance(ILog log)
         {
             MintransSettings settings = new MintransSettings();
-            return new MintransSink(log, settings, new SoapSink(settings), new MessageBuilder(new MintransMapper()), new ImeiExclusionList(settings));
+            return new MintransSink(log, settings, new MessageBuilder(new MintransMapper()), new ImeiList(settings));
         }
 
         public MintransSink(
             ILog log,
             MintransSettings settings,
-            SoapSink sink,
             MessageBuilder builder,
-            ImeiExclusionList imeiExclusionList)
+            ImeiList imeiList)
         {
             this.log = log;
             this.settings = settings;
-            this.sink = sink;
+            this.soapSinkPool = new ObjectPool<SoapSink>(20, () => new SoapSink(this.settings));
             this.builder = builder;
-            this.imeiExclusionList = imeiExclusionList;
+            this.imeiList = imeiList;
         }
 
         public async void SendLocationAndState(BasePacket packet)
         {
+            SoapSink sink = this.soapSinkPool.GetFromPool();
             try
             {
-                if (false == this.settings.Enabled ||
-                    this.imeiExclusionList.IsExclusion(packet.IMEI))
+                if (this.settings.Enabled &&
+                    this.imeiList.Contains(packet.IMEI))
                 {
-                    return;
+                    byte[] messageBytes = this.builder.CreateLocationAndStateMessage(packet);
+                    await sink.PostSoapMessage(messageBytes);
                 }
-
-                byte[] messageBytes = this.builder.CreateLocationAndStateMessage(packet);
-                await this.sink.PostSoapMessage(messageBytes);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 this.log.Error("MintransSink.SendLocationAndState " + ex.ToString());
+            }
+            finally
+            {
+                this.soapSinkPool.ReturnToPool(sink);
             }
         }
     }
