@@ -26,7 +26,7 @@ namespace TcpServer.Core.Mintrans
         {
             this.log = log;
             this.settings = settings;
-            this.soapSinkPool = new ObjectPool<SoapSink>(40, () => new SoapSink(this.settings));
+            this.soapSinkPool = new ObjectPool<SoapSink>(20, () => new SoapSink(this.settings));
             this.builder = builder;
             this.imeiList = imeiList;
         }
@@ -36,8 +36,8 @@ namespace TcpServer.Core.Mintrans
             SoapSink sink = this.soapSinkPool.GetFromPool();
             try
             {
-                if (true == this.settings.Enabled &&
-                    this.imeiList.IsIncluded(packet.IMEI))
+                if (this.settings.Enabled &&
+                    this.imeiList.Contains(packet.IMEI))
                 {
                     byte[] messageBytes = this.builder.CreateLocationAndStateMessage(packet);
                     await sink.PostSoapMessage(messageBytes);

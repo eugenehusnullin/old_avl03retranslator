@@ -35,7 +35,7 @@ namespace TcpServer.Core.Mintrans
             }
         }
 
-        public bool IsIncluded(string imei)
+        public bool Contains(string imei)
         {
             return this.imeiList.Contains(imei);
         }
