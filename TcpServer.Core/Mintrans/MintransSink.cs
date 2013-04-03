@@ -36,8 +36,8 @@ namespace TcpServer.Core.Mintrans
             SoapSink sink = this.soapSinkPool.GetFromPool();
             try
             {
-                if (false == this.settings.Enabled ||
-                this.imeiList.IsIncluded(packet.IMEI))
+                if (true == this.settings.Enabled &&
+                    this.imeiList.IsIncluded(packet.IMEI))
                 {
                     byte[] messageBytes = this.builder.CreateLocationAndStateMessage(packet);
                     await sink.PostSoapMessage(messageBytes);
