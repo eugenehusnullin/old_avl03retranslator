@@ -18,7 +18,6 @@ namespace TcpServer.Core.Mintrans
         {
             await Task.Run(() =>
             {
-                throw new Exception();
                 HttpWebRequest request = WebRequest.Create(this.settings.Url) as HttpWebRequest;
                 request.Method = "POST";
                 request.KeepAlive = true;
