@@ -71,11 +71,12 @@
     <Compile Include="DictionarySaver.cs" />
     <Compile Include="Listner.cs" />
     <Compile Include="Logger.cs" />
-    <Compile Include="Mintrans\ImeiExclusionList.cs" />
+    <Compile Include="Mintrans\ImeiList.cs" />
     <Compile Include="Mintrans\MessageBuilder.cs" />
     <Compile Include="Mintrans\MintransMapper.cs" />
     <Compile Include="Mintrans\MintransSettings.cs" />
     <Compile Include="Mintrans\MintransSink.cs" />
+    <Compile Include="Mintrans\ObjectPool.cs" />
     <Compile Include="Mintrans\SoapSink.cs" />
     <Compile Include="Mintrans\SoapTemplates.Designer.cs">
       <AutoGen>True</AutoGen>
