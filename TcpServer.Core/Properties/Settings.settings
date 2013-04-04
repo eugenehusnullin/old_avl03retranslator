@@ -21,16 +21,16 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="MintransMoscowRegion_Url" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">http://89.175.171.150:6400/gate2</Value>
+      <Value Profile="(Default)">http://46.183.183.2:4900</Value>
     </Setting>
     <Setting Name="MintransMoscowRegion_UserName" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">userm</Value>
+      <Value Profile="(Default)">user</Value>
     </Setting>
     <Setting Name="MintransMoscowRegion_Password" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">passm</Value>
+      <Value Profile="(Default)">pass</Value>
     </Setting>
     <Setting Name="MintransMoscowRegion_ImeiListFileName" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">MintransMoscowCityImeiList.txt</Value>
+      <Value Profile="(Default)">MintransMoscowRegionImeiList.txt</Value>
     </Setting>
     <Setting Name="MintransMoscowRegion_Enabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>

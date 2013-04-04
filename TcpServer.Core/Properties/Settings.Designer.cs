@@ -80,7 +80,7 @@ namespace TcpServer.Core.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://89.175.171.150:6400/gate2")]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://46.183.183.2:4900")]
         public string MintransMoscowRegion_Url {
             get {
                 return ((string)(this["MintransMoscowRegion_Url"]));
@@ -89,7 +89,7 @@ namespace TcpServer.Core.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("userm")]
+        [global::System.Configuration.DefaultSettingValueAttribute("user")]
         public string MintransMoscowRegion_UserName {
             get {
                 return ((string)(this["MintransMoscowRegion_UserName"]));
@@ -98,7 +98,7 @@ namespace TcpServer.Core.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("passm")]
+        [global::System.Configuration.DefaultSettingValueAttribute("pass")]
         public string MintransMoscowRegion_Password {
             get {
                 return ((string)(this["MintransMoscowRegion_Password"]));
@@ -107,7 +107,7 @@ namespace TcpServer.Core.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("MintransMoscowCityImeiList.txt")]
+        [global::System.Configuration.DefaultSettingValueAttribute("MintransMoscowRegionImeiList.txt")]
         public string MintransMoscowRegion_ImeiListFileName {
             get {
                 return ((string)(this["MintransMoscowRegion_ImeiListFileName"]));
