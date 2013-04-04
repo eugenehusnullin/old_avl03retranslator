@@ -9,5 +9,6 @@ namespace TcpServer.Core.Mintrans
         string Password { get; }
         string ImeiListFileName { get; }
         bool Enabled { get; }
+        string LoggerName { get; }
     }
 }

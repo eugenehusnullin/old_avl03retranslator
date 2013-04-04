@@ -11,6 +11,7 @@ namespace TcpServer.Core.Mintrans
             this.Password = Settings.Default.MintransMoscowCity_Password;
             this.ImeiListFileName = Settings.Default.MintransMoscowCity_ImeiListFileName;
             this.Enabled = Settings.Default.MintransMoscowCity_Enabled;
+            this.LoggerName = Settings.Default.MintransMoscowCity_LoggerName;
         }
 
         public string Url { get; private set; }
@@ -18,5 +19,6 @@ namespace TcpServer.Core.Mintrans
         public string Password { get; private set; }
         public string ImeiListFileName { get; private set; }
         public bool Enabled { get; private set; }
+        public string LoggerName { get; private set; }
     }
 }
