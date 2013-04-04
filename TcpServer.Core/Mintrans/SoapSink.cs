@@ -36,12 +36,21 @@ namespace TcpServer.Core.Mintrans
                         success = this.Send(message, out buffer);
                         if (false == success)
                         {
-                            this.initialized = false;
-                            throw new ApplicationException(new string(buffer));
+                            throw new ApplicationException(MessageBuilder.ENCODING.GetString(MessageBuilder.ENCODING.GetBytes(buffer)));
                         }
                     }
                 }
             });
+        }
+
+        public void Reset()
+        {
+            try
+            {
+                this.client.Close();
+                this.initialized = false;
+            }
+            catch { }
         }
 
         private void Initialize()

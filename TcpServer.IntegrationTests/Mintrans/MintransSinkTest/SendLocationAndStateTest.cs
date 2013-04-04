@@ -22,7 +22,7 @@ namespace TcpServer.IntegrationTests.Mintrans.MintransSinkTest
             SoapSink soapSink = new SoapSink(settings);
             MessageBuilder builder = new MessageBuilder(new MintransMapper());
             ImeiList imeiExclusionList = new ImeiList(settings);
-            this.target = new UnifiedProtocolSink(log.Object, settings, builder, imeiExclusionList);
+            this.target = new UnifiedProtocolSink(settings, builder, imeiExclusionList);
         }
 
         [Test]
