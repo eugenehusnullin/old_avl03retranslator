@@ -2,6 +2,7 @@
 using System;
 using System.Text;
 using TcpServer.Core.Mintrans;
+using TcpServer.Core.Properties;
 
 namespace TcpServer.Core.async.retranslator
 {
@@ -10,26 +11,38 @@ namespace TcpServer.Core.async.retranslator
         private static ILog packetLog;
         private static ILog log;
 
-        private RetranslatorTelemaxima retranslatorTelemaxima;
-        private MintransSink mintransSink;
+        private RetranslatorTelemaxima retranslatorTelemaxima = null;
+        private UnifiedProtocolSink mintransMoscowCitySink;
+        private UnifiedProtocolSink mintransMoscowRegionSink;
 
         public ReceivePacketProcessor()
         {
             packetLog = LogManager.GetLogger("packet");
             log = LogManager.GetLogger(typeof(ReceivePacketProcessor));
 
-            retranslatorTelemaxima = new RetranslatorTelemaxima();
-            this.mintransSink = MintransSink.GetInstance(log);
+            if (Settings.Default.Telemaxima_Enabled)
+            {
+                retranslatorTelemaxima = new RetranslatorTelemaxima();
+            }
+
+            this.mintransMoscowCitySink = UnifiedProtocolSink.GetInstance(new MintransMoscowCitySettings());
+            this.mintransMoscowRegionSink = UnifiedProtocolSink.GetInstance(new MintransMoscowRegionSettings());
         }
 
         public void start()
         {
-            retranslatorTelemaxima.start();
+            if (retranslatorTelemaxima != null)
+            {
+                retranslatorTelemaxima.start();
+            }
         }
 
         public void stop()
         {
-            retranslatorTelemaxima.stop();
+            if (retranslatorTelemaxima != null)
+            {
+                retranslatorTelemaxima.stop();
+            }
         }
 
         public byte[] processMessage(byte[] message)
@@ -41,8 +54,13 @@ namespace TcpServer.Core.async.retranslator
                 if (receivedData.StartsWith("$$"))
                 {
                     var basePacket = BasePacket.GetFromGlonass(receivedData);
-                    this.mintransSink.SendLocationAndState(basePacket);
-                    retranslatorTelemaxima.checkAndRetranslate(basePacket);
+                    this.mintransMoscowCitySink.SendLocationAndState(basePacket);
+                    this.mintransMoscowRegionSink.SendLocationAndState(basePacket);
+
+                    if (retranslatorTelemaxima != null)
+                    {
+                        retranslatorTelemaxima.checkAndRetranslate(basePacket);
+                    }
 
                     var gpsData = basePacket.ToPacketGps();
 
