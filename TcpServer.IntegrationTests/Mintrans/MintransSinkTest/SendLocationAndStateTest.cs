@@ -5,20 +5,22 @@ using Moq;
 using NUnit.Framework;
 using TcpServer.Core;
 using TcpServer.Core.Mintrans;
+using log4net.Config;
 
 namespace TcpServer.IntegrationTests.Mintrans.MintransSinkTest
 {
     [TestFixture]
     public class SendLocationAndStateTest
     {
-        private string PACKET = "$$9F359772038626256|AAUA0855.99485N038.37350E000000|01.6|01.0|01.3|20130324200047|20130324200047|000100000000|14122425|08580121|13DAC2AB|0000|0.0000|0167||580F";
+        private string PACKET = "$$9F359772035610485|AAUA0855.99485N038.37350E000000|01.6|01.0|01.3|20130324200047|20130324200047|000100000000|14122425|08580121|13DAC2AB|0000|0.0000|0167||580F";
         private UnifiedProtocolSink target;
 
         [SetUp]
         public void Setup()
         {
-            MintransMoscowRegionSettings settings = new MintransMoscowRegionSettings();
-            Mock<ILog> log = new Mock<ILog>();
+            XmlConfigurator.Configure();
+            ILog log = LogManager.GetLogger("Main");
+            IUnifiedProtocolSettings settings = new MintransMoscowRegionSettings();
             SoapSink soapSink = new SoapSink(settings);
             MessageBuilder builder = new MessageBuilder(new MintransMapper());
             ImeiList imeiExclusionList = new ImeiList(settings);

@@ -39,12 +39,11 @@ namespace TcpServer.Core.Mintrans
                 try
                 {
                     byte[] messageBytes = this.builder.CreateLocationAndStateMessage(packet);
-                    await sink.PostSoapMessage(messageBytes);
-                    this.log.InfoFormat("Retranslated to [{0}] IMEI= {1}, geo= {2}, {3}", this.settings.Url, packet.IMEI, packet.Latitude, packet.Longitude);
+                    await sink.PostSoapMessageAsync(messageBytes);
+                    this.log.InfoFormat("{0}, Retranslated to [{1}] IMEI= {2}, geo= {3}, {4}", sink.GetHashCode(), this.settings.Url, packet.IMEI, packet.Latitude, packet.Longitude);
                 }
                 catch (Exception ex)
                 {
-                    sink.Reset();
                     this.log.Error("UnifiedProtocolSink.SendLocationAndState: " + this.settings.Url + ": " + ex.ToString());
                 }
                 finally
