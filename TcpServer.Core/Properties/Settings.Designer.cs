@@ -123,27 +123,30 @@ namespace TcpServer.Core.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("MintransMoscowCity")]
         public string MintransMoscowCity_LoggerName {
             get {
                 return ((string)(this["MintransMoscowCity_LoggerName"]));
             }
-            set {
-                this["MintransMoscowCity_LoggerName"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("MintransMoscowRegion")]
         public string MintransMoscowRegion_LoggerName {
             get {
                 return ((string)(this["MintransMoscowRegion_LoggerName"]));
             }
-            set {
-                this["MintransMoscowRegion_LoggerName"] = value;
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool Telemaxima_Enabled {
+            get {
+                return ((bool)(this["Telemaxima_Enabled"]));
             }
         }
     }

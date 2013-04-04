@@ -13,9 +13,14 @@ namespace TcpServer.Core.Mintrans
 
         public ImeiList(IUnifiedProtocolSettings settings)
         {
+            this.imeiList = new HashSet<string>();
             this.settings = settings;
             this.log = LogManager.GetLogger(settings.LoggerName);
-            this.LoadList();
+
+            if (settings.Enabled)
+            {
+                this.LoadList();
+            }
         }
 
         private void LoadList()
@@ -42,7 +47,7 @@ namespace TcpServer.Core.Mintrans
                 return;
             }
 
-            this.imeiList = new HashSet<string>();
+            
             using (StreamReader reader = new StreamReader(File.OpenRead(imeiListFileName)))
             {
                 while(!reader.EndOfStream)

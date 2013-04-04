@@ -35,11 +35,14 @@
     <Setting Name="MintransMoscowRegion_Enabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="MintransMoscowCity_LoggerName" Type="System.String" Scope="User">
+    <Setting Name="MintransMoscowCity_LoggerName" Type="System.String" Scope="Application">
       <Value Profile="(Default)">MintransMoscowCity</Value>
     </Setting>
-    <Setting Name="MintransMoscowRegion_LoggerName" Type="System.String" Scope="User">
+    <Setting Name="MintransMoscowRegion_LoggerName" Type="System.String" Scope="Application">
       <Value Profile="(Default)">MintransMoscowRegion</Value>
+    </Setting>
+    <Setting Name="Telemaxima_Enabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

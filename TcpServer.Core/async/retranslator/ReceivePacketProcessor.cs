@@ -2,6 +2,7 @@
 using System;
 using System.Text;
 using TcpServer.Core.Mintrans;
+using TcpServer.Core.Properties;
 
 namespace TcpServer.Core.async.retranslator
 {
@@ -10,7 +11,7 @@ namespace TcpServer.Core.async.retranslator
         private static ILog packetLog;
         private static ILog log;
 
-        private RetranslatorTelemaxima retranslatorTelemaxima;
+        private RetranslatorTelemaxima retranslatorTelemaxima = null;
         private UnifiedProtocolSink mintransMoscowCitySink;
         private UnifiedProtocolSink mintransMoscowRegionSink;
 
@@ -19,14 +20,21 @@ namespace TcpServer.Core.async.retranslator
             packetLog = LogManager.GetLogger("packet");
             log = LogManager.GetLogger(typeof(ReceivePacketProcessor));
 
-            retranslatorTelemaxima = new RetranslatorTelemaxima();
+            if (Settings.Default.Telemaxima_Enabled)
+            {
+                retranslatorTelemaxima = new RetranslatorTelemaxima();
+            }
+
             this.mintransMoscowCitySink = UnifiedProtocolSink.GetInstance(new MintransMoscowCitySettings());
             this.mintransMoscowRegionSink = UnifiedProtocolSink.GetInstance(new MintransMoscowRegionSettings());
         }
 
         public void start()
         {
-            retranslatorTelemaxima.start();
+            if (retranslatorTelemaxima != null)
+            {
+                retranslatorTelemaxima.start();
+            }
         }
 
         public void stop()
@@ -46,7 +54,10 @@ namespace TcpServer.Core.async.retranslator
                     this.mintransMoscowCitySink.SendLocationAndState(basePacket);
                     this.mintransMoscowRegionSink.SendLocationAndState(basePacket);
 
-                    retranslatorTelemaxima.checkAndRetranslate(basePacket);
+                    if (retranslatorTelemaxima != null)
+                    {
+                        retranslatorTelemaxima.checkAndRetranslate(basePacket);
+                    }
 
                     var gpsData = basePacket.ToPacketGps();
 
