@@ -39,7 +39,10 @@ namespace TcpServer.Core.async.retranslator
 
         public void stop()
         {
-            retranslatorTelemaxima.stop();
+            if (retranslatorTelemaxima != null)
+            {
+                retranslatorTelemaxima.stop();
+            }
         }
 
         public byte[] processMessage(byte[] message)
