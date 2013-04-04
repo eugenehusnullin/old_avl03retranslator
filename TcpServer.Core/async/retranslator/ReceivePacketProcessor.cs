@@ -20,8 +20,8 @@ namespace TcpServer.Core.async.retranslator
             log = LogManager.GetLogger(typeof(ReceivePacketProcessor));
 
             retranslatorTelemaxima = new RetranslatorTelemaxima();
-            this.mintransMoscowCitySink = UnifiedProtocolSink.GetInstance(log, new MintransMoscowCitySettings());
-            this.mintransMoscowRegionSink = UnifiedProtocolSink.GetInstance(log, new MintransMoscowRegionSettings());
+            this.mintransMoscowCitySink = UnifiedProtocolSink.GetInstance(new MintransMoscowCitySettings());
+            this.mintransMoscowRegionSink = UnifiedProtocolSink.GetInstance(new MintransMoscowRegionSettings());
         }
 
         public void start()
