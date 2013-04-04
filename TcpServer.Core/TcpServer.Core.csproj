@@ -72,10 +72,12 @@
     <Compile Include="Listner.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Mintrans\ImeiList.cs" />
+    <Compile Include="Mintrans\IUnifiedProtocolSettings.cs" />
     <Compile Include="Mintrans\MessageBuilder.cs" />
     <Compile Include="Mintrans\MintransMapper.cs" />
-    <Compile Include="Mintrans\MintransSettings.cs" />
-    <Compile Include="Mintrans\MintransSink.cs" />
+    <Compile Include="Mintrans\MintransMoscowCitySettings.cs" />
+    <Compile Include="Mintrans\MintransMoscowRegionSettings.cs" />
+    <Compile Include="Mintrans\UnifiedProtocolSink.cs" />
     <Compile Include="Mintrans\ObjectPool.cs" />
     <Compile Include="Mintrans\SoapSink.cs" />
     <Compile Include="Mintrans\SoapTemplates.Designer.cs">

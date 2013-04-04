@@ -12,17 +12,17 @@ namespace TcpServer.IntegrationTests.Mintrans.MintransSinkTest
     public class SendLocationAndStateTest
     {
         private string PACKET = "$$9F359772038626256|AAUA0855.99485N038.37350E000000|01.6|01.0|01.3|20130324200047|20130324200047|000100000000|14122425|08580121|13DAC2AB|0000|0.0000|0167||580F";
-        private MintransSink target;
+        private UnifiedProtocolSink target;
 
         [SetUp]
         public void Setup()
         {
-            MintransSettings settings = new MintransSettings();
+            MintransMoscowRegionSettings settings = new MintransMoscowRegionSettings();
             Mock<ILog> log = new Mock<ILog>();
             SoapSink soapSink = new SoapSink(settings);
             MessageBuilder builder = new MessageBuilder(new MintransMapper());
             ImeiList imeiExclusionList = new ImeiList(settings);
-            this.target = new MintransSink(log.Object, settings, builder, imeiExclusionList);
+            this.target = new UnifiedProtocolSink(log.Object, settings, builder, imeiExclusionList);
         }
 
         [Test]

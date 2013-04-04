@@ -11,7 +11,8 @@ namespace TcpServer.Core.async.retranslator
         private static ILog log;
 
         private RetranslatorTelemaxima retranslatorTelemaxima;
-        private MintransSink mintransSink;
+        private UnifiedProtocolSink mintransMoscowCitySink;
+        private UnifiedProtocolSink mintransMoscowRegionSink;
 
         public ReceivePacketProcessor()
         {
@@ -19,7 +20,8 @@ namespace TcpServer.Core.async.retranslator
             log = LogManager.GetLogger(typeof(ReceivePacketProcessor));
 
             retranslatorTelemaxima = new RetranslatorTelemaxima();
-            this.mintransSink = MintransSink.GetInstance(log);
+            this.mintransMoscowCitySink = UnifiedProtocolSink.GetInstance(log, new MintransMoscowCitySettings());
+            this.mintransMoscowRegionSink = UnifiedProtocolSink.GetInstance(log, new MintransMoscowRegionSettings());
         }
 
         public void start()
@@ -41,7 +43,9 @@ namespace TcpServer.Core.async.retranslator
                 if (receivedData.StartsWith("$$"))
                 {
                     var basePacket = BasePacket.GetFromGlonass(receivedData);
-                    this.mintransSink.SendLocationAndState(basePacket);
+                    this.mintransMoscowCitySink.SendLocationAndState(basePacket);
+                    this.mintransMoscowRegionSink.SendLocationAndState(basePacket);
+
                     retranslatorTelemaxima.checkAndRetranslate(basePacket);
 
                     var gpsData = basePacket.ToPacketGps();

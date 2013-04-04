@@ -5,10 +5,10 @@ namespace TcpServer.Core.Mintrans
 {
     public class ImeiList
     {
-        private MintransSettings settings;
+        private IUnifiedProtocolSettings settings;
         private HashSet<string> imeiList;
 
-        public ImeiList(MintransSettings settings)
+        public ImeiList(IUnifiedProtocolSettings settings)
         {
             this.settings = settings;
             this.LoadList();

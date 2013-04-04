@@ -36,45 +36,90 @@ namespace TcpServer.Core.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("http://89.175.171.150:6400/gate2")]
-        public string Mintrans_Url {
+        public string MintransMoscowCity_Url {
             get {
-                return ((string)(this["Mintrans_Url"]));
+                return ((string)(this["MintransMoscowCity_Url"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("userm")]
-        public string Mintrans_UserName {
+        public string MintransMoscowCity_UserName {
             get {
-                return ((string)(this["Mintrans_UserName"]));
+                return ((string)(this["MintransMoscowCity_UserName"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("passm")]
-        public string Mintrans_Password {
+        public string MintransMoscowCity_Password {
             get {
-                return ((string)(this["Mintrans_Password"]));
+                return ((string)(this["MintransMoscowCity_Password"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("MintransImeiList.txt")]
-        public string Mintrans_ImeiListFileName {
+        [global::System.Configuration.DefaultSettingValueAttribute("MintransMoscowCityImeiList.txt")]
+        public string MintransMoscowCity_ImeiListFileName {
             get {
-                return ((string)(this["Mintrans_ImeiListFileName"]));
+                return ((string)(this["MintransMoscowCity_ImeiListFileName"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool Mintrans_Enabled {
+        public bool MintransMoscowCity_Enabled {
             get {
-                return ((bool)(this["Mintrans_Enabled"]));
+                return ((bool)(this["MintransMoscowCity_Enabled"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://89.175.171.150:6400/gate2")]
+        public string MintransMoscowRegion_Url {
+            get {
+                return ((string)(this["MintransMoscowRegion_Url"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("userm")]
+        public string MintransMoscowRegion_UserName {
+            get {
+                return ((string)(this["MintransMoscowRegion_UserName"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("passm")]
+        public string MintransMoscowRegion_Password {
+            get {
+                return ((string)(this["MintransMoscowRegion_Password"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("MintransMoscowCityImeiList.txt")]
+        public string MintransMoscowRegion_ImeiListFileName {
+            get {
+                return ((string)(this["MintransMoscowRegion_ImeiListFileName"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool MintransMoscowRegion_Enabled {
+            get {
+                return ((bool)(this["MintransMoscowRegion_Enabled"]));
             }
         }
     }

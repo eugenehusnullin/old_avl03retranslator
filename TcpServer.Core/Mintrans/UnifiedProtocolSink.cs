@@ -4,23 +4,22 @@ using System.Threading.Tasks;
 
 namespace TcpServer.Core.Mintrans
 {
-    public class MintransSink
+    public class UnifiedProtocolSink
     {
         private ILog log;
-        private MintransSettings settings;
+        private IUnifiedProtocolSettings settings;
         private ObjectPool<SoapSink> soapSinkPool;
         private MessageBuilder builder;
         private ImeiList imeiList;
 
-        public static MintransSink GetInstance(ILog log)
+        public static UnifiedProtocolSink GetInstance(ILog log, IUnifiedProtocolSettings settings)
         {
-            MintransSettings settings = new MintransSettings();
-            return new MintransSink(log, settings, new MessageBuilder(new MintransMapper()), new ImeiList(settings));
+            return new UnifiedProtocolSink(log, settings, new MessageBuilder(new MintransMapper()), new ImeiList(settings));
         }
 
-        public MintransSink(
+        public UnifiedProtocolSink(
             ILog log,
-            MintransSettings settings,
+            IUnifiedProtocolSettings settings,
             MessageBuilder builder,
             ImeiList imeiList)
         {
@@ -41,11 +40,12 @@ namespace TcpServer.Core.Mintrans
                 {
                     byte[] messageBytes = this.builder.CreateLocationAndStateMessage(packet);
                     await sink.PostSoapMessage(messageBytes);
+                    this.log.InfoFormat("Retranslated to [{0}] IMEI= {1}, geo= {2}, {3}", this.settings.Url, packet.IMEI, packet.Latitude, packet.Longitude);
                 }
             }
             catch (Exception ex)
             {
-                this.log.Error("MintransSink.SendLocationAndState " + ex.ToString());
+                this.log.Error("UnifiedProtocolSink.SendLocationAndState: " + this.settings.Url + ": " + ex.ToString());
             }
             finally
             {

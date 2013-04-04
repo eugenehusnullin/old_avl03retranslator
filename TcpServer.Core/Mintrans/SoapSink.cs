@@ -7,12 +7,12 @@ namespace TcpServer.Core.Mintrans
 {
     public class SoapSink
     {
-        private MintransSettings settings;
+        private IUnifiedProtocolSettings settings;
         private bool initialized = false;
         private TcpClient client;
         private StreamReader reader;
 
-        public SoapSink(MintransSettings settings)
+        public SoapSink(IUnifiedProtocolSettings settings)
         {
             this.settings = settings;
         }
