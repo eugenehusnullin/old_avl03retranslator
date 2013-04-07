@@ -117,6 +117,8 @@ namespace TcpServer.Core.Mintrans
         {
             Uri uri = new Uri(this.settings.Url);
             this.client = new TcpClient();
+            this.client.ReceiveTimeout = 5 * 60 * 1000;
+            this.client.SendTimeout = 5 * 60 * 1000;
             this.client.Connect(uri.Host, uri.Port);
             NetworkStream stream = this.client.GetStream();
             StreamWriter writer = new StreamWriter(stream, MessageBuilder.ENCODING);
