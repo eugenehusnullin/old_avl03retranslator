@@ -40,7 +40,14 @@ namespace TcpServer.Core.Mintrans
                 {
                     byte[] messageBytes = this.builder.CreateLocationAndStateMessage(packet);
                     await sink.PostSoapMessageAsync(messageBytes);
-                    this.log.InfoFormat("{0}, Retranslated to [{1}] IMEI= {2}, geo= {3}, {4}", sink.GetHashCode(), this.settings.Url, packet.IMEI, packet.Latitude, packet.Longitude);
+                    this.log.InfoFormat("IMEI={0}, geo={1}, {2}, speed={3}, direction={4}, altitude={5}, state={6}", 
+                        packet.IMEI, 
+                        packet.Latitude, 
+                        packet.Longitude,
+                        packet.Speed,
+                        packet.Direction,
+                        packet.Altitude,
+                        packet.State);
                 }
                 catch (Exception ex)
                 {

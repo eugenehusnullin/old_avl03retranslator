@@ -12,19 +12,19 @@ namespace TcpServer.Core.Mintrans
 
         public virtual string MapLat(BasePacket packet)
         {
-            string text = packet.Latitude.ToString(CultureInfo.InvariantCulture.NumberFormat);
+            string text = (packet.Latitude / 100).ToString(CultureInfo.InvariantCulture.NumberFormat);
             return text.Substring(0, Math.Min(15, text.Length));
         }
 
         public virtual string MapLon(BasePacket packet)
         {
-            string text = packet.Longitude.ToString(CultureInfo.InvariantCulture.NumberFormat);
+            string text = (packet.Longitude / 100).ToString(CultureInfo.InvariantCulture.NumberFormat);
             return text.Substring(0, Math.Min(15, text.Length));
         }
 
         public virtual string MapSpeed(BasePacket packet)
         {
-            return (packet.Speed * 1.852).ToString("0.0", CultureInfo.InvariantCulture.NumberFormat);
+            return packet.Speed.ToString("0.0", CultureInfo.InvariantCulture.NumberFormat);
         }
 
         public virtual string MapDir(BasePacket packet)
