@@ -36,5 +36,11 @@ namespace TcpServer.Core.Mintrans
         {
             return ('A' == packet.State) ? "1": "0";
         }
+
+        public virtual string MapIMEI(BasePacket packet)
+        {
+            // IMEI отправляется только последние 8 символов
+            return packet.IMEI.Substring(7);
+        }
     }
 }

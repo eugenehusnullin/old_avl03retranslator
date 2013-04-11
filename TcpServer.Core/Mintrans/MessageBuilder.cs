@@ -16,7 +16,7 @@ namespace TcpServer.Core.Mintrans
         public byte[] CreateLocationAndStateMessage(BasePacket packet)
         {
             string text = string.Format(SoapTemplates.LocationAndState,
-                packet.IMEI,
+                this.mapper.MapIMEI(packet),
                 this.mapper.MapTime(packet),
                 this.mapper.MapLon(packet),
                 this.mapper.MapLat(packet),
