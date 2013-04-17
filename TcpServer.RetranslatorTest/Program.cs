@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Configuration;
+using System.Globalization;
 using System.Threading;
 using TcpServer.Core;
 using TcpServer.Core.async.retranslator;
@@ -10,15 +12,12 @@ namespace TcpServer.RetranslatorTest
         static void Main(string[] args)
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-Us");
-            //var retranslator = new RetranslatorGlonass("84.234.58.229", 20141, "77.74.50.78", 20141);
-            //var retranslator = new RetranslatorGlonass("192.168.1.5", 20141, "77.74.50.78", 20141);
-            //retranslator.Start();
-
-            //ConnectionsAccepter async = new ConnectionsAccepter("31.31.20.193", 20141, "77.74.50.78", 20141);
-            AsyncRetranslator async = new AsyncRetranslator("127.0.0.1", 20141, "127.0.0.1", 20142);
-
-            //Thread thread = new Thread(() => async.start());
-            //thread.Start();
+            var async = new AsyncRetranslator(
+                ConfigurationManager.AppSettings["SrcHost"],
+                Convert.ToInt32(ConfigurationManager.AppSettings["SrcPort"]), 
+                ConfigurationManager.AppSettings["DstHost"], 
+                Convert.ToInt32(ConfigurationManager.AppSettings["DstPort"])
+            );
 
             async.start();
             System.Console.ReadLine();
