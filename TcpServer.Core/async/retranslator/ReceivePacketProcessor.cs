@@ -2,6 +2,7 @@
 using System;
 using System.Text;
 using TcpServer.Core.Mintrans;
+using TcpServer.Core.pilotka;
 using TcpServer.Core.Properties;
 
 namespace TcpServer.Core.async.retranslator
@@ -14,24 +15,28 @@ namespace TcpServer.Core.async.retranslator
         private RetranslatorTelemaxima retranslatorTelemaxima = null;
         private UnifiedProtocolSink mintransMoscowCitySink;
         private UnifiedProtocolSink mintransMoscowRegionSink;
+        private RetranslatorPilotka retranslatorPilotka;
+
+        private bool telemaximaEnabled = Settings.Default.Telemaxima_Enabled;
 
         public ReceivePacketProcessor()
         {
             packetLog = LogManager.GetLogger("packet");
             log = LogManager.GetLogger(typeof(ReceivePacketProcessor));
 
-            if (Settings.Default.Telemaxima_Enabled)
+            if (telemaximaEnabled)
             {
                 retranslatorTelemaxima = new RetranslatorTelemaxima();
             }
 
             this.mintransMoscowCitySink = UnifiedProtocolSink.GetInstance(new MintransMoscowCitySettings());
             this.mintransMoscowRegionSink = UnifiedProtocolSink.GetInstance(new MintransMoscowRegionSettings());
+            this.retranslatorPilotka = new RetranslatorPilotka();
         }
 
         public void start()
         {
-            if (retranslatorTelemaxima != null)
+            if (telemaximaEnabled)
             {
                 retranslatorTelemaxima.start();
             }
@@ -39,7 +44,7 @@ namespace TcpServer.Core.async.retranslator
 
         public void stop()
         {
-            if (retranslatorTelemaxima != null)
+            if (telemaximaEnabled)
             {
                 retranslatorTelemaxima.stop();
             }
@@ -56,8 +61,9 @@ namespace TcpServer.Core.async.retranslator
                     var basePacket = BasePacket.GetFromGlonass(receivedData);
                     this.mintransMoscowCitySink.SendLocationAndState(basePacket);
                     this.mintransMoscowRegionSink.SendLocationAndState(basePacket);
+                    this.retranslatorPilotka.retranslate(basePacket);
 
-                    if (retranslatorTelemaxima != null)
+                    if (telemaximaEnabled)
                     {
                         retranslatorTelemaxima.checkAndRetranslate(basePacket);
                     }

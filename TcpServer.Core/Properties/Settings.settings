@@ -44,5 +44,17 @@
     <Setting Name="Telemaxima_Enabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="Pilotka_Url" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://test-dextech.1gb.ua/service/get?deviceId={IMEI}&amp;state={STATE}&amp;utc={UTC}</Value>
+    </Setting>
+    <Setting Name="Pilotka_Enabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="Pilotka_ImeiListFileName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">pilotka.txt</Value>
+    </Setting>
+    <Setting Name="Pilotka_LoggerName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Pilotka</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
