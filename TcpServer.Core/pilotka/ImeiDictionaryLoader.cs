@@ -50,14 +50,17 @@ namespace TcpServer.Core.pilotka
             
             using (StreamReader reader = new StreamReader(File.OpenRead(imeiListFileName)))
             {
+                int i = 0;
                 while(!reader.EndOfStream)
                 {
                     string imei = reader.ReadLine();
                     if(!string.IsNullOrEmpty(imei))
                     {
                         imeiDictionary.Add(imei, new StateSended());
+                        i++;
                     }
                 }
+                log.InfoFormat("Загружено {0} imei из файла {1}", i, imeiListFileName);
             }
 
             return imeiDictionary;
