@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace TcpServer.Core.pilotka
 {
@@ -13,7 +14,7 @@ namespace TcpServer.Core.pilotka
         private PilotkaSettings settings;
         private string url;
         private ILog log;
-        private string datetimeFormat = "yyyy-MM-dd-HH-mm-ss";
+        private string datetimeFormat = "dd.MM.yyyy HH-mm-ss";
         private int webRequestTimeout = 10000;
 
         public WebRequestSender(PilotkaSettings settings)
@@ -34,12 +35,16 @@ namespace TcpServer.Core.pilotka
                             .Replace("{STATE}", engineState == EngineState.Started ? "1" : "0")
                             .Replace("{UTC}", utcDatetime.ToString(datetimeFormat));
 
+                        currentUrl = HttpUtility.UrlEncode(currentUrl);
+
                         HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(currentUrl);
                         webRequest.Timeout = webRequestTimeout;
                         webRequest.Method = "GET";
                         try
                         {
                             var webResponse = (HttpWebResponse)webRequest.GetResponse();
+                            log.DebugFormat("WebRequestSender: webResponse = {0}, url={1}", webResponse, currentUrl);
+
                             return webResponse.StatusCode == HttpStatusCode.OK;
                         }
                         catch (Exception e)

@@ -152,7 +152,7 @@ namespace TcpServer.Core.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://test-dextech.1gb.ua/service/get?deviceId={IMEI}&state={STATE}&utc={UTC}")]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://test-dextech.1gb.ua/service/get?deviceId={IMEI}&date={UTC}&status={STATE}")]
         public string Pilotka_Url {
             get {
                 return ((string)(this["Pilotka_Url"]));

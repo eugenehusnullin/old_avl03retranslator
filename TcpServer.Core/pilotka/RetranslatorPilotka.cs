@@ -44,6 +44,15 @@ namespace TcpServer.Core.pilotka
                         {
                             stateSended.state = newEngineState;
                             stateSended.sended = await webRequestSender.send(packet.IMEI, newEngineState, DateTime.UtcNow);
+
+                            if (stateSended.sended)
+                            {
+                                log.InfoFormat("Успешно: IMEI={0}, EngineState={1}", packet.IMEI, packet.Status[5]);
+                            }
+                            else
+                            {
+                                log.WarnFormat("Провально: IMEI={0}, EngineState={1}", packet.IMEI, packet.Status[5]);
+                            }
                         }
                         finally
                         {
@@ -54,7 +63,7 @@ namespace TcpServer.Core.pilotka
             }
             catch (Exception e)
             {
-                log.Error("RetranslatorPilotka: " + e.ToString());
+                log.Error("RetranslatorPilotka.retranslate: " + e.ToString());
             }
         }
 

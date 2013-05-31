@@ -45,7 +45,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="Pilotka_Url" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">http://test-dextech.1gb.ua/service/get?deviceId={IMEI}&amp;state={STATE}&amp;utc={UTC}</Value>
+      <Value Profile="(Default)">http://test-dextech.1gb.ua/service/get?deviceId={IMEI}&amp;date={UTC}&amp;status={STATE}</Value>
     </Setting>
     <Setting Name="Pilotka_Enabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
