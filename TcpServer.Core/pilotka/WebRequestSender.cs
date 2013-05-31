@@ -14,7 +14,7 @@ namespace TcpServer.Core.pilotka
         private PilotkaSettings settings;
         private string url;
         private ILog log;
-        private string datetimeFormat = "dd.MM.yyyy HH-mm-ss";
+        private string datetimeFormat = "dd.MM.yyyy HH:mm:ss";
         private int webRequestTimeout = 10000;
 
         public WebRequestSender(PilotkaSettings settings)
@@ -33,9 +33,7 @@ namespace TcpServer.Core.pilotka
                         string currentUrl = url;
                         currentUrl = currentUrl.Replace("{IMEI}", imei)
                             .Replace("{STATE}", engineState == EngineState.Started ? "1" : "0")
-                            .Replace("{UTC}", utcDatetime.ToString(datetimeFormat));
-
-                        currentUrl = HttpUtility.UrlEncode(currentUrl);
+                            .Replace("{UTC}", HttpUtility.UrlEncode(utcDatetime.ToString(datetimeFormat)));
 
                         HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(currentUrl);
                         webRequest.Timeout = webRequestTimeout;
@@ -43,7 +41,7 @@ namespace TcpServer.Core.pilotka
                         try
                         {
                             var webResponse = (HttpWebResponse)webRequest.GetResponse();
-                            log.DebugFormat("WebRequestSender: webResponse = {0}, url={1}", webResponse, currentUrl);
+                            log.DebugFormat("WebRequestSender: webResponse = {0}, url={1}", webResponse.StatusCode, currentUrl);
 
                             return webResponse.StatusCode == HttpStatusCode.OK;
                         }
