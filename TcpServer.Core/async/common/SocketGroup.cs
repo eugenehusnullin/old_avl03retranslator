@@ -15,6 +15,8 @@ namespace TcpServer.Core.async.common
         public volatile SocketAsyncEventArgs blockSendSAEA = null;
         public volatile SocketAsyncEventArgs monReceiveSAEA = null;
         public volatile SocketAsyncEventArgs monSendSAEA = null;
+        public volatile SocketAsyncEventArgs mon2ReceiveSAEA = null;
+        public volatile SocketAsyncEventArgs mon2SendSAEA = null;
 
         //public AutoResetEvent waitWhileSendToMon = new AutoResetEvent(true);
         //public AutoResetEvent waitWhileSendToBlock = new AutoResetEvent(true);

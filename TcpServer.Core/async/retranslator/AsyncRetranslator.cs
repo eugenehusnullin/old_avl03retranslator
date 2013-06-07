@@ -12,6 +12,7 @@ using System.Threading;
 using TcpServer.Core.async.block;
 using TcpServer.Core.async.common;
 using TcpServer.Core.async.mon;
+using TcpServer.Core.Properties;
 
 namespace TcpServer.Core.async.retranslator
 {
@@ -22,24 +23,29 @@ namespace TcpServer.Core.async.retranslator
         
         private BlocksAcceptor blocksAcceptor;
         private MonConnector monConnector;
+        private Mon2Connector mon2Connector;
         private ReceivePacketProcessor receivePacketProcessor;
 
         
         private BaseConnector.MessageReceived messageReceivedFromBlockDelegate;
         private BaseConnector.MessageReceived messageReceivedFromMonDelegate;
+        private BaseConnector.MessageReceived messageReceivedFromMon2Delegate;
 
         private BaseConnector.MessageSended messageSendedToMonDelegate;
+        private BaseConnector.MessageSended messageSendedToMon2Delegate;
         private BaseConnector.MessageSended messageSendedToBlockDelegate;
+        
 
         private BaseConnector.ReceiveFailed blockReceiveFailedDelegate;
         private BaseConnector.SendFailed blockSendFailedDelegate;
         private BaseConnector.ReceiveFailed monReceiveFailedDelegate;
         private BaseConnector.SendFailed monSendFailedDelegate;
+        private BaseConnector.ReceiveFailed mon2ReceiveFailedDelegate;
+        private BaseConnector.SendFailed mon2SendFailedDelegate;
 
         private BlocksAcceptor.ConnectionAccepted blockConnectionAcceptedDelegate;
 
-        private volatile int connectionsToBlock = 0;
-        private object syncCntToBlock = new object();
+        private HashSet<string> mon2Imeis;
 
         public AsyncRetranslator(string listenHost, int listenPort, string monHost, int monPort)
         {
@@ -52,14 +58,18 @@ namespace TcpServer.Core.async.retranslator
 
             messageReceivedFromBlockDelegate = messageReceivedFromBlock;
             messageReceivedFromMonDelegate = messageReceivedFromMon;
+            messageReceivedFromMon2Delegate = messageReceivedFromMon2;
 
             messageSendedToMonDelegate = messageSendedToMon;
+            messageSendedToMon2Delegate = messageSendedToMon2;
             messageSendedToBlockDelegate = messageSendedToBlock;
 
             blockReceiveFailedDelegate = blockReceiveFailed;
             blockSendFailedDelegate = blockSendFailed;
             monReceiveFailedDelegate = monReceiveFailed;
             monSendFailedDelegate = monSendFailed;
+            mon2ReceiveFailedDelegate = mon2ReceiveFailed;
+            mon2SendFailedDelegate = mon2SendFailed;
 
             blockConnectionAcceptedDelegate = blockConnectionAccepted;
 
@@ -68,6 +78,16 @@ namespace TcpServer.Core.async.retranslator
                 blockConnectionAcceptedDelegate, blockReceiveFailedDelegate, blockSendFailedDelegate);
             monConnector = new MonConnector(monHost, monPort, messageReceivedFromMonDelegate, messageSendedToMonDelegate,
                 monReceiveFailedDelegate, monSendFailedDelegate);
+
+            if (Settings.Default.Mon2_Enabled)
+            {
+                // 1. load imeis
+                mon2Imeis = ImeiListLoader.loadImeis(log, Settings.Default.Mon2_ImeiListFileName);
+
+                // 2. init mon2connector
+                mon2Connector = new Mon2Connector(Settings.Default.Mon2_Host, Settings.Default.Mon2_Port,
+                    messageReceivedFromMon2Delegate, messageSendedToMon2Delegate, mon2ReceiveFailedDelegate, mon2SendFailedDelegate);
+            }
         }
 
         public void start()
@@ -86,42 +106,24 @@ namespace TcpServer.Core.async.retranslator
             log.Info("Retranslator stoped.");
         }
 
-        private void incrementCountConnectionsToBlock()
-        {
-            lock (syncCntToBlock)
-            {
-                connectionsToBlock++;
-                log.DebugFormat("Block connections: {0}", connectionsToBlock);
-            }
-        }
-
-        private void decrementCountConnectionsToBlock()
-        {
-            lock (syncCntToBlock)
-            {
-                connectionsToBlock--;
-                log.DebugFormat("Block connections: {0}", connectionsToBlock);
-            }
-        }
-
         private void blockConnectionAccepted(SocketAsyncEventArgs saea)
         {
-            var userToken = (DataHoldingUserToken)saea.UserToken;
-            userToken.socketGroup = new SocketGroup();
-            userToken.socketGroup.blockReceiveSAEA = saea;
-
             // создаем заранее соединение с мониторингом
             SocketAsyncEventArgs monReceive, monSend;
             if (monConnector.createConnection(out monReceive, out monSend))
             {
-                userToken.socketGroup.monSendSAEA = monSend;
-                ((DataHoldingUserToken)userToken.socketGroup.monSendSAEA.UserToken).socketGroup = userToken.socketGroup;
-                userToken.socketGroup.monReceiveSAEA = monReceive;
-                ((DataHoldingUserToken)userToken.socketGroup.monReceiveSAEA.UserToken).socketGroup = userToken.socketGroup;
-                monConnector.startReceive(monReceive);
+                var socketGroup = new SocketGroup();
 
+                ((DataHoldingUserToken)saea.UserToken).socketGroup = socketGroup;
+                ((DataHoldingUserToken)monReceive.UserToken).socketGroup = socketGroup;
+                ((DataHoldingUserToken)monSend.UserToken).socketGroup = socketGroup;
+
+                socketGroup.blockReceiveSAEA = saea;
+                socketGroup.monReceiveSAEA = monReceive;
+                socketGroup.monSendSAEA = monSend;
+
+                monConnector.startReceive(monReceive);
                 blocksAcceptor.startReceive(saea);
-                incrementCountConnectionsToBlock();
             }
             else
             {
@@ -134,11 +136,11 @@ namespace TcpServer.Core.async.retranslator
         {
             SocketGroup socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
 
-            byte[] processedBytes = receivePacketProcessor.processMessage(message);
+            string imei;
+            byte[] processedBytes = receivePacketProcessor.processMessage(message, out imei);
 
             if (processedBytes == null)
             {
-                decrementCountConnectionsToBlock();
                 blocksAcceptor.closeSocket(socketGroup.blockReceiveSAEA);
                 if (socketGroup.monSendSAEA != null)
                 {
@@ -148,6 +150,35 @@ namespace TcpServer.Core.async.retranslator
             }
 
             monConnector.startSend(socketGroup.monSendSAEA, processedBytes);
+
+            // mon2
+            if (Settings.Default.Mon2_Enabled && mon2Imeis.Contains(imei))
+            {
+                if (socketGroup.mon2SendSAEA == null)
+                {
+                    SocketAsyncEventArgs mon2Receive, mon2Send;
+                    if (mon2Connector.createConnection(out mon2Receive, out mon2Send))
+                    {
+                        ((DataHoldingUserToken)mon2Receive.UserToken).socketGroup = socketGroup;
+                        ((DataHoldingUserToken)mon2Send.UserToken).socketGroup = socketGroup;
+
+                        socketGroup.mon2ReceiveSAEA = mon2Receive;
+                        socketGroup.mon2SendSAEA = mon2Send;
+
+                        mon2Connector.startReceive(mon2Receive);
+                    }
+                    else
+                    {
+                        socketGroup.mon2ReceiveSAEA = null;
+                        socketGroup.mon2SendSAEA = null;
+                    }
+                }
+
+                if (socketGroup.mon2SendSAEA != null)
+                {
+                    mon2Connector.startSend(socketGroup.mon2SendSAEA, processedBytes);
+                }
+            }
         }
 
         private void messageSendedToMon(SocketAsyncEventArgs saea)
@@ -156,7 +187,31 @@ namespace TcpServer.Core.async.retranslator
             blocksAcceptor.startReceive(userToken.socketGroup.blockReceiveSAEA);
         }
 
+        private void messageSendedToMon2(SocketAsyncEventArgs saea)
+        {
+            var userToken = (DataHoldingUserToken)saea.UserToken;
+            blocksAcceptor.startReceive(userToken.socketGroup.blockReceiveSAEA);
+        }
+
         private void messageReceivedFromMon(byte[] message, SocketAsyncEventArgs saea)
+        {
+            // log command
+            {
+                string str = Encoding.ASCII.GetString(message);
+                commandLog.Debug(str);
+            }
+
+            SocketGroup socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
+            if (socketGroup.blockSendSAEA == null)
+            {
+                socketGroup.blockSendSAEA = blocksAcceptor.createSaeaForSend(socketGroup.blockReceiveSAEA.AcceptSocket);
+                ((DataHoldingUserToken)socketGroup.blockSendSAEA.UserToken).socketGroup = socketGroup;
+            }
+            
+            blocksAcceptor.startSend(socketGroup.blockSendSAEA, message);
+        }
+
+        private void messageReceivedFromMon2(byte[] message, SocketAsyncEventArgs saea)
         {
             // log command
             {
@@ -182,7 +237,6 @@ namespace TcpServer.Core.async.retranslator
 
         private void blockReceiveFailed(SocketAsyncEventArgs saea)
         {
-            decrementCountConnectionsToBlock();
             var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
             if (socketGroup.monSendSAEA != null)
             {
@@ -214,9 +268,15 @@ namespace TcpServer.Core.async.retranslator
             }
         }
 
+        private void mon2ReceiveFailed(SocketAsyncEventArgs saea)
+        {
+            var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
+            socketGroup.mon2ReceiveSAEA = null;
+            socketGroup.mon2SendSAEA = null;
+        }
+
         private void monSendFailed(SocketAsyncEventArgs saea)
         {
-            decrementCountConnectionsToBlock();
             var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
             if (socketGroup.blockReceiveSAEA != null)
             {
@@ -224,6 +284,13 @@ namespace TcpServer.Core.async.retranslator
                 (socketGroup.blockReceiveSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
                 socketGroup.blockReceiveSAEA.Dispose();
             }
+        }
+
+        private void mon2SendFailed(SocketAsyncEventArgs saea)
+        {
+            var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
+            socketGroup.mon2ReceiveSAEA = null;
+            socketGroup.mon2SendSAEA = null;
         }
     }
 }

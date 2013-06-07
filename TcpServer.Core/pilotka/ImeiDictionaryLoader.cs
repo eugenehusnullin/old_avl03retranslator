@@ -1,10 +1,10 @@
 ﻿using log4net;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TcpServer.Core.async.common;
 
 namespace TcpServer.Core.pilotka
 {
@@ -26,43 +26,11 @@ namespace TcpServer.Core.pilotka
             ILog log = LogManager.GetLogger(settings.LoggerName);
             Dictionary<string, StateSended> imeiDictionary = new Dictionary<string, StateSended>();
 
-            string imeiListFileName = settings.ImeiListFileName;
-
-            try
+            var imeiSet = ImeiListLoader.loadImeis(log, settings.ImeiListFileName);
+            foreach (string imei in imeiSet)
             {
-                if (!File.Exists(imeiListFileName))
-                {
-                    string servicePath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
-                    imeiListFileName = Path.Combine(servicePath, settings.ImeiListFileName);
-
-                    if (!File.Exists(imeiListFileName))
-                    {
-                        log.ErrorFormat("Imei list file {0} not exists.", settings.ImeiListFileName);
-                        return imeiDictionary;
-                    }
-                }
+                imeiDictionary.Add(imei, new StateSended());
             }
-            catch (Exception e)
-            {
-                log.Error(String.Format("Exception on loading Imei list file {0}.", settings.ImeiListFileName), e);
-                return imeiDictionary;
-            }
-            
-            using (StreamReader reader = new StreamReader(File.OpenRead(imeiListFileName)))
-            {
-                int i = 0;
-                while(!reader.EndOfStream)
-                {
-                    string imei = reader.ReadLine();
-                    if(!string.IsNullOrEmpty(imei))
-                    {
-                        imeiDictionary.Add(imei, new StateSended());
-                        i++;
-                    }
-                }
-                log.InfoFormat("Загружено {0} imei из файла {1}", i, imeiListFileName);
-            }
-
             return imeiDictionary;
         }
     }

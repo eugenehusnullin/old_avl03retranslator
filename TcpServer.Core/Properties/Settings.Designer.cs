@@ -185,5 +185,41 @@ namespace TcpServer.Core.Properties {
                 return ((string)(this["Pilotka_LoggerName"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool Mon2_Enabled {
+            get {
+                return ((bool)(this["Mon2_Enabled"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("mon2.txt")]
+        public string Mon2_ImeiListFileName {
+            get {
+                return ((string)(this["Mon2_ImeiListFileName"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("195.206.252.236")]
+        public string Mon2_Host {
+            get {
+                return ((string)(this["Mon2_Host"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("16161")]
+        public int Mon2_Port {
+            get {
+                return ((int)(this["Mon2_Port"]));
+            }
+        }
     }
 }

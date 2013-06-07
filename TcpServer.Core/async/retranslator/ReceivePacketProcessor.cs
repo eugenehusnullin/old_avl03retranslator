@@ -50,15 +50,17 @@ namespace TcpServer.Core.async.retranslator
             }
         }
 
-        public byte[] processMessage(byte[] message)
+        public byte[] processMessage(byte[] message, out string imei)
         {
             string receivedData = string.Empty;
+            imei = null;
             try
             {
                 receivedData = Encoding.ASCII.GetString(message);
                 if (receivedData.StartsWith("$$"))
                 {
                     var basePacket = BasePacket.GetFromGlonass(receivedData);
+                    imei = basePacket.IMEI;
                     this.mintransMoscowCitySink.SendLocationAndState(basePacket);
                     this.mintransMoscowRegionSink.SendLocationAndState(basePacket);
                     this.retranslatorPilotka.retranslate(basePacket);

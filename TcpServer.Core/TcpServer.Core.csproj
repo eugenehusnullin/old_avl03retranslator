@@ -54,6 +54,8 @@
     <Compile Include="async\block\ReceiveAllReadedHandler.cs" />
     <Compile Include="async\block\ReceiveResponseHandler.cs" />
     <Compile Include="async\block\ReceiveTypeSelector.cs" />
+    <Compile Include="async\common\ImeiListLoader.cs" />
+    <Compile Include="async\mon\Mon2Connector.cs" />
     <Compile Include="async\retranslator\AsyncRetranslator.cs" />
     <Compile Include="async\common\BaseConnector.cs" />
     <Compile Include="async\block\BlocksAcceptor.cs" />

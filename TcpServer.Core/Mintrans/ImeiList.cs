@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using TcpServer.Core.async.common;
 
 namespace TcpServer.Core.Mintrans
 {
@@ -19,45 +20,7 @@ namespace TcpServer.Core.Mintrans
 
             if (settings.Enabled)
             {
-                this.LoadList();
-            }
-        }
-
-        private void LoadList()
-        {
-            string imeiListFileName = this.settings.ImeiListFileName;
-
-            try
-            {
-                if (!File.Exists(imeiListFileName))
-                {
-                    string servicePath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
-                    imeiListFileName = Path.Combine(servicePath, this.settings.ImeiListFileName);
-
-                    if (!File.Exists(imeiListFileName))
-                    {
-                        log.ErrorFormat("Imei list file {0} not exists.", settings.ImeiListFileName);
-                        return;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                log.Error(String.Format("Exception on loading Imei list file {0}.", settings.ImeiListFileName), e);
-                return;
-            }
-
-            
-            using (StreamReader reader = new StreamReader(File.OpenRead(imeiListFileName)))
-            {
-                while(!reader.EndOfStream)
-                {
-                    string imei = reader.ReadLine();
-                    if(!string.IsNullOrEmpty(imei))
-                    {
-                        this.imeiList.Add(imei);
-                    }
-                }
+                imeiList = ImeiListLoader.loadImeis(log, settings.ImeiListFileName);
             }
         }
 

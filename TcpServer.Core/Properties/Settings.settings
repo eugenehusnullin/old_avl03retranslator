@@ -56,5 +56,17 @@
     <Setting Name="Pilotka_LoggerName" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Pilotka</Value>
     </Setting>
+    <Setting Name="Mon2_Enabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="Mon2_ImeiListFileName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">mon2.txt</Value>
+    </Setting>
+    <Setting Name="Mon2_Host" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">195.206.252.236</Value>
+    </Setting>
+    <Setting Name="Mon2_Port" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">16161</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
