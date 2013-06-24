@@ -61,6 +61,13 @@ namespace TcpServer.Core.async.retranslator
                 {
                     var basePacket = BasePacket.GetFromGlonass(receivedData);
                     imei = basePacket.IMEI;
+
+                    if (basePacket.State.Equals('V'))
+                    {
+                        basePacket.Latitude = 0.0d;
+                        basePacket.Longitude = 0.0d;
+                    }
+
                     this.mintransMoscowCitySink.SendLocationAndState(basePacket);
                     this.mintransMoscowRegionSink.SendLocationAndState(basePacket);
                     this.retranslatorPilotka.retranslate(basePacket);

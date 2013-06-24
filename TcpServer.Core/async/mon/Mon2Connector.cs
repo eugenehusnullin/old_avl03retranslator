@@ -42,7 +42,7 @@ namespace TcpServer.Core.async.mon
             sendEventHandler = new EventHandler<SocketAsyncEventArgs>(sendEvent);
             receiveEventHandler = new EventHandler<SocketAsyncEventArgs>(receiveEvent);
 
-            log = LogManager.GetLogger(typeof(MonConnector));
+            log = LogManager.GetLogger(typeof(Mon2Connector));
         }
 
         private void receiveEvent(object sender, SocketAsyncEventArgs saea)
