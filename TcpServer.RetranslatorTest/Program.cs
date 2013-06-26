@@ -12,12 +12,7 @@ namespace TcpServer.RetranslatorTest
         static void Main(string[] args)
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-Us");
-            var async = new AsyncRetranslator(
-                ConfigurationManager.AppSettings["SrcHost"],
-                Convert.ToInt32(ConfigurationManager.AppSettings["SrcPort"]), 
-                ConfigurationManager.AppSettings["DstHost"], 
-                Convert.ToInt32(ConfigurationManager.AppSettings["DstPort"])
-            );
+            var async = new AsyncRetranslator("127.0.0.1", 4805, "127.0.0.1", 20401);
 
             async.start();
             System.Console.ReadLine();

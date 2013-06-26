@@ -189,8 +189,6 @@ namespace TcpServer.Core.async.retranslator
 
         private void messageSendedToMon2(SocketAsyncEventArgs saea)
         {
-            var userToken = (DataHoldingUserToken)saea.UserToken;
-            blocksAcceptor.startReceive(userToken.socketGroup.blockReceiveSAEA);
         }
 
         private void messageReceivedFromMon(byte[] message, SocketAsyncEventArgs saea)
