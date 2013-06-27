@@ -176,7 +176,7 @@ namespace TcpServer.Core.async.retranslator
 
                 if (socketGroup.mon2SendSAEA != null)
                 {
-                    mon2Connector.startSend(socketGroup.mon2SendSAEA, processedBytes);
+                    mon2Connector.startSend(socketGroup.mon2SendSAEA, message);
                 }
             }
         }
