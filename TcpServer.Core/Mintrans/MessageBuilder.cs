@@ -13,10 +13,10 @@ namespace TcpServer.Core.Mintrans
             this.mapper = mapper;
         }
 
-        public byte[] CreateLocationAndStateMessage(BasePacket packet)
+        public byte[] CreateLocationAndStateMessage(BasePacket packet, string id)
         {
             string text = string.Format(SoapTemplates.LocationAndState,
-                this.mapper.MapIMEI(packet),
+                id,
                 this.mapper.MapTime(packet),
                 this.mapper.MapLon(packet),
                 this.mapper.MapLat(packet),

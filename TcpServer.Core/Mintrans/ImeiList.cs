@@ -9,24 +9,36 @@ namespace TcpServer.Core.Mintrans
     public class ImeiList
     {
         private IUnifiedProtocolSettings settings;
-        private HashSet<string> imeiList;
+        private Dictionary<string, string> imeiDictionary;
         ILog log;
 
         public ImeiList(IUnifiedProtocolSettings settings)
         {
-            this.imeiList = new HashSet<string>();
             this.settings = settings;
             this.log = LogManager.GetLogger(settings.LoggerName);
+            this.imeiDictionary = new Dictionary<string, string>();
 
             if (settings.Enabled)
             {
-                imeiList = ImeiListLoader.loadImeis(log, settings.ImeiListFileName);
+                var set = ImeiListLoader.loadImeis(log, settings.ImeiListFileName);
+                foreach (string csv in set)
+                {
+                    var strs = csv.Split(';');
+                    imeiDictionary.Add(strs[0], strs[1]);
+                }
             }
         }
 
-        public bool Contains(string imei)
+        public string GetId(string imei)
         {
-            return this.imeiList.Contains(imei);
+            if (imeiDictionary.ContainsKey(imei))
+            {
+                return imeiDictionary[imei];
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

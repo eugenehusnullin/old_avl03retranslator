@@ -32,30 +32,35 @@ namespace TcpServer.Core.Mintrans
 
         public async void SendLocationAndState(BasePacket packet)
         {
-            if (this.settings.Enabled &&
-                    this.imeiList.Contains(packet.IMEI))
+
+            if (this.settings.Enabled) 
             {
-                SoapSink sink = this.soapSinkPool.GetFromPool();
-                try
+                var id = this.imeiList.GetId(packet.IMEI);
+                if (id != null)
                 {
-                    byte[] messageBytes = this.builder.CreateLocationAndStateMessage(packet);
-                    await sink.PostSoapMessageAsync(messageBytes);
-                    this.log.InfoFormat("IMEI={0}, geo={1}, {2}, speed={3}, direction={4}, altitude={5}, state={6}", 
-                        packet.IMEI, 
-                        packet.Latitude, 
-                        packet.Longitude,
-                        packet.Speed,
-                        packet.Direction,
-                        packet.Altitude,
-                        packet.State);
-                }
-                catch (Exception ex)
-                {
-                    this.log.Error("UnifiedProtocolSink.SendLocationAndState: " + this.settings.Url + ": " + ex.ToString());
-                }
-                finally
-                {
-                    this.soapSinkPool.ReturnToPool(sink);
+                    SoapSink sink = this.soapSinkPool.GetFromPool();
+                    try
+                    {
+                        byte[] messageBytes = this.builder.CreateLocationAndStateMessage(packet, id);
+                        await sink.PostSoapMessageAsync(messageBytes);
+                        this.log.InfoFormat("IMEI={0}, geo={1}, {2}, speed={3}, direction={4}, altitude={5}, state={6}, id={7}",
+                            packet.IMEI,
+                            packet.Latitude,
+                            packet.Longitude,
+                            packet.Speed,
+                            packet.Direction,
+                            packet.Altitude,
+                            packet.State,
+                            id);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.log.Error("UnifiedProtocolSink.SendLocationAndState: " + this.settings.Url + ": " + ex.ToString());
+                    }
+                    finally
+                    {
+                        this.soapSinkPool.ReturnToPool(sink);
+                    }
                 }
             }
         }
