@@ -198,11 +198,18 @@ namespace TcpServer.Core.async.block
             }
             else
             {
+                byte[] message = null;
+                int code = 0;
+
                 if (userToken.dataTypeId == 0)
                 {
                     receiveTypeSelector.defineTypeData(saea, userToken);
                     if (userToken.dataTypeId == 0)
                     {
+                        receiveAllReadedHandler.handle(saea, userToken, out message);
+                        string receivedData = Encoding.ASCII.GetString(message);
+                        log.WarnFormat("Someone sended us a bad packet={0}", receivedData);
+
                         userToken.resetAll();
                         receiveFailed(saea);
                         closeSocket(saea);
@@ -212,8 +219,6 @@ namespace TcpServer.Core.async.block
                     }
                 }
 
-                byte[] message = null;
-                int code = 0;
                 if (userToken.dataTypeId == 1)
                 {
                     code = receiveMessageHandler.handleMessage(saea, userToken, bytesToProcess, out message);
