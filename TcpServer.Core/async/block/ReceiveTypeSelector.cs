@@ -68,6 +68,10 @@ namespace TcpServer.Core.async.block
             {
                 userToken.dataTypeId = 3;
             }
+            else if (prefix.StartsWith("IMEI"))
+            {
+                userToken.dataTypeId = 4;
+            }
             else
             {
                 // непонятно что прислали, рвем соединение

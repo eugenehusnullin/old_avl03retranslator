@@ -227,7 +227,7 @@ namespace TcpServer.Core.async.block
                 {
                     code = receiveResponseHandler.handleResponse(saea, userToken, out message);
                 }
-                else if (userToken.dataTypeId == 3)
+                else if (userToken.dataTypeId == 3 || userToken.dataTypeId == 4)
                 {
                     code = receiveAllReadedHandler.handle(saea, userToken, out message);
                 }
