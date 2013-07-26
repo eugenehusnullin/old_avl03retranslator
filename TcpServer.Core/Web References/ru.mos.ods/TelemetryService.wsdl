@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<wsdl:definitions xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy/ws-policy.xsd" xmlns:tns="http://webservice.telemetry.udo.fors.ru/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:sp="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702" name="TelemetryService" targetNamespace="http://webservice.telemetry.udo.fors.ru/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
-  <wsp:Policy wsu:Id="UsernameToken" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:sp="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702">
+<wsdl:definitions xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://webservice.telemetry.udo.fors.ru/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns1="http://schemas.xmlsoap.org/soap/http" name="TelemetryService" targetNamespace="http://webservice.telemetry.udo.fors.ru/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsp:Policy wsu:Id="UsernameToken" xmlns:sp="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702" xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="                   http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702                   http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702/ws-securitypolicy-1.2.xsd">
     <wsp:ExactlyOne>
       <wsp:All>
-        <!-- Empty <TransportBinding/> element required due to bug in CXF 2.2.6 +++-->
-        <sp:TransportBinding />
         <sp:SupportingTokens>
           <wsp:Policy>
-            <sp:UsernameToken sp:IncludeToken="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702/IncludeToken/AlwaysToRecipient" />
+            <sp:UsernameToken sp:IncludeToken="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702/IncludeToken/AlwaysToRecipient">
+              <wsp:Policy />
+            </sp:UsernameToken>
           </wsp:Policy>
         </sp:SupportingTokens>
       </wsp:All>
@@ -55,8 +55,8 @@
       </xs:complexType>
       <xs:complexType name="telemetryDetailBa">
         <xs:sequence>
-          <xs:element name="sensorCode" type="xs:string" />
-          <xs:element name="value" type="xs:double" />
+          <xs:element minOccurs="0" name="sensorCode" type="xs:string" />
+          <xs:element minOccurs="0" name="value" type="xs:double" />
         </xs:sequence>
       </xs:complexType>
       <xs:complexType name="storeTelemetryListResponse">
@@ -64,7 +64,7 @@
       </xs:complexType>
       <xs:complexType name="storeTelemetry">
         <xs:sequence>
-          <xs:element name="telemetry" type="tns:telemetryBa" />
+          <xs:element minOccurs="0" name="telemetry" type="tns:telemetryBa" />
           <xs:element minOccurs="0" maxOccurs="unbounded" name="telemetryDetails" type="tns:telemetryDetailBa" />
         </xs:sequence>
       </xs:complexType>
@@ -134,9 +134,9 @@
       <wsdl:fault name="TelemetryException" message="tns:TelemetryException" />
     </wsdl:operation>
   </wsdl:portType>
-  <wsdl:binding name="TelemetryServiceServiceSoapBinding" type="tns:TelemetryService">
-    <wsp:PolicyReference xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" URI="#UsernameToken" />
+  <wsdl:binding name="TelemetryServiceSoapBinding" type="tns:TelemetryService">
     <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsp:PolicyReference URI="#UsernameToken" />
     <wsdl:operation name="testService">
       <soap:operation soapAction="" style="document" />
       <wsdl:input name="testService">
@@ -175,7 +175,7 @@
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="TelemetryService">
-    <wsdl:port name="TelemetryServicePort" binding="tns:TelemetryServiceServiceSoapBinding">
+    <wsdl:port name="TelemetryServiceImplPort" binding="tns:TelemetryServiceSoapBinding">
       <soap:address location="http://ods.mos.ru:80/telemetry/telemetryWebService" />
     </wsdl:port>
   </wsdl:service>

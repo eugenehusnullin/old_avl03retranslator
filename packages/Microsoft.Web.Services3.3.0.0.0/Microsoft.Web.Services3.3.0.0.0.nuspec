@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>Microsoft.Web.Services3</id>
+    <version>3.0.0.0</version>
+    <title>WSE 3.0</title>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <projectUrl>http://msdn.microsoft.com/en-us/library/aa139619.aspx</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>WSE 3.0 simplifies the development and deployment of secure Web services. It enables developers and administrators to apply security policies to Web services running on the .NET Framework 2.0. Using WSE 3.0, Web services communication can be signed and encrypted using Kerberos tickets, X.509 certificates and other custom binary and XML-based security tokens. In addition username/password credentials can be used for authentication purposes. An enhanced security model provides a policy-driven foundation for securing Web services. WSE also supports the ability to establish a trust-issuing service for retrieval and validation of security tokens, as well as the ability to establish more efficient long-running secure communication via secure conversations. 
+downloaded from url: http://www.microsoft.com/download/en/details.aspx?id=14089</description>
+    <releaseNotes />
+    <copyright />
+    <language />
+    <tags>wse webservices</tags>
+  </metadata>
+</package>

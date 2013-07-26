@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Web.Services3.Design;
+using Microsoft.Web.Services3.Security.Tokens;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -115,10 +117,20 @@ namespace TcpServer.Core
                         currentImei = basePacket.IMEI;
                         Logger.PacketWriteLine(currentImei + " " + packet);
 
-                        var wsdl = new TelemetryService.TelemetryService();
-                        wsdl.UseDefaultCredentials = true;
+                        
 
-                        var telemetry = new TelemetryService.telemetryBa();
+                        //string username = "braitmonitor"; //"braitmonitor_test";
+                        //string password = "cup6ztd3BvOd"; //"braitmonitor123";
+                        PolicyAssertion[] policyAssertion = new PolicyAssertion[] {
+                            new UsernameOverTransportAssertion()
+                        };
+                        Policy policy = new Policy(policyAssertion);
+
+                        TelemetryService service = new TelemetryService();
+                        service.SetPolicy(policy);
+                        service.SetClientCredential(new UsernameToken("braitmonitor", "cup6ztd3BvOd", PasswordOption.SendPlainText));
+
+                        var telemetry = new telemetryBa();
                         telemetry.gpsCode = basePacket.IMEI;
                         telemetry.coordX = basePacket.Longitude;
                         telemetry.coordY = basePacket.Latitude;
@@ -126,13 +138,13 @@ namespace TcpServer.Core
                         telemetry.speed = basePacket.Speed;
                         telemetry.glonass = false;
 
-                        var telemetryDetailsCollection = new List<TelemetryService.telemetryDetailBa>();
-                        var telemetryDetails = new TelemetryService.telemetryDetailBa();
+                        var telemetryDetailsCollection = new List<telemetryDetailBa>();
+                        var telemetryDetails = new telemetryDetailBa();
                         telemetryDetails.sensorCode = "pwr_ext";
                         telemetryDetails.value = 12;
                         telemetryDetailsCollection.Add(telemetryDetails);
 
-                        wsdl.storeTelemetry(telemetry, telemetryDetailsCollection.ToArray());
+                        service.storeTelemetry(telemetry, telemetryDetailsCollection.ToArray());
 
                         var resultBuffer = new[] { (byte)0x11 };
                         lock (_thisLock)
@@ -163,40 +175,5 @@ namespace TcpServer.Core
             if (blockStream != null) blockStream.Close();
             if (blockClient != null) blockClient.Close();
         }
-    }
-}
-
-namespace TcpServer.Core.TelemetryService
-{
-    public partial class TelemetryService
-    {
-        protected override System.Xml.XmlWriter GetWriterForMessage(SoapClientMessage message, int bufferSize)
-        {
-
-            var header = new SoapHeaderSecurity();
-            header.MustUnderstand = true;
-            header.UsernameToken.Username = "braitmonitor";
-            header.UsernameToken.Password = "cup6ztd3BvOd";
-            //header.UsernameToken.Username = "braitmonitor_test";
-            //header.UsernameToken.Password = "braitmonitor123";
-            message.Headers.Add(header);
-            return base.GetWriterForMessage(message, bufferSize);
-        }
-    }
-
-    [System.Xml.Serialization.XmlRootAttribute("Security", Namespace = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd", DataType = "wsse", IsNullable = false)]
-    public class SoapHeaderSecurity : SoapHeader
-    {
-        public SoapHeaderSecurity()
-        {
-            UsernameToken = new UsernameToken();
-        }
-        public UsernameToken UsernameToken { get; set; }
-    }
-
-    public class UsernameToken
-    {
-        public string Username { get; set; }
-        public string Password { get; set; }
     }
 }
