@@ -33,11 +33,26 @@ namespace TcpServer.Retranslator.Service.Wsdl
                 throw new ArgumentException("Не создан параметр", "LogPath");
             }
             LogPath = logPath;
+
+            Username = ConfigurationManager.AppSettings["username"];
+            if (string.IsNullOrEmpty(Username))
+            {
+                throw new ArgumentException("Не создан параметр", "username");
+            }
+
+            Password = ConfigurationManager.AppSettings["password"];
+            if (string.IsNullOrEmpty(Username))
+            {
+                throw new ArgumentException("Не создан параметр", "password");
+            }
         }
 
         public string SrcHost { get; set; }
         public int SrcPort { get; set; }
 
         public string LogPath { get; set; }
+
+        public string Username { get; set; }
+        public string Password { get; set; }
     }
 }

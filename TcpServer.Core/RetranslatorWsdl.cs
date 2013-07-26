@@ -13,15 +13,21 @@ namespace TcpServer.Core
 {
     public class RetranslatorWsdl
     {
-        public RetranslatorWsdl(string srcIpAddress, int srcPort) : this(srcIpAddress, srcPort, null, new Options { LogPath = "RetranslatorWsdlLog" }) { }
-        public RetranslatorWsdl(string srcIpAddress, int srcPort, EventLog eventLog, Options options)
+        public RetranslatorWsdl(string srcIpAddress, int srcPort) : this(srcIpAddress, srcPort, null, new Options { LogPath = "RetranslatorWsdlLog" }, null, null) { }
+        public RetranslatorWsdl(string srcIpAddress, int srcPort, EventLog eventLog, Options options, string username, string password)
         {
             SrcHost = srcIpAddress;
             SrcPort = srcPort;
 
             Options = options;
             Logger = new Logger(eventLog, options.LogPath);
+
+            this.username = username;
+            this.password = password;
         }
+
+        private string username;
+        private string password;
 
         public Options Options { get; set; }
         public Logger Logger { get; set; }
@@ -116,11 +122,7 @@ namespace TcpServer.Core
 
                         currentImei = basePacket.IMEI;
                         Logger.PacketWriteLine(currentImei + " " + packet);
-
                         
-
-                        //string username = "braitmonitor"; //"braitmonitor_test";
-                        //string password = "cup6ztd3BvOd"; //"braitmonitor123";
                         PolicyAssertion[] policyAssertion = new PolicyAssertion[] {
                             new UsernameOverTransportAssertion()
                         };
@@ -128,7 +130,7 @@ namespace TcpServer.Core
 
                         TelemetryService service = new TelemetryService();
                         service.SetPolicy(policy);
-                        service.SetClientCredential(new UsernameToken("braitmonitor", "cup6ztd3BvOd", PasswordOption.SendPlainText));
+                        service.SetClientCredential(new UsernameToken(username, password, PasswordOption.SendPlainText));
 
                         var telemetry = new telemetryBa();
                         telemetry.gpsCode = basePacket.IMEI;

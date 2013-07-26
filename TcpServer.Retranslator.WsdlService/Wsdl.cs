@@ -24,7 +24,7 @@ namespace TcpServer.Retranslator.Service.Wsdl
             options.LogPath = appOptions.LogPath;
 
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-Us");
-            RetranslatorWsdl = new RetranslatorWsdl(appOptions.SrcHost, appOptions.SrcPort, eventLog, options);
+            RetranslatorWsdl = new RetranslatorWsdl(appOptions.SrcHost, appOptions.SrcPort, eventLog, options, appOptions.Username, appOptions.Password);
         }
 
         public RetranslatorWsdl RetranslatorWsdl { get; set; }
