@@ -8,6 +8,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Web.Services.Protocols;
+using TestOds;
 
 namespace TcpServer.Core
 {
@@ -124,7 +125,8 @@ namespace TcpServer.Core
                         Logger.PacketWriteLine(currentImei + " " + packet);
                         
                         PolicyAssertion[] policyAssertion = new PolicyAssertion[] {
-                            new UsernameOverTransportAssertion()
+                            new OdsTransportAssertion()
+                            //new UsernameOverTransportAssertion()
                         };
                         Policy policy = new Policy(policyAssertion);
 

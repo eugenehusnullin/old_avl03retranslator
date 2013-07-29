@@ -94,6 +94,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>SoapTemplates.resx</DependentUpon>
     </Compile>
+    <Compile Include="OdsTransportAssertion.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="pilotka\ImeiDictionaryLoader.cs" />
     <Compile Include="pilotka\PilotkaSettings.cs" />
