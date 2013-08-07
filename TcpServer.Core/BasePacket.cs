@@ -421,8 +421,8 @@ namespace TcpServer.Core
                 int.TryParse(matchGroups["FuelImpuls"].Value, out fuelImpuls);
                 result.FuelImpuls = fuelImpuls;
 
-                var fuelString = GetIntToString(fuelImpuls, 4);
-                result.ADC = result.ADC.Substring(0, 4) + fuelString;
+                //var fuelString = GetIntToString(fuelImpuls, 4);
+                //result.ADC = result.ADC.Substring(0, 4) + fuelString;
             }
 
             return result;
