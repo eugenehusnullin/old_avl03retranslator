@@ -74,7 +74,8 @@ namespace TcpServer.Core.async.block
             }
             else
             {
-                // непонятно что прислали, рвем соединение
+                userToken.dataTypeId = 5;
+                // непонятно что прислали
                 log.WarnFormat("Someone sended us a bad packet with prefix={0} his IP={1}", prefix,
                     ((IPEndPoint)saea.AcceptSocket.RemoteEndPoint).Address);
             }
