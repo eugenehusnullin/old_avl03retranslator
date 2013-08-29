@@ -23,7 +23,7 @@ namespace TcpServer.Core.async.retranslator
         
         private BlocksAcceptor blocksAcceptor;
         private MonConnector monConnector;
-        private Mon2Connector mon2Connector;
+        private MonConnector mon2Connector;
         private ReceivePacketProcessor receivePacketProcessor;
 
         
@@ -77,7 +77,7 @@ namespace TcpServer.Core.async.retranslator
             blocksAcceptor = new BlocksAcceptor(listenHost, listenPort, messageReceivedFromBlockDelegate, messageSendedToBlockDelegate,
                 blockConnectionAcceptedDelegate, blockReceiveFailedDelegate, blockSendFailedDelegate);
             monConnector = new MonConnector(monHost, monPort, messageReceivedFromMonDelegate, messageSendedToMonDelegate,
-                monReceiveFailedDelegate, monSendFailedDelegate);
+                monReceiveFailedDelegate, monSendFailedDelegate, 3, 7000);
 
             if (Settings.Default.Mon2_Enabled)
             {
@@ -85,7 +85,7 @@ namespace TcpServer.Core.async.retranslator
                 mon2Imeis = ImeiListLoader.loadImeis(log, Settings.Default.Mon2_ImeiListFileName);
 
                 // 2. init mon2connector
-                mon2Connector = new Mon2Connector(Settings.Default.Mon2_Host, Settings.Default.Mon2_Port,
+                mon2Connector = new MonConnector(Settings.Default.Mon2_Host, Settings.Default.Mon2_Port,
                     messageReceivedFromMon2Delegate, messageSendedToMon2Delegate, mon2ReceiveFailedDelegate, mon2SendFailedDelegate);
             }
         }

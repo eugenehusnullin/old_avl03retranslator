@@ -15,8 +15,8 @@ namespace TcpServer.Core.async.mon
 {
     public class MonConnector : BaseConnector
     {
-        private const int ATTEMPT_CONNECT_TO_MONITORING = 3;
-        private const int TIMEOUT_BETWEEN_ATTEMPT_CONNECT_TO_MONITORING = 7000;
+        private int attemptConnect = 1;
+        private int timeoutConnect = 1000;
         private const int BUFFER_SIZE = 512;
 
         private ILog log;
@@ -45,6 +45,14 @@ namespace TcpServer.Core.async.mon
             receiveEventHandler = new EventHandler<SocketAsyncEventArgs>(receiveEvent);
 
             log = LogManager.GetLogger(typeof(MonConnector));
+        }
+
+        public MonConnector(string monHost, int monPort, MessageReceived messageReceived, BaseConnector.MessageSended messageSended,
+            ReceiveFailed receiveFailed, SendFailed sendFailed, int attemptConnect, int timeoutConnect)
+            : this(monHost, monPort, messageReceived, messageSended, receiveFailed, sendFailed)
+        {
+            this.attemptConnect = attemptConnect;
+            this.timeoutConnect = timeoutConnect;
         }
 
         private void receiveEvent(object sender, SocketAsyncEventArgs saea)
@@ -183,11 +191,11 @@ namespace TcpServer.Core.async.mon
 
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             int attempt = 0;
-            while (!socket.Connected && attempt < ATTEMPT_CONNECT_TO_MONITORING)
+            while (!socket.Connected && attempt < attemptConnect)
             {
                 if (attempt > 0)
                 {
-                    Thread.Sleep(TIMEOUT_BETWEEN_ATTEMPT_CONNECT_TO_MONITORING);
+                    Thread.Sleep(timeoutConnect);
                 }
                 attempt++;
                 try
