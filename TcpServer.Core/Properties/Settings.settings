@@ -68,5 +68,8 @@
     <Setting Name="TcpServer_Core_ru_mos_ods_TelemetryService" Type="(Web Service URL)" Scope="Application">
       <Value Profile="(Default)">http://ods.mos.ru:80/telemetry/telemetryWebService</Value>
     </Setting>
+    <Setting Name="Mon2_Format" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

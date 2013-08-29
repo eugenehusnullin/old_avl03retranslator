@@ -176,7 +176,14 @@ namespace TcpServer.Core.async.retranslator
 
                 if (socketGroup.mon2SendSAEA != null)
                 {
-                    mon2Connector.startSend(socketGroup.mon2SendSAEA, message);
+                    if (Settings.Default.Mon2_Format)
+                    {
+                        mon2Connector.startSend(socketGroup.mon2SendSAEA, processedBytes);
+                    }
+                    else
+                    {
+                        mon2Connector.startSend(socketGroup.mon2SendSAEA, message);
+                    }
                 }
             }
         }
