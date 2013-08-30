@@ -177,6 +177,11 @@ namespace TcpServer.Core.async.mon
                 {
                     saea.AcceptSocket.Shutdown(SocketShutdown.Both);
                 }
+            }
+            catch { }
+
+            try
+            {
                 saea.AcceptSocket.Close();
             }
             catch { }

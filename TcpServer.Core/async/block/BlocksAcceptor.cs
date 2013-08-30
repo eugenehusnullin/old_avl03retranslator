@@ -330,6 +330,11 @@ namespace TcpServer.Core.async.block
                 {
                     saea.AcceptSocket.Shutdown(SocketShutdown.Both);
                 }
+            }
+            catch { }
+
+            try
+            {
                 saea.AcceptSocket.Close();
             }
             catch { }
