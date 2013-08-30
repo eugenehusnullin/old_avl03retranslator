@@ -332,9 +332,13 @@ namespace TcpServer.Core.async.block
                 }
                 saea.AcceptSocket.Close();
             }
-            catch
+            catch { }
+
+            try
             {
+                saea.Dispose();
             }
+            catch { }
         }
 
         public SocketAsyncEventArgs createSaeaForSend(Socket acceptSocket)

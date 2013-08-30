@@ -179,9 +179,13 @@ namespace TcpServer.Core.async.mon
                 }
                 saea.AcceptSocket.Close();
             }
-            catch
+            catch { }
+
+            try
             {
+                saea.Dispose();
             }
+            catch { }
         }
 
         public bool createConnection(out SocketAsyncEventArgs receiveSaea, out SocketAsyncEventArgs sendSaea)
