@@ -15,7 +15,7 @@ namespace TcpServer.Core.Mintrans
 
         public byte[] CreateLocationAndStateMessage(BasePacket packet, string id)
         {
-            string text = string.Format(SoapTemplates.LocationAndState,
+            string text = string.Format(packet.isSOS() ? SoapTemplates.Alarm : SoapTemplates.LocationAndState,
                 id,
                 this.mapper.MapTime(packet),
                 this.mapper.MapLon(packet),

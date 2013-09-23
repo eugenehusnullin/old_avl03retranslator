@@ -117,6 +117,19 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Alarm" xml:space="preserve">
+    <value>&lt;?xml version="1.0" encoding="windows-1251" ?&gt;
+&lt;soapenv:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope"&gt;
+  &lt;soapenv:Header /&gt;
+  &lt;soapenv:Body&gt;
+    &lt;ws:PutCoordResponce&gt;
+      &lt;ObjectID&gt;{0}&lt;/ObjectID&gt;
+      &lt;Coord time="{1}" lon="{2}" lat="{3}" alt="{4}" speed="{5}" dir="{6}" valid="{7}" /&gt;
+      &lt;DigI inpnum="7" val="1" /&gt;
+    &lt;/ws:PutCoordResponce&gt;
+  &lt;/soapenv:Body&gt;
+&lt;/soapenv:Envelope&gt;</value>
+  </data>
   <data name="LocationAndState" xml:space="preserve">
     <value>&lt;?xml version="1.0" encoding="windows-1251" ?&gt;
 &lt;soapenv:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope"&gt;

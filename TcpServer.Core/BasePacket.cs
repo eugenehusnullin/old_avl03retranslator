@@ -271,6 +271,11 @@ namespace TcpServer.Core
             return bytes.Skip(21).Take(87).ToArray();
         }
 
+        public bool isSOS()
+        {
+            return AlarmType.Equals("01");
+        }
+
         public static BasePacket GetFromGlonass(string stringPacket)
         {
             const string pattern_old = @"\$\$(?<Len>\w{2})(?<Imei>\d{15})\|(?<AlarmType>\w{2})(?<Chip>U|R)(?<State>A|V)(?<Satellites>\d{2})"
