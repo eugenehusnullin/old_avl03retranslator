@@ -125,7 +125,7 @@
     &lt;ws:PutCoordResponce&gt;
       &lt;ObjectID&gt;{0}&lt;/ObjectID&gt;
       &lt;Coord time="{1}" lon="{2}" lat="{3}" alt="{4}" speed="{5}" dir="{6}" valid="{7}" /&gt;
-      &lt;DigI inpnum="7" val="1" /&gt;
+      &lt;DigI inpnum="2" /&gt;
     &lt;/ws:PutCoordResponce&gt;
   &lt;/soapenv:Body&gt;
 &lt;/soapenv:Envelope&gt;</value>

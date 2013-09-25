@@ -43,7 +43,9 @@ namespace TcpServer.Core.Mintrans
                     {
                         byte[] messageBytes = this.builder.CreateLocationAndStateMessage(packet, id);
                         await sink.PostSoapMessageAsync(messageBytes);
-                        this.log.InfoFormat("IMEI={0}, geo={1}, {2}, speed={3}, direction={4}, altitude={5}, state={6}, id={7}",
+                        this.log.InfoFormat(
+                            packet.isSOS() ? "ALARM = SOS, IMEI={0}, geo={1}, {2}, speed={3}, direction={4}, altitude={5}, state={6}, id={7}" 
+                            : "IMEI={0}, geo={1}, {2}, speed={3}, direction={4}, altitude={5}, state={6}, id={7}",
                             packet.IMEI,
                             packet.Latitude,
                             packet.Longitude,
