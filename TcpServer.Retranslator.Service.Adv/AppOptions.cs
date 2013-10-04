@@ -66,6 +66,12 @@ namespace TcpServer.Retranslator.Service
                 throw new ArgumentException("Параметр должен быть true или false", "UseFeedBack");
             }
             UseFeedBack = useFeedBack;
+
+            var ServiceName = ConfigurationManager.AppSettings["ServiceName"];
+            if (string.IsNullOrEmpty(ServiceName))
+            {
+                throw new ArgumentException("Не создан параметр", "ServiceName");
+            }
         }
 
         public  string SrcHost { get; set; }
@@ -76,5 +82,7 @@ namespace TcpServer.Retranslator.Service
 
         public string LogPath { get; set; }
         public bool UseFeedBack { get; set; }
+
+        public string ServiceName { get; set; }
     }                
 }
