@@ -225,9 +225,9 @@ namespace TcpServer.Core.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool Mon2_Format {
+        public bool PureRetranslate {
             get {
-                return ((bool)(this["Mon2_Format"]));
+                return ((bool)(this["PureRetranslate"]));
             }
         }
     }

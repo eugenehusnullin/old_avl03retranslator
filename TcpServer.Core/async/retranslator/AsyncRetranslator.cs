@@ -20,13 +20,13 @@ namespace TcpServer.Core.async.retranslator
     {
         private ILog log;
         private ILog commandLog;
-        
+
         private BlocksAcceptor blocksAcceptor;
         private MonConnector monConnector;
         private MonConnector mon2Connector;
         private ReceivePacketProcessor receivePacketProcessor;
 
-        
+
         private BaseConnector.MessageReceived messageReceivedFromBlockDelegate;
         private BaseConnector.MessageReceived messageReceivedFromMonDelegate;
         private BaseConnector.MessageReceived messageReceivedFromMon2Delegate;
@@ -34,7 +34,7 @@ namespace TcpServer.Core.async.retranslator
         private BaseConnector.MessageSended messageSendedToMonDelegate;
         private BaseConnector.MessageSended messageSendedToMon2Delegate;
         private BaseConnector.MessageSended messageSendedToBlockDelegate;
-        
+
 
         private BaseConnector.ReceiveFailed blockReceiveFailedDelegate;
         private BaseConnector.SendFailed blockSendFailedDelegate;
@@ -47,9 +47,11 @@ namespace TcpServer.Core.async.retranslator
 
         private HashSet<string> mon2Imeis;
 
+        private string appPath;
+
         public AsyncRetranslator(string listenHost, int listenPort, string monHost, int monPort)
         {
-            string appPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+            appPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             string log4netConfigPath = Path.Combine(appPath, "log4net.config");
             FileInfo fi = new FileInfo(log4netConfigPath);
             XmlConfigurator.ConfigureAndWatch(fi);
@@ -136,46 +138,65 @@ namespace TcpServer.Core.async.retranslator
         {
             SocketGroup socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
 
-            string imei;
-            byte[] processedBytes = receivePacketProcessor.processMessage(message, out imei);
-
-            if (processedBytes == null)
+            if (Settings.Default.PureRetranslate)
             {
-                blocksAcceptor.closeSocket(socketGroup.blockReceiveSAEA);
-                if (socketGroup.monSendSAEA != null)
-                {
-                    monConnector.closeSocket(socketGroup.monSendSAEA);
-                }
-                return;
+                string filename = Path.Combine(appPath,"purelog"); //((IPEndPoint)saea.AcceptSocket.RemoteEndPoint).Address.ToString();
+                var fs = new FileStream(filename, FileMode.Append);
+                string messageHead = "^device:";
+                var messageHeadBytes = Encoding.ASCII.GetBytes(messageHead);
+                fs.Write(messageHeadBytes, 0, messageHeadBytes.Length);
+                fs.Write(message, 0, message.Length);
+
+                var lineEnd = "\r\n";
+                var lineEndBytes = Encoding.ASCII.GetBytes(lineEnd);
+                fs.Write(lineEndBytes, 0, lineEndBytes.Length);
+
+                fs.Close();
+
+                monConnector.startSend(socketGroup.monSendSAEA, message);
             }
-
-            monConnector.startSend(socketGroup.monSendSAEA, processedBytes);
-
-            // mon2
-            if (Settings.Default.Mon2_Enabled && mon2Imeis.Contains(imei))
+            else
             {
-                if (socketGroup.mon2SendSAEA == null)
+                string imei;
+                byte[] processedBytes = receivePacketProcessor.processMessage(message, out imei);
+
+                if (processedBytes == null)
                 {
-                    SocketAsyncEventArgs mon2Receive, mon2Send;
-                    if (mon2Connector.createConnection(out mon2Receive, out mon2Send))
+                    blocksAcceptor.closeSocket(socketGroup.blockReceiveSAEA);
+                    if (socketGroup.monSendSAEA != null)
                     {
-                        ((DataHoldingUserToken)mon2Receive.UserToken).socketGroup = socketGroup;
-                        ((DataHoldingUserToken)mon2Send.UserToken).socketGroup = socketGroup;
-
-                        socketGroup.mon2ReceiveSAEA = mon2Receive;
-                        socketGroup.mon2SendSAEA = mon2Send;
-
-                        mon2Connector.startReceive(mon2Receive);
+                        monConnector.closeSocket(socketGroup.monSendSAEA);
                     }
-                    else
-                    {
-                        socketGroup.mon2ReceiveSAEA = null;
-                        socketGroup.mon2SendSAEA = null;
-                    }
+                    return;
                 }
 
-                if (socketGroup.mon2SendSAEA != null)
+                monConnector.startSend(socketGroup.monSendSAEA, processedBytes);
+
+                // mon2
+                if (Settings.Default.Mon2_Enabled && mon2Imeis.Contains(imei))
                 {
+                    if (socketGroup.mon2SendSAEA == null)
+                    {
+                        SocketAsyncEventArgs mon2Receive, mon2Send;
+                        if (mon2Connector.createConnection(out mon2Receive, out mon2Send))
+                        {
+                            ((DataHoldingUserToken)mon2Receive.UserToken).socketGroup = socketGroup;
+                            ((DataHoldingUserToken)mon2Send.UserToken).socketGroup = socketGroup;
+
+                            socketGroup.mon2ReceiveSAEA = mon2Receive;
+                            socketGroup.mon2SendSAEA = mon2Send;
+
+                            mon2Connector.startReceive(mon2Receive);
+                        }
+                        else
+                        {
+                            socketGroup.mon2ReceiveSAEA = null;
+                            socketGroup.mon2SendSAEA = null;
+                        }
+                    }
+
+                    if (socketGroup.mon2SendSAEA != null)
+                    {
                     if (Settings.Default.Mon2_Format)
                     {
                         mon2Connector.startSend(socketGroup.mon2SendSAEA, processedBytes);
@@ -183,6 +204,7 @@ namespace TcpServer.Core.async.retranslator
                     else
                     {
                         mon2Connector.startSend(socketGroup.mon2SendSAEA, message);
+                    }
                     }
                 }
             }
@@ -200,7 +222,22 @@ namespace TcpServer.Core.async.retranslator
 
         private void messageReceivedFromMon(byte[] message, SocketAsyncEventArgs saea)
         {
-            // log command
+            if (Settings.Default.PureRetranslate)
+            {
+                string filename = Path.Combine(appPath,"purelog"); //((IPEndPoint)saea.AcceptSocket.RemoteEndPoint).Address.ToString();
+                var fs = new FileStream(filename, FileMode.Append);
+                string messageHead = "^server:";
+                var messageHeadBytes = Encoding.ASCII.GetBytes(messageHead);
+                fs.Write(messageHeadBytes, 0, messageHeadBytes.Length);
+                fs.Write(message, 0, message.Length);
+
+                var lineEnd = "\r\n";
+                var lineEndBytes = Encoding.ASCII.GetBytes(lineEnd);
+                fs.Write(lineEndBytes, 0, lineEndBytes.Length);
+
+                fs.Close();
+            }
+            else
             {
                 string str = Encoding.ASCII.GetString(message);
                 commandLog.Debug(str);
@@ -212,7 +249,7 @@ namespace TcpServer.Core.async.retranslator
                 socketGroup.blockSendSAEA = blocksAcceptor.createSaeaForSend(socketGroup.blockReceiveSAEA.AcceptSocket);
                 ((DataHoldingUserToken)socketGroup.blockSendSAEA.UserToken).socketGroup = socketGroup;
             }
-            
+
             blocksAcceptor.startSend(socketGroup.blockSendSAEA, message);
         }
 
@@ -230,7 +267,7 @@ namespace TcpServer.Core.async.retranslator
                 socketGroup.blockSendSAEA = blocksAcceptor.createSaeaForSend(socketGroup.blockReceiveSAEA.AcceptSocket);
                 ((DataHoldingUserToken)socketGroup.blockSendSAEA.UserToken).socketGroup = socketGroup;
             }
-            
+
             blocksAcceptor.startSend(socketGroup.blockSendSAEA, message);
         }
 

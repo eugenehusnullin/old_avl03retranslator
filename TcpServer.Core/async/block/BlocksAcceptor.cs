@@ -227,9 +227,11 @@ namespace TcpServer.Core.async.block
                 {
                     code = receiveResponseHandler.handleResponse(saea, userToken, out message);
                 }
-                else if (userToken.dataTypeId == 3 || userToken.dataTypeId == 4)
+                else if (userToken.dataTypeId == 3 || userToken.dataTypeId == 4 || userToken.dataTypeId == 5)
                 {
                     code = receiveAllReadedHandler.handle(saea, userToken, out message);
+                    string receivedData = Encoding.ASCII.GetString(message);
+                    log.InfoFormat("Someone sended us a bad packet={0}", receivedData);
                 }
 
                 if (code < 0)
