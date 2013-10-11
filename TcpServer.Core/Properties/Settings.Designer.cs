@@ -230,5 +230,14 @@ namespace TcpServer.Core.Properties {
                 return ((bool)(this["PureRetranslate"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool Mon2_Format {
+            get {
+                return ((bool)(this["Mon2_Format"]));
+            }
+        }
     }
 }
