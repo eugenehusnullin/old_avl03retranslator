@@ -93,6 +93,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>SoapTemplates.resx</DependentUpon>
     </Compile>
+    <Compile Include="Mintrans\Worker.cs" />
     <Compile Include="OdsTransportAssertion.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="pilotka\ImeiDictionaryLoader.cs" />

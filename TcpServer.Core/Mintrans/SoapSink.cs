@@ -7,7 +7,7 @@ namespace TcpServer.Core.Mintrans
 {
     public class SoapSink
     {
-        private const int ATTEMPTS_COUNT = 3;
+        private const int ATTEMPTS_COUNT = 1;
         private const string INIT_MESSAGE = "POST {0} HTTP/1.1\r\n" +
                             "Content-Type: application/soap+xml\r\n" +
                             "Host: {1}:{2}\r\n" +
@@ -66,6 +66,17 @@ namespace TcpServer.Core.Mintrans
                     }
                 }
             });
+        }
+
+        public void PostSoapMessage(byte[] message)
+        {
+            string responseText = null;
+            Exception ex = null;
+            bool success = this.SendMessageInAttempts(message, ref responseText, ref ex);
+            if (!success)
+            {
+                throw new ApplicationException(responseText, ex);
+            }
         }
 
         private bool SendMessageInAttempts(byte[] message, ref string responseText, ref Exception responseException)

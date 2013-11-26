@@ -40,6 +40,9 @@ namespace TcpServer.Core.async.retranslator
             {
                 retranslatorTelemaxima.start();
             }
+
+            this.mintransMoscowCitySink.start();
+            this.mintransMoscowRegionSink.start();
         }
 
         public void stop()
@@ -48,6 +51,9 @@ namespace TcpServer.Core.async.retranslator
             {
                 retranslatorTelemaxima.stop();
             }
+
+            this.mintransMoscowCitySink.stop();
+            this.mintransMoscowRegionSink.stop();
         }
 
         public byte[] processMessage(byte[] message, out string imei)
