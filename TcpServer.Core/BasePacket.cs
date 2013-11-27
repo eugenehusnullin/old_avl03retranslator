@@ -290,9 +290,168 @@ namespace TcpServer.Core
                                   + @"\|(?<Voltage>[0-9]{8})\|(?<ADC>[0-9]{8})\|(?<LACCI>\w{8})\|(?<Temperature>\w{4})\|(?<Odometer>[0-9\.]{6})\|(?<SerialID>\d{4})\|(?<RFIDNo>\d*)"
                                   + @"\|(?<FuelImpuls>\d{5})\|(?<Checksum>\w{4})";
 
-            var is_9_19_Impuls = stringPacket.Split('|').Length == 17;
 
-            var pattern = is_9_19_Impuls ? pattern_9_19_Impuls : pattern_old;
+            var cnt_parts = stringPacket.Split('|').Length;
+            if (cnt_parts == 14)
+            {
+                return GetFromGPRMC(stringPacket);
+            }
+            else
+            {
+                var is_9_19_Impuls = cnt_parts == 17;
+
+                var pattern = is_9_19_Impuls ? pattern_9_19_Impuls : pattern_old;
+                var regex = new Regex(pattern);
+                var match = regex.Match(stringPacket);
+                var matchGroups = match.Groups;
+
+                var result = new BasePacket();
+
+                long imeiCheck;
+                if (!long.TryParse(matchGroups["Imei"].Value, out imeiCheck)) throw new Exception("В пакете не верный IMEI");
+                result.IMEI = matchGroups["Imei"].Value;
+
+                result.AlarmType = matchGroups["AlarmType"].Value;
+
+                char state;
+                char.TryParse(matchGroups["State"].Value, out state);
+                result.State = state;
+
+                // coordinats 
+                float latitude;
+                float.TryParse(matchGroups["Latitude"].Value, out latitude);
+                result.Latitude = ConvertGlonassToBaseCoordinat(latitude);
+
+                char latitudeLetter;
+                char.TryParse(matchGroups["LatitudeLetter"].Value, out latitudeLetter);
+                result.LatitudeLetter = latitudeLetter;
+
+                float longitude;
+                float.TryParse(matchGroups["Longitude"].Value, out longitude);
+                result.Longitude = ConvertGlonassToBaseCoordinat(longitude);
+
+                char longitudeLetter;
+                char.TryParse(matchGroups["LongitudeLetter"].Value, out longitudeLetter);
+                result.LongitudeLetter = longitudeLetter;
+
+                // speed
+                int sog;
+                int.TryParse(matchGroups["Speed"].Value, out sog);
+                result.Speed = sog;
+
+                // speed
+                int direction;
+                int.TryParse(matchGroups["Direction"].Value, out direction);
+                result.Direction = direction;
+
+                // 
+                float pdop;
+                float.TryParse(matchGroups["PDOP"].Value, out pdop);
+                result.PDOP = pdop;
+
+                float hdop;
+                float.TryParse(matchGroups["HDOP"].Value, out hdop);
+                result.HDOP = hdop;
+
+                float vdop;
+                float.TryParse(matchGroups["VDOP"].Value, out vdop);
+                result.VDOP = vdop;
+
+                result.Status = matchGroups["Status"].Value;
+
+                // RTC
+                var rtcString = matchGroups["RTC"].Value;
+
+                int rtcYear;
+                int.TryParse(rtcString.Substring(0, 4), out rtcYear);
+
+                int rtcMonth;
+                int.TryParse(rtcString.Substring(4, 2), out rtcMonth);
+
+                int rtcDay;
+                int.TryParse(rtcString.Substring(6, 2), out rtcDay);
+
+                int rtcHour;
+                int.TryParse(rtcString.Substring(8, 2), out rtcHour);
+
+                int rtcMinute;
+                int.TryParse(rtcString.Substring(10, 2), out rtcMinute);
+
+                int rtcSeconds;
+                int.TryParse(rtcString.Substring(12, 2), out rtcSeconds);
+
+                result.ValidNavigDateTime = new DateTime(rtcYear, rtcMonth, rtcDay, rtcHour, rtcMinute, rtcSeconds);
+
+                //Datetime
+                var datetimeString = matchGroups["DateTime"].Value;
+
+                int datetimeYear;
+                int.TryParse(datetimeString.Substring(0, 4), out datetimeYear);
+
+                int datetimeMonth;
+                int.TryParse(datetimeString.Substring(4, 2), out datetimeMonth);
+
+                int datetimeDay;
+                int.TryParse(datetimeString.Substring(6, 2), out datetimeDay);
+
+                int datetimeHour;
+                int.TryParse(datetimeString.Substring(8, 2), out datetimeHour);
+
+                int datetimeMinute;
+                int.TryParse(datetimeString.Substring(10, 2), out datetimeMinute);
+
+                int datetimeSeconds;
+                int.TryParse(datetimeString.Substring(12, 2), out datetimeSeconds);
+
+                try
+                {
+                    result.RTC = new DateTime(datetimeYear, datetimeMonth, datetimeDay, datetimeHour, datetimeMinute, datetimeSeconds);
+                }
+                catch
+                {
+                    result.RTC = result.ValidNavigDateTime;
+                }
+
+                //Voltage and etc.
+                result.Voltage = matchGroups["Voltage"].Value;
+                result.ADC = matchGroups["ADC"].Value;
+                result.LACCI = matchGroups["LACCI"].Value;
+
+                result.Temperature = matchGroups["Temperature"].Value;
+
+                float odometer;
+                float.TryParse(matchGroups["Odometer"].Value, out odometer);
+                result.Odometer = odometer;
+
+                int serialID;
+                int.TryParse(matchGroups["SerialID"].Value, out serialID);
+                result.SerialID = serialID;
+
+                result.RFIDNo = matchGroups["RFIDNo"].Value;
+
+                if (is_9_19_Impuls)
+                {
+                    int fuelImpuls;
+                    int.TryParse(matchGroups["FuelImpuls"].Value, out fuelImpuls);
+                    result.FuelImpuls = fuelImpuls;
+
+                    //var fuelString = GetIntToString(fuelImpuls, 4);
+                    //result.ADC = result.ADC.Substring(0, 4) + fuelString;
+                }
+
+                return result;
+            }
+        }
+
+        public static BasePacket GetFromGPRMC(string stringPacket)
+        {
+//$$B7359772035557439|AA$GPRMC,173354.771,A,5543.1196,N,03813.8631,E,0.14,79.87,261113,,,A*57|04.5|03.1|03.2|000000000000|20131126173353|03710000|00000000|13DDEBD8|0000|0.0000|0002|3D7C
+            const string pattern =
+    @"\$\$(?<Len>\w{2})(?<Imei>\d{15})\|(?<AlarmType>\w{2})\$GPRMC,(?<Time>[0-9\.]{9,11}),(?<State>A|V),(?<Latitude>[0-9\.]{7,10}),(?<LatitudeLetter>N|S),"
+    + @"(?<Longitude>[0-9\.]{8,11}),(?<LongitudeLetter>E|W),(?<Speed>[0-9\.]{3,}),(?<Direction>[0-9\.]{3,}),(?<Date>[0-9]{6}),([0-9\.]{1,}|),([0-9\.]{1,}|)(,(A|D|E|N|)|)\*\w{2,}"
+    + @"\|(?<PDOP>[0-9\.]{4})\|(?<HDOP>[0-9\.]{4})\|(?<VDOP>[0-9\.]{4})\|(?<Status>[0-9]{12})\|(?<RTC>[0-9]{14})\|(?<Voltage>[0-9]{8})\|(?<ADC>[0-9]{8})"
+    + @"\|(?<LACCI>\w{8})\|(?<Temperature>\w{4})\|(?<Odometer>[0-9\.]{6})\|(?<SerialID>\d{4})\|(?<Checksum>\w{4})";
+
             var regex = new Regex(pattern);
             var match = regex.Match(stringPacket);
             var matchGroups = match.Groups;
@@ -327,13 +486,13 @@ namespace TcpServer.Core
             result.LongitudeLetter = longitudeLetter;
 
             // speed
-            int sog;
-            int.TryParse(matchGroups["Speed"].Value, out sog);
+            float sog;
+            float.TryParse(matchGroups["Speed"].Value, out sog);
             result.Speed = sog;
 
             // speed
-            int direction;
-            int.TryParse(matchGroups["Direction"].Value, out direction);
+            float direction;
+            float.TryParse(matchGroups["Direction"].Value, out direction);
             result.Direction = direction;
 
             // 
@@ -375,25 +534,27 @@ namespace TcpServer.Core
             result.ValidNavigDateTime = new DateTime(rtcYear, rtcMonth, rtcDay, rtcHour, rtcMinute, rtcSeconds);
 
             //Datetime
-            var datetimeString = matchGroups["DateTime"].Value;
+            var date = matchGroups["Date"].Value;
+            var time = matchGroups["Time"].Value;
 
             int datetimeYear;
-            int.TryParse(datetimeString.Substring(0, 4), out datetimeYear);
+            int.TryParse(date.Substring(4, 2), out datetimeYear);
+            datetimeYear += 2000;
 
             int datetimeMonth;
-            int.TryParse(datetimeString.Substring(4, 2), out datetimeMonth);
+            int.TryParse(date.Substring(2, 2), out datetimeMonth);
 
             int datetimeDay;
-            int.TryParse(datetimeString.Substring(6, 2), out datetimeDay);
+            int.TryParse(date.Substring(0, 2), out datetimeDay);
 
             int datetimeHour;
-            int.TryParse(datetimeString.Substring(8, 2), out datetimeHour);
+            int.TryParse(time.Substring(0, 2), out datetimeHour);
 
             int datetimeMinute;
-            int.TryParse(datetimeString.Substring(10, 2), out datetimeMinute);
+            int.TryParse(time.Substring(2, 2), out datetimeMinute);
 
             int datetimeSeconds;
-            int.TryParse(datetimeString.Substring(12, 2), out datetimeSeconds);
+            int.TryParse(time.Substring(4, 2), out datetimeSeconds);
 
             try
             {
@@ -418,17 +579,7 @@ namespace TcpServer.Core
             int.TryParse(matchGroups["SerialID"].Value, out serialID);
             result.SerialID = serialID;
 
-            result.RFIDNo = matchGroups["RFIDNo"].Value;
-
-            if (is_9_19_Impuls)
-            {
-                int fuelImpuls;
-                int.TryParse(matchGroups["FuelImpuls"].Value, out fuelImpuls);
-                result.FuelImpuls = fuelImpuls;
-
-                //var fuelString = GetIntToString(fuelImpuls, 4);
-                //result.ADC = result.ADC.Substring(0, 4) + fuelString;
-            }
+            result.RFIDNo = "";
 
             return result;
         }
