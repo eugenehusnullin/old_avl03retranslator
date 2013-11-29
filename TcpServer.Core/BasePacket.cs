@@ -278,6 +278,7 @@ namespace TcpServer.Core
 
         public static BasePacket GetFromGlonass(string stringPacket)
         {
+//$$A5359772039754511|AAUA0855.74210N036.86489E000000|02.7|02.2|01.5|20131129130737|20131129130737|001000000000|14171226|00000000|13D249F9|0000|0.0000|0776||00000|B8B3
             const string pattern_old = @"\$\$(?<Len>\w{2})(?<Imei>\d{15})\|(?<AlarmType>\w{2})(?<Chip>U|R)(?<State>A|V)(?<Satellites>\d{2})"
                                   + @"(?<Latitude>[0-9\.]{8})(?<LatitudeLetter>N|S)(?<Longitude>[0-9\.]{9})(?<LongitudeLetter>E|W)(?<Speed>[0-9]{3})(?<Direction>[0-9]{3})"
                                   + @"\|(?<PDOP>[0-9\.]{4})\|(?<HDOP>[0-9\.]{4})\|(?<VDOP>[0-9\.]{4})\|(?<DateTime>[0-9]{14})\|(?<RTC>[0-9]{14})\|(?<Status>[0-9]{12})"
@@ -445,7 +446,6 @@ namespace TcpServer.Core
 
         public static BasePacket GetFromGPRMC(string stringPacket)
         {
-
 // without coord $$AE353358018980081|AA000000000000000000000000000000000000000000000000000000000000|00.0|00.0|00.0|100001000000|20000000000000|14121262|00000000|1E305333|0000|0.0000|0014|1325
 //$$B7359772035557439|AA$GPRMC,173354.771,A,5543.1196,N,03813.8631,E,0.14,79.87,261113,,,A*57|04.5|03.1|03.2|000000000000|20131126173353|03710000|00000000|13DDEBD8|0000|0.0000|0002|3D7C
             const string pattern =
@@ -476,7 +476,7 @@ namespace TcpServer.Core
             // coordinats 
             float latitude;
             float.TryParse(matchGroups["Latitude"].Value, out latitude);
-            result.Latitude = ConvertGlonassToBaseCoordinat(latitude);
+            result.Latitude = latitude;
 
             char latitudeLetter;
             char.TryParse(matchGroups["LatitudeLetter"].Value, out latitudeLetter);
@@ -484,7 +484,7 @@ namespace TcpServer.Core
 
             float longitude;
             float.TryParse(matchGroups["Longitude"].Value, out longitude);
-            result.Longitude = ConvertGlonassToBaseCoordinat(longitude);
+            result.Longitude = longitude;
 
             char longitudeLetter;
             char.TryParse(matchGroups["LongitudeLetter"].Value, out longitudeLetter);
