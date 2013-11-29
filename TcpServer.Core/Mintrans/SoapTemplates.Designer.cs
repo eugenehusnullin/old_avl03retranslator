@@ -65,11 +65,11 @@ namespace TcpServer.Core.Mintrans {
         ///&lt;soapenv:Envelope xmlns:env=&quot;http://schemas.xmlsoap.org/soap/envelope&quot;&gt;
         ///  &lt;soapenv:Header /&gt;
         ///  &lt;soapenv:Body&gt;
-        ///    &lt;ws:PutCoordResponce&gt;
+        ///    &lt;ws:PutCoord&gt;
         ///      &lt;ObjectID&gt;{0}&lt;/ObjectID&gt;
         ///      &lt;Coord time=&quot;{1}&quot; lon=&quot;{2}&quot; lat=&quot;{3}&quot; alt=&quot;{4}&quot; speed=&quot;{5}&quot; dir=&quot;{6}&quot; valid=&quot;{7}&quot; /&gt;
         ///      &lt;DigI inpnum=&quot;2&quot; /&gt;
-        ///    &lt;/ws:PutCoordResponce&gt;
+        ///    &lt;/ws:PutCoord&gt;
         ///  &lt;/soapenv:Body&gt;
         ///&lt;/soapenv:Envelope&gt;.
         /// </summary>
@@ -84,10 +84,10 @@ namespace TcpServer.Core.Mintrans {
         ///&lt;soapenv:Envelope xmlns:env=&quot;http://schemas.xmlsoap.org/soap/envelope&quot;&gt;
         ///  &lt;soapenv:Header /&gt;
         ///  &lt;soapenv:Body&gt;
-        ///    &lt;ws:PutCoordResponce&gt;
+        ///    &lt;ws:PutCoord&gt;
         ///      &lt;ObjectID&gt;{0}&lt;/ObjectID&gt;
         ///      &lt;Coord time=&quot;{1}&quot; lon=&quot;{2}&quot; lat=&quot;{3}&quot; alt=&quot;{4}&quot; speed=&quot;{5}&quot; dir=&quot;{6}&quot; valid=&quot;{7}&quot; /&gt;
-        ///    &lt;/ws:PutCoordResponce&gt;
+        ///    &lt;/ws:PutCoord&gt;
         ///  &lt;/soapenv:Body&gt;
         ///&lt;/soapenv:Envelope&gt;.
         /// </summary>
