@@ -445,10 +445,12 @@ namespace TcpServer.Core
 
         public static BasePacket GetFromGPRMC(string stringPacket)
         {
+
+// without coord $$AE353358018980081|AA000000000000000000000000000000000000000000000000000000000000|00.0|00.0|00.0|100001000000|20000000000000|14121262|00000000|1E305333|0000|0.0000|0014|1325
 //$$B7359772035557439|AA$GPRMC,173354.771,A,5543.1196,N,03813.8631,E,0.14,79.87,261113,,,A*57|04.5|03.1|03.2|000000000000|20131126173353|03710000|00000000|13DDEBD8|0000|0.0000|0002|3D7C
             const string pattern =
-    @"\$\$(?<Len>\w{2})(?<Imei>\d{15})\|(?<AlarmType>\w{2})\$GPRMC,(?<Time>[0-9\.]{9,11}),(?<State>A|V),(?<Latitude>[0-9\.]{7,10}),(?<LatitudeLetter>N|S),"
-    + @"(?<Longitude>[0-9\.]{8,11}),(?<LongitudeLetter>E|W),(?<Speed>[0-9\.]{3,}),(?<Direction>[0-9\.]{3,}),(?<Date>[0-9]{6}),([0-9\.]{1,}|),([0-9\.]{1,}|)(,(A|D|E|N|)|)\*\w{2,}"
+    @"\$\$(?<Len>\w{2})(?<Imei>\d{15})\|(?<AlarmType>\w{2})((\$GPRMC,(?<Time>[0-9\.]{9,11}),(?<State>A|V),(?<Latitude>[0-9\.]{7,10}),(?<LatitudeLetter>N|S),"
+    + @"(?<Longitude>[0-9\.]{8,11}),(?<LongitudeLetter>E|W),(?<Speed>[0-9\.]{3,}),(?<Direction>[0-9\.]{3,}),(?<Date>[0-9]{6}),([0-9\.]{1,}|),([0-9\.]{1,}|)(,(A|D|E|N|)|)\*\w{2,})|(\d{1,}))"
     + @"\|(?<PDOP>[0-9\.]{4})\|(?<HDOP>[0-9\.]{4})\|(?<VDOP>[0-9\.]{4})\|(?<Status>[0-9]{12})\|(?<RTC>[0-9]{14})\|(?<Voltage>[0-9]{8})\|(?<ADC>[0-9]{8})"
     + @"\|(?<LACCI>\w{8})\|(?<Temperature>\w{4})\|(?<Odometer>[0-9\.]{6})\|(?<SerialID>\d{4})\|(?<Checksum>\w{4})";
 
@@ -465,7 +467,10 @@ namespace TcpServer.Core
             result.AlarmType = matchGroups["AlarmType"].Value;
 
             char state;
-            char.TryParse(matchGroups["State"].Value, out state);
+            if (!char.TryParse(matchGroups["State"].Value, out state))
+            {
+                state = 'Z';
+            }
             result.State = state;
 
             // coordinats 
@@ -531,37 +536,51 @@ namespace TcpServer.Core
             int rtcSeconds;
             int.TryParse(rtcString.Substring(12, 2), out rtcSeconds);
 
-            result.ValidNavigDateTime = new DateTime(rtcYear, rtcMonth, rtcDay, rtcHour, rtcMinute, rtcSeconds);
+            try
+            {
+                result.ValidNavigDateTime = new DateTime(rtcYear, rtcMonth, rtcDay, rtcHour, rtcMinute, rtcSeconds);
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                result.ValidNavigDateTime = new DateTime();
+            }
 
             //Datetime
             var date = matchGroups["Date"].Value;
             var time = matchGroups["Time"].Value;
-
-            int datetimeYear;
-            int.TryParse(date.Substring(4, 2), out datetimeYear);
-            datetimeYear += 2000;
-
-            int datetimeMonth;
-            int.TryParse(date.Substring(2, 2), out datetimeMonth);
-
-            int datetimeDay;
-            int.TryParse(date.Substring(0, 2), out datetimeDay);
-
-            int datetimeHour;
-            int.TryParse(time.Substring(0, 2), out datetimeHour);
-
-            int datetimeMinute;
-            int.TryParse(time.Substring(2, 2), out datetimeMinute);
-
-            int datetimeSeconds;
-            int.TryParse(time.Substring(4, 2), out datetimeSeconds);
-
-            try
-            {
-                result.RTC = new DateTime(datetimeYear, datetimeMonth, datetimeDay, datetimeHour, datetimeMinute, datetimeSeconds);
-            } catch 
+            if (String.IsNullOrEmpty(date) || String.IsNullOrEmpty(time))
             {
                 result.RTC = result.ValidNavigDateTime;
+            }
+            else
+            {
+                int datetimeYear;
+                int.TryParse(date.Substring(4, 2), out datetimeYear);
+                datetimeYear += 2000;
+
+                int datetimeMonth;
+                int.TryParse(date.Substring(2, 2), out datetimeMonth);
+
+                int datetimeDay;
+                int.TryParse(date.Substring(0, 2), out datetimeDay);
+
+                int datetimeHour;
+                int.TryParse(time.Substring(0, 2), out datetimeHour);
+
+                int datetimeMinute;
+                int.TryParse(time.Substring(2, 2), out datetimeMinute);
+
+                int datetimeSeconds;
+                int.TryParse(time.Substring(4, 2), out datetimeSeconds);
+
+                try
+                {
+                    result.RTC = new DateTime(datetimeYear, datetimeMonth, datetimeDay, datetimeHour, datetimeMinute, datetimeSeconds);
+                }
+                catch
+                {
+                    result.RTC = result.ValidNavigDateTime;
+                }
             }
 
             //Voltage and etc.
@@ -702,30 +721,37 @@ namespace TcpServer.Core
         {
             var sb = new StringBuilder();
 
-            sb.Append("GPRMC");
-            sb.AppendFormat(",{0:HHmmss.fff}", ValidNavigDateTime);
-            sb.AppendFormat(",{0}", State);
+            if (State == 'Z')
+            {
+                sb.Append("000000000000000000000000000000000000000000000000000000000000");
+            }
+            else
+            {
+                sb.Append("GPRMC");
+                sb.AppendFormat(",{0:HHmmss.fff}", ValidNavigDateTime);
+                sb.AppendFormat(",{0}", State);
 
-            sb.AppendFormat(",{0:F4}", Latitude);
-            sb.AppendFormat(",{0}", LatitudeLetter);
+                sb.AppendFormat(",{0:F4}", Latitude);
+                sb.AppendFormat(",{0}", LatitudeLetter);
 
-            sb.AppendFormat(",{0:F4}", Longitude);
-            sb.AppendFormat(",{0}", LongitudeLetter);
+                sb.AppendFormat(",{0:F4}", Longitude);
+                sb.AppendFormat(",{0}", LongitudeLetter);
 
-            sb.AppendFormat(",{0:F2}", Speed);
-            sb.AppendFormat(",{0:F2}", Direction);
+                sb.AppendFormat(",{0:F2}", Speed);
+                sb.AppendFormat(",{0:F2}", Direction);
 
-            sb.AppendFormat(",{0:ddMMyy}", ValidNavigDateTime);
+                sb.AppendFormat(",{0:ddMMyy}", ValidNavigDateTime);
 
-            sb.AppendFormat(",{0}", MagneticVariation);
-            sb.AppendFormat(",{0}", MagneticVariationLetter);
+                sb.AppendFormat(",{0}", MagneticVariation);
+                sb.AppendFormat(",{0}", MagneticVariationLetter);
 
-            sb.AppendFormat(",{0}", Mode);
+                sb.AppendFormat(",{0}", Mode);
 
-            var crc = CrcNmea.ComputeChecksumASCII(sb.ToString());
-            sb.Insert(0, "$");
+                var crc = CrcNmea.ComputeChecksumASCII(sb.ToString());
+                sb.Insert(0, "$");
 
-            sb.AppendFormat("*{0:X2}", crc);
+                sb.AppendFormat("*{0:X2}", crc);
+            }
 
             return sb.ToString();
         }
