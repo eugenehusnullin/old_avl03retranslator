@@ -72,6 +72,10 @@ namespace TcpServer.Core.async.block
             {
                 userToken.dataTypeId = 4;
             }
+            else if (prefix.StartsWith("$V") || userToken.imageReceiving)
+            {
+                userToken.dataTypeId = 6;
+            }
             else
             {
                 userToken.dataTypeId = 5;

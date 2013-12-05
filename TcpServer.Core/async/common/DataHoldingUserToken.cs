@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using TcpServer.Core.async.block;
 
 namespace TcpServer.Core.async.common
 {
@@ -20,6 +21,9 @@ namespace TcpServer.Core.async.common
         public int bytesDoneThisOp = 0;
 
         public int dataTypeId = 0;
+
+        public ImageHolder imageHolder = new ImageHolder();
+        public bool imageReceiving = false;
 
         public DataHoldingUserToken()
         {

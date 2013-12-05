@@ -293,7 +293,7 @@ namespace TcpServer.Core
 
 
             var cnt_parts = stringPacket.Split('|').Length;
-            if (cnt_parts == 14)
+            if (cnt_parts == 14 || cnt_parts == 15)
             {
                 return GetFromGPRMC(stringPacket);
             }
@@ -452,7 +452,7 @@ namespace TcpServer.Core
     @"\$\$(?<Len>\w{2})(?<Imei>\d{15})\|(?<AlarmType>\w{2})((\$GPRMC,(?<Time>[0-9\.]{9,11}),(?<State>A|V),(?<Latitude>[0-9\.]{7,10}),(?<LatitudeLetter>N|S),"
     + @"(?<Longitude>[0-9\.]{8,11}),(?<LongitudeLetter>E|W),(?<Speed>[0-9\.]*),(?<Direction>[0-9\.]*),(?<Date>[0-9]{6}),([0-9\.]{1,}|),([0-9\.]{1,}|)(,(A|D|E|N|)|)\*\w{2,})|(\d{1,}))"
     + @"\|(?<PDOP>[0-9\.]{4})\|(?<HDOP>[0-9\.]{4})\|(?<VDOP>[0-9\.]{4})\|(?<Status>[0-9]{12})\|(?<RTC>[0-9]{14})\|(?<Voltage>[0-9]{8})\|(?<ADC>[0-9]{8})"
-    + @"\|(?<LACCI>\w{8})\|(?<Temperature>\w{4})\|(?<Odometer>[0-9\.]{6})\|(?<SerialID>\d{4})\|(?<Checksum>\w{4})";
+    + @"\|(?<LACCI>\w{8})\|(?<Temperature>\w{4})\|(?<Odometer>[0-9\.]{6})\|(?<SerialID>\d{4})\|(\|?)(?<Checksum>\w{4})";
 
             var regex = new Regex(pattern);
             var match = regex.Match(stringPacket);

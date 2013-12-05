@@ -239,5 +239,14 @@ namespace TcpServer.Core.Properties {
                 return ((bool)(this["Mon2_Format"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ImageSaveDirectory {
+            get {
+                return ((string)(this["ImageSaveDirectory"]));
+            }
+        }
     }
 }

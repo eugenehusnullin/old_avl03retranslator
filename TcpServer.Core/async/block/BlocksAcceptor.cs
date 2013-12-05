@@ -34,6 +34,7 @@ namespace TcpServer.Core.async.block
         private ReceiveTypeSelector receiveTypeSelector;
         private ReceiveResponseHandler receiveResponseHandler;
         private ReceiveAllReadedHandler receiveAllReadedHandler;
+        private ReceivePhotoHandler receivePhotoHandler;
 
         private ILog log;
 
@@ -56,6 +57,7 @@ namespace TcpServer.Core.async.block
             receiveTypeSelector = new ReceiveTypeSelector();
             receiveResponseHandler = new ReceiveResponseHandler();
             receiveAllReadedHandler = new ReceiveAllReadedHandler();
+            receivePhotoHandler = new ReceivePhotoHandler();
 
             blockAcceptEventHandler = new EventHandler<SocketAsyncEventArgs>(acceptEvent);
             receiveEventHandler = new EventHandler<SocketAsyncEventArgs>(receiveEvent);
@@ -227,11 +229,15 @@ namespace TcpServer.Core.async.block
                 {
                     code = receiveResponseHandler.handleResponse(saea, userToken, out message);
                 }
-                else if (userToken.dataTypeId == 3 || userToken.dataTypeId == 4 || userToken.dataTypeId == 5)
+                else if (userToken.dataTypeId == 3 || userToken.dataTypeId == 4 || userToken.dataTypeId == 5 || userToken.dataTypeId == 7)
                 {
                     code = receiveAllReadedHandler.handle(saea, userToken, out message);
                     string receivedData = Encoding.ASCII.GetString(message);
                     log.InfoFormat("Someone sended us a bad packet={0}", receivedData);
+                }
+                else if (userToken.dataTypeId == 6)
+                {
+                    code = receivePhotoHandler.handle(saea, userToken, out message);
                 }
 
                 if (code < 0)
