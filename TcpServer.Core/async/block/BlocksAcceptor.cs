@@ -34,7 +34,7 @@ namespace TcpServer.Core.async.block
         private ReceiveTypeSelector receiveTypeSelector;
         private ReceiveResponseHandler receiveResponseHandler;
         private ReceiveAllReadedHandler receiveAllReadedHandler;
-        private ReceivePhotoHandler receivePhotoHandler;
+        private ReceiveUPhotoHandler receiveUPhotoHandler;
 
         private ILog log;
 
@@ -57,7 +57,7 @@ namespace TcpServer.Core.async.block
             receiveTypeSelector = new ReceiveTypeSelector();
             receiveResponseHandler = new ReceiveResponseHandler();
             receiveAllReadedHandler = new ReceiveAllReadedHandler();
-            receivePhotoHandler = new ReceivePhotoHandler();
+            receiveUPhotoHandler = new ReceiveUPhotoHandler();
 
             blockAcceptEventHandler = new EventHandler<SocketAsyncEventArgs>(acceptEvent);
             receiveEventHandler = new EventHandler<SocketAsyncEventArgs>(receiveEvent);
@@ -178,6 +178,12 @@ namespace TcpServer.Core.async.block
         {
             var userToken = (DataHoldingUserToken)saea.UserToken;
 
+            if (saea.BytesTransferred == 0)
+            {
+                startReceive(saea);
+                return;
+            }
+
             if (saea.SocketError != SocketError.Success || saea.BytesTransferred == 0)
             {
                 log.DebugFormat("Process receive from block failed. SocketError={0} or BytesTransferred={1}.", saea.SocketError, saea.BytesTransferred);
@@ -221,6 +227,8 @@ namespace TcpServer.Core.async.block
                     }
                 }
 
+                log.DebugFormat("Packet dataTypeId = {0} - received", userToken.dataTypeId);
+
                 if (userToken.dataTypeId == 1)
                 {
                     code = receiveMessageHandler.handleMessage(saea, userToken, bytesToProcess, out message);
@@ -229,15 +237,15 @@ namespace TcpServer.Core.async.block
                 {
                     code = receiveResponseHandler.handleResponse(saea, userToken, out message);
                 }
-                else if (userToken.dataTypeId == 3 || userToken.dataTypeId == 4 || userToken.dataTypeId == 5 || userToken.dataTypeId == 7)
+                else if (userToken.dataTypeId == 3 || userToken.dataTypeId == 4 || userToken.dataTypeId == 5)
                 {
                     code = receiveAllReadedHandler.handle(saea, userToken, out message);
                     string receivedData = Encoding.ASCII.GetString(message);
                     log.InfoFormat("Someone sended us a bad packet={0}", receivedData);
                 }
-                else if (userToken.dataTypeId == 6)
+                else if (userToken.dataTypeId == 7)
                 {
-                    code = receivePhotoHandler.handle(saea, userToken, out message);
+                    code = receiveUPhotoHandler.handle(saea, userToken, out message);
                 }
 
                 if (code < 0)

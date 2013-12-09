@@ -277,7 +277,47 @@ namespace TcpServer.Core.async.retranslator
             monConnector.startReceive(userToken.socketGroup.monReceiveSAEA);
         }
 
-        private void blockReceiveFree(SocketAsyncEventArgs saea)
+        private void blockReceiveFailed(SocketAsyncEventArgs saea)
+        {
+            var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
+            if (socketGroup.monSendSAEA != null)
+            {
+                monConnector.closeSocket(socketGroup.monSendSAEA);
+                (socketGroup.monSendSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
+                socketGroup.monSendSAEA.Dispose();
+            }
+        }
+
+        private void blockSendFailed(SocketAsyncEventArgs saea)
+        {
+            var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
+            if (socketGroup.monReceiveSAEA != null)
+            {
+                monConnector.closeSocket(socketGroup.monReceiveSAEA);
+                (socketGroup.monReceiveSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
+                socketGroup.monReceiveSAEA.Dispose();
+            }
+        }
+
+        private void monReceiveFailed(SocketAsyncEventArgs saea)
+        {
+            var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
+            if (socketGroup.blockSendSAEA != null)
+            {
+                blocksAcceptor.closeSocket(socketGroup.blockSendSAEA);
+                (socketGroup.blockSendSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
+                socketGroup.blockSendSAEA.Dispose();
+            }
+        }
+
+        private void mon2ReceiveFailed(SocketAsyncEventArgs saea)
+        {
+            var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
+            socketGroup.mon2ReceiveSAEA = null;
+            socketGroup.mon2SendSAEA = null;
+        }
+
+        private void monSendFailed(SocketAsyncEventArgs saea)
         {
             var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
             if (socketGroup.blockReceiveSAEA != null)
@@ -286,84 +326,6 @@ namespace TcpServer.Core.async.retranslator
                 (socketGroup.blockReceiveSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
                 socketGroup.blockReceiveSAEA.Dispose();
             }
-        }
-
-        private void monReceiveFree(SocketAsyncEventArgs saea)
-        {
-            var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
-            if (socketGroup.monReceiveSAEA!= null)
-            {
-                monConnector.closeSocket(socketGroup.monReceiveSAEA);
-                (socketGroup.monReceiveSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
-                socketGroup.monReceiveSAEA.Dispose();
-            }
-        }
-
-        private void blockReceiveFailed(SocketAsyncEventArgs saea)
-        {
-            try
-            {
-                monReceiveFree(saea);
-            }
-            catch { }
-
-            try
-            {
-                blockReceiveFree(saea);
-            }
-            catch { }
-        }
-
-        private void blockSendFailed(SocketAsyncEventArgs saea)
-        {
-            try
-            {
-                monReceiveFree(saea);
-            }
-            catch { }
-
-            try
-            {
-                blockReceiveFree(saea);
-            }
-            catch { }
-        }
-
-        private void monReceiveFailed(SocketAsyncEventArgs saea)
-        {
-            try
-            {
-                monReceiveFree(saea);
-            }
-            catch { }
-
-            try
-            {
-                blockReceiveFree(saea);
-            }
-            catch { }
-        }
-
-        private void monSendFailed(SocketAsyncEventArgs saea)
-        {
-            try
-            {
-                monReceiveFree(saea);
-            }
-            catch { }
-
-            try
-            {
-                blockReceiveFree(saea);
-            }
-            catch { }
-        }
-
-        private void mon2ReceiveFailed(SocketAsyncEventArgs saea)
-        {
-            var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
-            socketGroup.mon2ReceiveSAEA = null;
-            socketGroup.mon2SendSAEA = null;
         }
 
         private void mon2SendFailed(SocketAsyncEventArgs saea)

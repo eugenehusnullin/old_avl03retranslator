@@ -12,7 +12,7 @@ namespace TcpServer.RetranslatorTest
         static void Main(string[] args)
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-Us");
-            var async = new AsyncRetranslator("127.0.0.1", 4805, "127.0.0.1", 20401);
+            var async = new AsyncRetranslator("195.206.252.236", 20181, "77.74.50.78", 20141);
 
             async.start();
             System.Console.ReadLine();
@@ -20,3 +20,11 @@ namespace TcpServer.RetranslatorTest
         }
     }
 }
+
+/*
+ * <add key="SrcHost" value="195.206.252.236" /> 
+  <add key="SrcPort" value="20181" /> 
+  <add key="DstHost" value="77.74.50.78" /> 
+  <add key="DstPort" value="20141" /> 
+
+*/

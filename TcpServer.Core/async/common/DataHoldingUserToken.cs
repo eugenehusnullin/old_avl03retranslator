@@ -22,8 +22,7 @@ namespace TcpServer.Core.async.common
 
         public int dataTypeId = 0;
 
-        public ImageHolder imageHolder = new ImageHolder();
-        public bool imageReceiving = false;
+        public UImageHolder uImageHolder = new UImageHolder();
 
         public DataHoldingUserToken()
         {

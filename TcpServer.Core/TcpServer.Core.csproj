@@ -59,7 +59,7 @@
   <ItemGroup>
     <Compile Include="async\block\ImageHolder.cs" />
     <Compile Include="async\block\ReceiveAllReadedHandler.cs" />
-    <Compile Include="async\block\ReceivePhotoHandler.cs" />
+    <Compile Include="async\block\ReceiveUPhotoHandler.cs" />
     <Compile Include="async\block\ReceiveResponseHandler.cs" />
     <Compile Include="async\block\ReceiveTypeSelector.cs" />
     <Compile Include="async\common\ImeiListLoader.cs" />
