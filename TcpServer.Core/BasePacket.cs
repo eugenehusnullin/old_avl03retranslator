@@ -546,7 +546,7 @@ namespace TcpServer.Core
             {
                 result.ValidNavigDateTime = new DateTime(rtcYear, rtcMonth, rtcDay, rtcHour, rtcMinute, rtcSeconds);
             }
-            catch (ArgumentOutOfRangeException ex)
+            catch (ArgumentOutOfRangeException)
             {
                 result.ValidNavigDateTime = new DateTime();
             }

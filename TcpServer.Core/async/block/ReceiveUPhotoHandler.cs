@@ -23,6 +23,8 @@ namespace TcpServer.Core.async.block
 
         public int handle(SocketAsyncEventArgs saea, DataHoldingUserToken userToken, out byte[] readyMessage)
         {
+            readyMessage = null;
+
             int cnt = 0;
             while (saea.BytesTransferred > (userToken.bytesDoneThisOp + cnt))
             {
@@ -47,12 +49,12 @@ namespace TcpServer.Core.async.block
 
             if (userToken.messageBytes[userToken.messageBytes.Length - 1] == 0x23)
             {
-                readyMessage = new byte[2 + userToken.messageBytes.Length];
-                Buffer.BlockCopy(userToken.prefixBytes, 2, readyMessage, 0, 2);
-                Buffer.BlockCopy(userToken.messageBytes, 0, readyMessage, 2, userToken.messageBytes.Length);
+                message = new byte[2 + userToken.messageBytes.Length];
+                Buffer.BlockCopy(userToken.prefixBytes, 2, message, 0, 2);
+                Buffer.BlockCopy(userToken.messageBytes, 0, message, 2, userToken.messageBytes.Length);
                 userToken.resetReadyMessage();
 
-                string receivedData = Encoding.ASCII.GetString(readyMessage, 0, readyMessage.Length - 1);
+                string receivedData = Encoding.ASCII.GetString(message, 0, message.Length - 1);
                 log.DebugFormat("Photo packet={0}", receivedData);
 
                 int indexOfImageBytes = 26;
@@ -64,8 +66,12 @@ namespace TcpServer.Core.async.block
                     userToken.uImageHolder.ImageBytes = new byte[userToken.uImageHolder.TotalPackages][];
                 }
 
-                string str = receivedData.Substring(indexOfImageBytes);
-                userToken.uImageHolder.ImageBytes[userToken.uImageHolder.LastPackageSequence] = StringToByteArray(str);
+                if (userToken.uImageHolder.ImageBytes == null)
+                {
+                    return 0;
+                }
+                
+                userToken.uImageHolder.ImageBytes[userToken.uImageHolder.LastPackageSequence] = StringToByteArray(receivedData.Substring(indexOfImageBytes));
 
                 if (userToken.uImageHolder.LastPackageSequence == userToken.uImageHolder.TotalPackages)
                 {
@@ -76,8 +82,7 @@ namespace TcpServer.Core.async.block
                     userToken.uImageHolder = new UImageHolder();
                 }
             }
-
-            readyMessage = null;
+            
             return 0;
         }
 

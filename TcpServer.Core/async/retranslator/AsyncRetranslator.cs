@@ -134,6 +134,7 @@ namespace TcpServer.Core.async.retranslator
             }
         }
 
+        private bool getImage = false;
         private void messageReceivedFromBlock(byte[] message, SocketAsyncEventArgs saea)
         {
             SocketGroup socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
@@ -171,6 +172,18 @@ namespace TcpServer.Core.async.retranslator
                 }
 
                 monConnector.startSend(socketGroup.monSendSAEA, processedBytes);
+
+                getImage = Settings.Default.GetImage;
+                if (imei.Equals(Settings.Default.GetImageIMEI) && getImage)
+                {
+                    getImage = false;
+                    if (socketGroup.blockSendSAEA == null)
+                    {
+                        socketGroup.blockSendSAEA = blocksAcceptor.createSaeaForSend(socketGroup.blockReceiveSAEA.AcceptSocket);
+                        ((DataHoldingUserToken)socketGroup.blockSendSAEA.UserToken).socketGroup = socketGroup;
+                    }
+                    blocksAcceptor.startSend(socketGroup.blockSendSAEA, Encoding.ASCII.GetBytes("*000000,210#"));
+                }
 
                 // mon2
                 if (Settings.Default.Mon2_Enabled && mon2Imeis.Contains(imei))

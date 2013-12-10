@@ -221,7 +221,6 @@ namespace TcpServer.Core.async.mon
                 return false;
             }
 
-            socket.ReceiveTimeout = 5 * 60 * 1000;
             socket.SendTimeout = 1 * 60 * 1000;
 
             receiveSaea = createSaea(receiveEventHandler, BUFFER_SIZE);

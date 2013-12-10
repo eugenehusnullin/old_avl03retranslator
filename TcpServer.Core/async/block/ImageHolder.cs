@@ -12,6 +12,6 @@ namespace TcpServer.Core.async.block
         public int PictureNumber;
         public int TotalPackages = 0;
         public int LastPackageSequence = 0;
-        public byte[][] ImageBytes;
+        public byte[][] ImageBytes = null;
     }
 }
