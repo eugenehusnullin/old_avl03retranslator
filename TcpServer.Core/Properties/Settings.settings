@@ -77,11 +77,5 @@
     <Setting Name="ImageSaveDirectory" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="GetImage" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="GetImageIMEI" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">359772039731832</Value>
-    </Setting>
   </Settings>
 </SettingsFile>

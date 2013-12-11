@@ -248,23 +248,5 @@ namespace TcpServer.Core.Properties {
                 return ((string)(this["ImageSaveDirectory"]));
             }
         }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool GetImage {
-            get {
-                return ((bool)(this["GetImage"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("359772039731832")]
-        public string GetImageIMEI {
-            get {
-                return ((string)(this["GetImageIMEI"]));
-            }
-        }
     }
 }

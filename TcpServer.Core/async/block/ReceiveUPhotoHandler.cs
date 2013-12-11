@@ -71,7 +71,7 @@ namespace TcpServer.Core.async.block
                     return 0;
                 }
                 
-                userToken.uImageHolder.ImageBytes[userToken.uImageHolder.LastPackageSequence] = StringToByteArray(receivedData.Substring(indexOfImageBytes));
+                userToken.uImageHolder.ImageBytes[userToken.uImageHolder.LastPackageSequence-1] = StringToByteArray(receivedData.Substring(indexOfImageBytes));
 
                 if (userToken.uImageHolder.LastPackageSequence == userToken.uImageHolder.TotalPackages)
                 {
@@ -96,7 +96,8 @@ namespace TcpServer.Core.async.block
 
         private void saveImageToDisc(DataHoldingUserToken userToken)
         {
-            string imageFilePath = Path.Combine(Settings.Default.ImageSaveDirectory, userToken.uImageHolder.IMEI + ".jpg");
+            string fileName = userToken.uImageHolder.IMEI + DateTime.UtcNow.ToString("yyyy_MM_dd_HH_mm") + ".jpg";
+            string imageFilePath = Path.Combine(Settings.Default.ImageSaveDirectory, fileName);
             FileStream fs = new FileStream(imageFilePath, FileMode.Create);
             for (int i = 0; i < userToken.uImageHolder.ImageBytes.Length; i++)
             {
