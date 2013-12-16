@@ -10,7 +10,7 @@ namespace TcpServer.Core.pilotka
 {
     public class RetranslatorPilotka
     {
-        private static int bitIndex = 4;
+        private static int bitIndex = 6;
         private PilotkaSettings settings;
         private ILog log;
         private Dictionary<string, StateSended> imeiDictionary;

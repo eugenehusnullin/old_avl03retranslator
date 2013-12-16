@@ -178,12 +178,6 @@ namespace TcpServer.Core.async.block
         {
             var userToken = (DataHoldingUserToken)saea.UserToken;
 
-            if (saea.BytesTransferred == 0)
-            {
-                startReceive(saea);
-                return;
-            }
-
             if (saea.SocketError != SocketError.Success || saea.BytesTransferred == 0)
             {
                 log.DebugFormat("Process receive from block failed. SocketError={0} or BytesTransferred={1}.", saea.SocketError, saea.BytesTransferred);
