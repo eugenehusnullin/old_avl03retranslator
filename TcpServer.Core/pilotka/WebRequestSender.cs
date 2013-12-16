@@ -24,7 +24,7 @@ namespace TcpServer.Core.pilotka
             this.url = settings.Url;
         }
 
-        public async Task<bool> send(string imei, EngineState engineState, DateTime utcDatetime)
+        public async Task<bool> send(string imei, PilotkaState state, DateTime utcDatetime)
         {
             return await Task<bool>.Run(() =>
                 {
@@ -32,7 +32,7 @@ namespace TcpServer.Core.pilotka
                     {
                         string currentUrl = url;
                         currentUrl = currentUrl.Replace("{IMEI}", imei)
-                            .Replace("{STATE}", engineState == EngineState.Started ? "1" : "0")
+                            .Replace("{STATE}", state == PilotkaState.Started ? "1" : "0")
                             .Replace("{UTC}", HttpUtility.UrlEncode(utcDatetime.ToString(datetimeFormat)));
 
                         HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(currentUrl);

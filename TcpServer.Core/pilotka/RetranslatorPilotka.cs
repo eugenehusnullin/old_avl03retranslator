@@ -10,6 +10,7 @@ namespace TcpServer.Core.pilotka
 {
     public class RetranslatorPilotka
     {
+        private static int bitIndex = 4;
         private PilotkaSettings settings;
         private ILog log;
         private Dictionary<string, StateSended> imeiDictionary;
@@ -35,23 +36,23 @@ namespace TcpServer.Core.pilotka
                 {
                     StateSended stateSended = imeiDictionary[packet.IMEI];
 
-                    EngineState newEngineState = packet.Status[5] == '0' ? EngineState.Stoped : EngineState.Started;
+                    PilotkaState newState = packet.Status[bitIndex] == '0' ? PilotkaState.Stoped : PilotkaState.Started;
 
-                    if (!stateSended.sended || stateSended.state != newEngineState)
+                    if (!stateSended.sended || stateSended.state != newState)
                     {
                         var webRequestSender = webRequestSenderPool.GetFromPool();
                         try
                         {
-                            stateSended.state = newEngineState;
-                            stateSended.sended = await webRequestSender.send(packet.IMEI, newEngineState, DateTime.UtcNow);
+                            stateSended.state = newState;
+                            stateSended.sended = await webRequestSender.send(packet.IMEI, newState, packet.ValidNavigDateTime);
 
                             if (stateSended.sended)
                             {
-                                log.InfoFormat("Успешно: IMEI={0}, EngineState={1}", packet.IMEI, packet.Status[5]);
+                                log.InfoFormat("Успешно: IMEI={0}, State={1}", packet.IMEI, packet.Status[bitIndex]);
                             }
                             else
                             {
-                                log.WarnFormat("Провально: IMEI={0}, EngineState={1}", packet.IMEI, packet.Status[5]);
+                                log.WarnFormat("Провально: IMEI={0}, State={1}", packet.IMEI, packet.Status[bitIndex]);
                             }
                         }
                         finally

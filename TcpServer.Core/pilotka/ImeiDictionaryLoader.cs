@@ -8,14 +8,14 @@ using TcpServer.Core.async.common;
 
 namespace TcpServer.Core.pilotka
 {
-    public enum EngineState
+    public enum PilotkaState
     {
         Undefined, Started, Stoped
     }
 
     public class StateSended
     {
-        public EngineState state = EngineState.Undefined;
+        public PilotkaState state = PilotkaState.Undefined;
         public bool sended = false;
     }
 
