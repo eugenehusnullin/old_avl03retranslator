@@ -248,5 +248,14 @@ namespace TcpServer.Core.Properties {
                 return ((string)(this["ImageSaveDirectory"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool Mon2_Allboards {
+            get {
+                return ((bool)(this["Mon2_Allboards"]));
+            }
+        }
     }
 }

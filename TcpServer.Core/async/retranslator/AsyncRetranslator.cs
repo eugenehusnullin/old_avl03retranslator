@@ -84,7 +84,10 @@ namespace TcpServer.Core.async.retranslator
             if (Settings.Default.Mon2_Enabled)
             {
                 // 1. load imeis
-                mon2Imeis = ImeiListLoader.loadImeis(log, Settings.Default.Mon2_ImeiListFileName);
+                if (!Settings.Default.Mon2_Allboards)
+                {
+                    mon2Imeis = ImeiListLoader.loadImeis(log, Settings.Default.Mon2_ImeiListFileName);
+                }
 
                 // 2. init mon2connector
                 mon2Connector = new MonConnector(Settings.Default.Mon2_Host, Settings.Default.Mon2_Port,
@@ -173,7 +176,7 @@ namespace TcpServer.Core.async.retranslator
                 monConnector.startSend(socketGroup.monSendSAEA, processedBytes);
 
                 // mon2
-                if (Settings.Default.Mon2_Enabled && mon2Imeis.Contains(imei))
+                if (Settings.Default.Mon2_Enabled && (Settings.Default.Mon2_Allboards || mon2Imeis.Contains(imei)))
                 {
                     if (socketGroup.mon2SendSAEA == null)
                     {
