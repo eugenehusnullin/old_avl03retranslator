@@ -80,5 +80,20 @@
     <Setting Name="Mon2_Allboards" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="Activemq_user" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">mon2producer</Value>
+    </Setting>
+    <Setting Name="Activemq_password" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Hde3Y66kpUsOvK26Q8hQ</Value>
+    </Setting>
+    <Setting Name="Activemq_queue" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">pilotka</Value>
+    </Setting>
+    <Setting Name="Activemq_url" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">activemq:tcp://195.206.252.236:61616</Value>
+    </Setting>
+    <Setting Name="Activemq_enabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

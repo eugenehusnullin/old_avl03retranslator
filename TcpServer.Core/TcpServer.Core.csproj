@@ -36,6 +36,12 @@
   </PropertyGroup>
   <PropertyGroup />
   <ItemGroup>
+    <Reference Include="Apache.NMS">
+      <HintPath>lib\Apache.NMS.dll</HintPath>
+    </Reference>
+    <Reference Include="Apache.NMS.ActiveMQ">
+      <HintPath>lib\Apache.NMS.ActiveMQ.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <HintPath>..\log4net.dll</HintPath>
     </Reference>
