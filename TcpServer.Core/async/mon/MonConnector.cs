@@ -107,10 +107,14 @@ namespace TcpServer.Core.async.mon
 
         public void startSend(SocketAsyncEventArgs saea, byte[] bytes)
         {
-            var userToken = (DataHoldingUserToken)saea.UserToken;
-            userToken.resetAll();
-            userToken.messageBytes = bytes;
-            startSend(saea);
+            try
+            {
+                var userToken = (DataHoldingUserToken)saea.UserToken;
+                userToken.resetAll();
+                userToken.messageBytes = bytes;
+                startSend(saea);
+            }
+            catch { }
         }
 
         private void startSend(SocketAsyncEventArgs saea)

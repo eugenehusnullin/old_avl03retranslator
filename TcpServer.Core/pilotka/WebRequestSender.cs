@@ -37,40 +37,45 @@ namespace TcpServer.Core.pilotka
                 {
                     lock (this)
                     {
-                        string currentUrl = url;
-                        currentUrl = currentUrl.Replace("{IMEI}", imei)
-                            .Replace("{STATE}", state == PilotkaState.Started ? "1" : "0")
-                            .Replace("{UTC}", HttpUtility.UrlEncode(utcDatetime.ToString(datetimeFormat)));
-
-                        HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(currentUrl);
-                        webRequest.Timeout = webRequestTimeout;
-                        webRequest.Method = "GET";
-                        try
+                        if (Settings.Default.Activemq_enabled)
                         {
-                            var webResponse = (HttpWebResponse)webRequest.GetResponse();
-                            log.DebugFormat("WebRequestSender: webResponse = {0}, url={1}", webResponse.StatusCode, currentUrl);
-
-                            // active mq post message
-                            if (Settings.Default.Activemq_enabled)
-                            {
-                                nsmSend(imei, state, utcDatetime);
-                            }
-
-                            return webResponse.StatusCode == HttpStatusCode.OK;
+                            return nsmSend(imei, state, utcDatetime);
                         }
-                        catch (Exception e)
+                        else
                         {
-                            log.Error("WebRequestSender: " + currentUrl + ": " + e.ToString());
-                            return false;
-                        }
-                        finally
-                        {
-                            webRequest.GetResponse().Close();
-                            webRequest.GetResponse().Dispose();
+                            return webSend(imei, state, utcDatetime);
                         }
                     }
                 }
             );
+        }
+
+        private bool webSend(string imei, PilotkaState state, DateTime utcDatetime)
+        {
+            string currentUrl = url;
+            currentUrl = currentUrl.Replace("{IMEI}", imei)
+                                    .Replace("{STATE}", state == PilotkaState.Started ? "1" : "0")
+                                    .Replace("{UTC}", HttpUtility.UrlEncode(utcDatetime.ToString(datetimeFormat)));
+
+            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(currentUrl);
+            webRequest.Timeout = webRequestTimeout;
+            webRequest.Method = "GET";
+            try
+            {
+                var webResponse = (HttpWebResponse)webRequest.GetResponse();
+                log.DebugFormat("WebRequestSender: webResponse = {0}, url={1}", webResponse.StatusCode, currentUrl);
+                return webResponse.StatusCode == HttpStatusCode.OK;
+            }
+            catch (Exception e)
+            {
+                log.Error("WebRequestSender: " + currentUrl + ": " + e.ToString());
+                return false;
+            }
+            finally
+            {
+                webRequest.GetResponse().Close();
+                webRequest.GetResponse().Dispose();
+            }
         }
 
         private void createConnection()
@@ -129,7 +134,9 @@ namespace TcpServer.Core.pilotka
                 var textMessage = session.CreateTextMessage(msg);
                 producer.Send(textMessage);
                 return true;
-            } catch {
+            }
+            catch
+            {
                 closeConnection();
                 return false;
             }
