@@ -20,3 +20,4 @@ Thumbs.db
 *.lib
 *.sbr
 _ReSharper*/
+packages*/

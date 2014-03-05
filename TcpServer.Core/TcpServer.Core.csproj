@@ -42,6 +42,9 @@
     <Reference Include="Apache.NMS.ActiveMQ">
       <HintPath>lib\Apache.NMS.ActiveMQ.dll</HintPath>
     </Reference>
+    <Reference Include="EntityFramework">
+      <HintPath>..\packages\EntityFramework.5.0.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <HintPath>..\log4net.dll</HintPath>
     </Reference>
@@ -50,16 +53,25 @@
       <HintPath>..\packages\Microsoft.Web.Services3.3.0.0.0\lib\net20\Microsoft.Web.Services3.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.Entity">
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System.EnterpriseServices" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Services" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Data">
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -69,6 +81,12 @@
     <Compile Include="async\block\ReceiveResponseHandler.cs" />
     <Compile Include="async\block\ReceiveTypeSelector.cs" />
     <Compile Include="async\common\ImeiListLoader.cs" />
+    <Compile Include="async\othertasks\FediaTask.cs" />
+    <Compile Include="async\othertasks\model\FediaModel.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FediaModel.edmx</DependentUpon>
+    </Compile>
     <Compile Include="async\retranslator\AsyncRetranslator.cs" />
     <Compile Include="async\common\BaseConnector.cs" />
     <Compile Include="async\block\BlocksAcceptor.cs" />
@@ -135,6 +153,10 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
+    <EntityDeploy Include="async\othertasks\model\FediaModel.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>FediaModel.Designer.cs</LastGenOutput>
+    </EntityDeploy>
     <None Include="log4net.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>
@@ -176,6 +198,9 @@
       <CachedAppSettingsObjectName>Settings</CachedAppSettingsObjectName>
       <CachedSettingsPropName>TcpServer_Core_ru_mos_ods_TelemetryService</CachedSettingsPropName>
     </WebReferenceUrl>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

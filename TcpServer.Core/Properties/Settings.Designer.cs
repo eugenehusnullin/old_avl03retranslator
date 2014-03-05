@@ -302,5 +302,23 @@ namespace TcpServer.Core.Properties {
                 return ((bool)(this["Activemq_enabled"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("fedia.txt")]
+        public string Fedia_ImeiListFileName {
+            get {
+                return ((string)(this["Fedia_ImeiListFileName"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool Fedia_Enabled {
+            get {
+                return ((bool)(this["Fedia_Enabled"]));
+            }
+        }
     }
 }

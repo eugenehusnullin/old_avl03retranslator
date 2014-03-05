@@ -95,5 +95,11 @@
     <Setting Name="Activemq_enabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="Fedia_ImeiListFileName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">fedia.txt</Value>
+    </Setting>
+    <Setting Name="Fedia_Enabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
