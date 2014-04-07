@@ -381,7 +381,14 @@ namespace TcpServer.Core
                 int rtcSeconds;
                 int.TryParse(rtcString.Substring(12, 2), out rtcSeconds);
 
-                result.ValidNavigDateTime = new DateTime(rtcYear, rtcMonth, rtcDay, rtcHour, rtcMinute, rtcSeconds);
+                try
+                {
+                    result.ValidNavigDateTime = new DateTime(rtcYear, rtcMonth, rtcDay, rtcHour, rtcMinute, rtcSeconds);
+                }
+                catch
+                {
+                    result.ValidNavigDateTime = new DateTime();
+                }
 
                 //Datetime
                 var datetimeString = matchGroups["DateTime"].Value;
