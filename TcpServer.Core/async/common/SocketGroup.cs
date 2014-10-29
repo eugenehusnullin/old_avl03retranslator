@@ -11,24 +11,13 @@ namespace TcpServer.Core.async.common
 {
     public class SocketGroup
     {
-        public volatile SocketAsyncEventArgs blockReceiveSAEA = null;
-        public volatile SocketAsyncEventArgs blockSendSAEA = null;
-        public volatile SocketAsyncEventArgs monReceiveSAEA = null;
-        public volatile SocketAsyncEventArgs monSendSAEA = null;
-        public volatile SocketAsyncEventArgs mon2ReceiveSAEA = null;
-        public volatile SocketAsyncEventArgs mon2SendSAEA = null;
+        public SocketAsyncEventArgs blockReceiveSAEA = null;
+        public SocketAsyncEventArgs blockSendSAEA = null;
+        public SocketAsyncEventArgs monReceiveSAEA = null;
+        public SocketAsyncEventArgs monSendSAEA = null;
+        public SocketAsyncEventArgs mon2ReceiveSAEA = null;
+        public SocketAsyncEventArgs mon2SendSAEA = null;
 
-        //public AutoResetEvent waitWhileSendToMon = new AutoResetEvent(true);
-        //public AutoResetEvent waitWhileSendToBlock = new AutoResetEvent(true);
 
-        //public void reset()
-        //{
-        //    blockSendSAEA = null;
-        //    monReceiveSAEA = null;
-        //    monSendSAEA = null;
-
-        //    waitWhileSendToMon.Set();
-        //    waitWhileSendToBlock.Set();
-        //}
     }
 }

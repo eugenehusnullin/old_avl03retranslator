@@ -3,7 +3,6 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using TcpServer.Core.async.othertasks;
 using TcpServer.Core.Mintrans;
 using TcpServer.Core.pilotka;
 using TcpServer.Core.Properties;
@@ -19,7 +18,6 @@ namespace TcpServer.Core.async.retranslator
         private UnifiedProtocolSink mintransMoscowCitySink;
         private UnifiedProtocolSink mintransMoscowRegionSink;
         private RetranslatorPilotka retranslatorPilotka;
-        private FediaTask fediaTask;
 
         private bool telemaximaEnabled = Settings.Default.Telemaxima_Enabled;
 
@@ -36,7 +34,6 @@ namespace TcpServer.Core.async.retranslator
             this.mintransMoscowCitySink = UnifiedProtocolSink.GetInstance(new MintransMoscowCitySettings());
             this.mintransMoscowRegionSink = UnifiedProtocolSink.GetInstance(new MintransMoscowRegionSettings());
             this.retranslatorPilotka = new RetranslatorPilotka();
-            fediaTask = new FediaTask();
         }
 
         public void start()
@@ -89,8 +86,6 @@ namespace TcpServer.Core.async.retranslator
                     }
 
                     var gpsData = basePacket.ToPacketGps();
-
-                    fediaTask.task(imei, gpsData, basePacket);
 
                     packetLog.DebugFormat("src: {0}{1}dst: {2}", receivedData, Environment.NewLine, gpsData);
 

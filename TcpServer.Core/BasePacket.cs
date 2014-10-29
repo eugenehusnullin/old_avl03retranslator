@@ -278,7 +278,13 @@ namespace TcpServer.Core
 
         public static BasePacket GetFromGlonass(string stringPacket)
         {
-//$$A5359772039754511|AAUA0855.74210N036.86489E000000|02.7|02.2|01.5|20131129130737|20131129130737|001000000000|14171226|00000000|13D249F9|0000|0.0000|0776||00000|B8B3
+
+// новый блок с датч. топлива
+// $$AF863771020234458|AAUA0655.71719N038.23135E000003|01.3|00.8|01.0|20141029095029|20141029095029|000000000000|04020000|00000000|0000|0000|13DDEC5A|0000|0.0000|0047||00000|4D3C
+
+// старый блок
+// $$9F359772036674894|AAUA0753.36640N055.93727E000000|02.5|01.8|01.8|20141029103052|20141029103052|000000000000|14121179|00000000|00D1EFFD|0000|0.0000|0124||5E9E
+// $$A5359772039754511|AAUA0855.74210N036.86489E000000|02.7|02.2|01.5|20131129130737|20131129130737|001000000000|14171226|00000000|13D249F9|0000|0.0000|0776||00000|B8B3
             const string pattern_old = @"\$\$(?<Len>\w{2})(?<Imei>\d{15})\|(?<AlarmType>\w{2})(?<Chip>U|R)(?<State>A|V)(?<Satellites>\d{2})"
                                   + @"(?<Latitude>[0-9\.]{8})(?<LatitudeLetter>N|S)(?<Longitude>[0-9\.]{9})(?<LongitudeLetter>E|W)(?<Speed>[0-9]{3})(?<Direction>[0-9]{3})"
                                   + @"\|(?<PDOP>[0-9\.]{4})\|(?<HDOP>[0-9\.]{4})\|(?<VDOP>[0-9\.]{4})\|(?<DateTime>[0-9]{14})\|(?<RTC>[0-9]{14})\|(?<Status>[0-9]{12})"
@@ -291,6 +297,12 @@ namespace TcpServer.Core
                                   + @"\|(?<Voltage>[0-9]{8})\|(?<ADC>[0-9]{8})\|(?<LACCI>\w{8})\|(?<Temperature>\w{4})\|(?<Odometer>[0-9\.]{6,})\|(?<SerialID>\d{4})\|(?<RFIDNo>\d*)"
                                   + @"\|(?<FuelImpuls>\d{5})\|(?<Checksum>\w{4})";
 
+            const string pattern_fuel = @"\$\$(?<Len>\w{2})(?<Imei>\d{15})\|(?<AlarmType>\w{2})(?<Chip>U|R)(?<State>A|V)(?<Satellites>\d{2})"
+                                  + @"(?<Latitude>[0-9\.]{8})(?<LatitudeLetter>N|S)(?<Longitude>[0-9\.]{9})(?<LongitudeLetter>E|W)(?<Speed>[0-9]{3})(?<Direction>[0-9]{3})"
+                                  + @"\|(?<PDOP>[0-9\.]{4})\|(?<HDOP>[0-9\.]{4})\|(?<VDOP>[0-9\.]{4})\|(?<DateTime>[0-9]{14})\|(?<RTC>[0-9]{14})\|(?<Status>[0-9]{12})"
+                                  + @"\|(?<Voltage>[0-9]{8})\|(?<ADC>[0-9]{8})\|(?<f1>\w{4})\|(?<f2>\w{4})\|(?<LACCI>\w{8})\|(?<Temperature>\w{4})\|(?<Odometer>[0-9\.]{6,})\|(?<SerialID>\d{4})\|(?<RFIDNo>\d*)"
+                                  + @"\|(?<FuelImpuls>\d{5})\|(?<Checksum>\w{4})";
+
 
             var cnt_parts = stringPacket.Split('|').Length;
             if (cnt_parts == 14 || cnt_parts == 15)
@@ -299,9 +311,34 @@ namespace TcpServer.Core
             }
             else
             {
-                var is_9_19_Impuls = cnt_parts == 17;
+                int messageType;
+                string pattern;
+                switch (cnt_parts)
+                {
+                    case 16:
+                        messageType = 1;
+                        pattern = pattern_old;
+                        break;
+                    case 17:
+                        messageType = 2;
+                        pattern = pattern_9_19_Impuls;
+                        break;
+                    case 19:
+                        messageType = 3;
+                        pattern = pattern_fuel;
+                        break;
+                    default:
+                        messageType = 0;
+                        pattern = string.Empty;
+                        break;
+                }
 
-                var pattern = is_9_19_Impuls ? pattern_9_19_Impuls : pattern_old;
+                if (messageType == 0)
+                {
+                    throw new Exception("bad packet");
+                }
+
+                
                 var regex = new Regex(pattern);
                 var match = regex.Match(stringPacket);
                 var matchGroups = match.Groups;
@@ -437,7 +474,7 @@ namespace TcpServer.Core
 
                 result.RFIDNo = matchGroups["RFIDNo"].Value;
 
-                if (is_9_19_Impuls)
+                if (messageType == 2 || messageType == 3)
                 {
                     int fuelImpuls;
                     int.TryParse(matchGroups["FuelImpuls"].Value, out fuelImpuls);

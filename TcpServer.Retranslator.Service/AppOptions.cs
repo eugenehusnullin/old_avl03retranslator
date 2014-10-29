@@ -67,7 +67,7 @@ namespace TcpServer.Retranslator.Service
             }
             UseFeedBack = useFeedBack;
 
-            var ServiceName = ConfigurationManager.AppSettings["ServiceName"];
+            ServiceName = ConfigurationManager.AppSettings["ServiceName"];
             if (string.IsNullOrEmpty(ServiceName))
             {
                 throw new ArgumentException("Не создан параметр", "ServiceName");
