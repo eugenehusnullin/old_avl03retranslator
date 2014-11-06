@@ -312,8 +312,9 @@ namespace TcpServer.Core.async.block
                 if (userToken.messageBytesDoneCount == userToken.messageBytes.Length)
                 {
                     // отправка завершена
+                    var message = userToken.messageBytes;
                     userToken.resetAll();
-                    messageSended(saea);
+                    messageSended(saea, message);
                 }
                 else
                 {

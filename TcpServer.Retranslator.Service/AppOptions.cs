@@ -47,26 +47,6 @@ namespace TcpServer.Retranslator.Service
             }
             DstPort = dstPort;
 
-            var logPath = ConfigurationManager.AppSettings["LogPath"];
-            if (string.IsNullOrEmpty(logPath))
-            {
-                throw new ArgumentException("Не создан параметр", "LogPath");
-            }
-            LogPath = logPath;
-
-            var useFeedBackString = ConfigurationManager.AppSettings["UseFeedBack"];
-            if (string.IsNullOrEmpty(useFeedBackString))
-            {
-                throw new ArgumentException("Не создан параметр", "UseFeedBack");
-            }
-
-            bool useFeedBack;
-            if (!bool.TryParse(useFeedBackString, out useFeedBack))
-            {
-                throw new ArgumentException("Параметр должен быть true или false", "UseFeedBack");
-            }
-            UseFeedBack = useFeedBack;
-
             ServiceName = ConfigurationManager.AppSettings["ServiceName"];
             if (string.IsNullOrEmpty(ServiceName))
             {
@@ -79,9 +59,6 @@ namespace TcpServer.Retranslator.Service
 
         public  string DstHost { get; set; }
         public  int DstPort { get; set; }
-
-        public string LogPath { get; set; }
-        public bool UseFeedBack { get; set; }
 
         public string ServiceName { get; set; }
     }                

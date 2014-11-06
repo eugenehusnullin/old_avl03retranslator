@@ -14,13 +14,6 @@ namespace TcpServer.Retranslator.Service
 
             InitializeComponent();
 
-            eventLog.Source = "Retranslator Service";
-            eventLog.Log = "Glonass Log";
-
-            var options = new Options();
-            options.LogPath = appOptions.LogPath;
-            options.UseFeedBack = appOptions.UseFeedBack;
-
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-Us");
             asyncRetranslator = new AsyncRetranslator(appOptions.SrcHost, appOptions.SrcPort, appOptions.DstHost, appOptions.DstPort);
         }

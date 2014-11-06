@@ -139,6 +139,12 @@ namespace TcpServer.Core.async.retranslator
 
         private void messageReceivedFromBlock(byte[] message, SocketAsyncEventArgs saea)
         {
+            if (log.IsDebugEnabled)
+            {
+                var receivedData = Encoding.ASCII.GetString(message);
+                log.Debug("--- messageReceivedFromBlock --- " + receivedData);
+            }
+
             SocketGroup socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
 
             if (Settings.Default.PureRetranslate)
@@ -213,18 +219,30 @@ namespace TcpServer.Core.async.retranslator
             }
         }
 
-        private void messageSendedToMon(SocketAsyncEventArgs saea)
+        private void messageSendedToMon(SocketAsyncEventArgs saea, byte[] message)
         {
+            if (log.IsDebugEnabled)
+            {
+                var receivedData = Encoding.ASCII.GetString(message);
+                log.Debug("--- messageSendedToMon --- " + receivedData);
+            }
+
             var userToken = (DataHoldingUserToken)saea.UserToken;
             blocksAcceptor.startReceive(userToken.socketGroup.blockReceiveSAEA);
         }
 
-        private void messageSendedToMon2(SocketAsyncEventArgs saea)
+        private void messageSendedToMon2(SocketAsyncEventArgs saea, byte[] message)
         {
         }
 
         private void messageReceivedFromMon(byte[] message, SocketAsyncEventArgs saea)
         {
+            if (log.IsDebugEnabled)
+            {
+                var receivedData = Encoding.ASCII.GetString(message);
+                log.Debug("--- messageReceivedFromMon --- " + receivedData);
+            }
+
             if (Settings.Default.PureRetranslate)
             {
                 string filename = Path.Combine(appPath,"purelog"); //((IPEndPoint)saea.AcceptSocket.RemoteEndPoint).Address.ToString();
@@ -274,8 +292,14 @@ namespace TcpServer.Core.async.retranslator
             blocksAcceptor.startSend(socketGroup.blockSendSAEA, message);
         }
 
-        private void messageSendedToBlock(SocketAsyncEventArgs saea)
+        private void messageSendedToBlock(SocketAsyncEventArgs saea, byte[] message)
         {
+            if (log.IsDebugEnabled)
+            {
+                var receivedData = Encoding.ASCII.GetString(message);
+                log.Debug("--- messageSendedToBlock --- " + receivedData);
+            }
+
             var userToken = (DataHoldingUserToken)saea.UserToken;
             monConnector.startReceive(userToken.socketGroup.monReceiveSAEA);
         }
