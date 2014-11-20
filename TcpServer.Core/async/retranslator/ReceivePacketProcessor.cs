@@ -3,9 +3,12 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using TcpServer.Core.async.common;
+using TcpServer.Core.edmx;
 using TcpServer.Core.Mintrans;
 using TcpServer.Core.pilotka;
 using TcpServer.Core.Properties;
+using System.Linq;
 
 namespace TcpServer.Core.async.retranslator
 {
@@ -58,7 +61,7 @@ namespace TcpServer.Core.async.retranslator
             this.mintransMoscowRegionSink.stop();
         }
 
-        public byte[] processMessage(byte[] message, out string imei)
+        public byte[] processMessage(byte[] message, out string imei, SocketGroup socketGroup)
         {
             string receivedData = string.Empty;
             imei = null;
@@ -93,6 +96,30 @@ namespace TcpServer.Core.async.retranslator
                 }
                 else
                 {
+                    try
+                    {
+                        if (receivedData.Contains("GSMVER:") && socketGroup.IMEI != null)
+                        {
+                            using (var db = new somereasonEntities())
+                            {
+                                var blockInfo = db.block_info.FirstOrDefault(_ => _.imei == socketGroup.IMEI);
+                                if (blockInfo == null)
+                                {
+                                    blockInfo = new block_info();
+                                    blockInfo.imei = socketGroup.IMEI;
+                                    blockInfo.info = receivedData;
+                                    blockInfo.arrived = DateTime.Now;
+                                    db.block_info.AddObject(blockInfo);
+                                    db.SaveChanges();
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error(e.ToString());
+                    }
+
                     return message;
                 }
             }

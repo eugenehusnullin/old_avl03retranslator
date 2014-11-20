@@ -54,6 +54,7 @@
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.Entity" />
     <Reference Include="System.EnterpriseServices" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Security" />
@@ -92,6 +93,11 @@
     <Compile Include="CrcNmea.cs" />
     <Compile Include="DateTimeHelper.cs" />
     <Compile Include="DictionarySaver.cs" />
+    <Compile Include="edmx\somereason.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>somereason.edmx</DependentUpon>
+    </Compile>
     <Compile Include="Listner.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Mintrans\ImeiList.cs" />
@@ -142,6 +148,10 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
+    <EntityDeploy Include="edmx\somereason.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>somereason.Designer.cs</LastGenOutput>
+    </EntityDeploy>
     <None Include="log4net.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>

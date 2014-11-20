@@ -167,7 +167,7 @@ namespace TcpServer.Core.async.retranslator
             else
             {
                 string imei;
-                byte[] processedBytes = receivePacketProcessor.processMessage(message, out imei);
+                byte[] processedBytes = receivePacketProcessor.processMessage(message, out imei, socketGroup);
 
                 if (processedBytes == null)
                 {
@@ -179,6 +179,10 @@ namespace TcpServer.Core.async.retranslator
                     return;
                 }
 
+                if (imei != null && socketGroup.IMEI == null)
+                {
+                    socketGroup.IMEI = imei;
+                }
                 monConnector.startSend(socketGroup.monSendSAEA, processedBytes);
 
                 // mon2
