@@ -130,8 +130,8 @@ namespace TcpServer.Core.async.block
                 {
                     SocketAsyncEventArgs saeaForReceive = createSaea(receiveEventHandler, BUFFER_SIZE);
                     saeaForReceive.AcceptSocket = saea.AcceptSocket;
-                    saeaForReceive.AcceptSocket.ReceiveTimeout = 10 * 60 * 1000;
-                    saeaForReceive.AcceptSocket.SendTimeout = 1 * 60 * 1000;
+                    saeaForReceive.AcceptSocket.ReceiveTimeout = 90 * 1000;
+                    saeaForReceive.AcceptSocket.SendTimeout = 60 * 1000;
                     connectionAccepted(saeaForReceive);
 
                     saea.AcceptSocket = null;
