@@ -24,7 +24,7 @@ namespace TcpServer.Core.Mintrans
                 foreach (string csv in set)
                 {
                     var strs = csv.Split(';');
-                    imeiDictionary.Add(strs[0], strs[1]);
+                    imeiDictionary.[strs[0]] = strs[1];
                 }
             }
         }
