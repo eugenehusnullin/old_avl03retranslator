@@ -9,6 +9,7 @@ using TcpServer.Core.Mintrans;
 using TcpServer.Core.pilotka;
 using TcpServer.Core.Properties;
 using System.Linq;
+using TcpServer.Core.gis;
 
 namespace TcpServer.Core.async.retranslator
 {
@@ -21,6 +22,7 @@ namespace TcpServer.Core.async.retranslator
         private UnifiedProtocolSink mintransMoscowCitySink;
         private UnifiedProtocolSink mintransMoscowRegionSink;
         private RetranslatorPilotka retranslatorPilotka;
+        private GISHandler gisHandler;
 
         private bool telemaximaEnabled = Settings.Default.Telemaxima_Enabled;
 
@@ -37,6 +39,7 @@ namespace TcpServer.Core.async.retranslator
             this.mintransMoscowCitySink = UnifiedProtocolSink.GetInstance(new MintransMoscowCitySettings());
             this.mintransMoscowRegionSink = UnifiedProtocolSink.GetInstance(new MintransMoscowRegionSettings());
             this.retranslatorPilotka = new RetranslatorPilotka();
+            this.gisHandler = new GISHandler();
         }
 
         public void start()
@@ -48,6 +51,7 @@ namespace TcpServer.Core.async.retranslator
 
             this.mintransMoscowCitySink.start();
             this.mintransMoscowRegionSink.start();
+            this.gisHandler.start();
         }
 
         public void stop()
@@ -59,6 +63,7 @@ namespace TcpServer.Core.async.retranslator
 
             this.mintransMoscowCitySink.stop();
             this.mintransMoscowRegionSink.stop();
+            this.gisHandler.stop();
         }
 
         public byte[] processMessage(byte[] message, out string imei, SocketGroup socketGroup)
@@ -82,6 +87,7 @@ namespace TcpServer.Core.async.retranslator
                     this.mintransMoscowCitySink.SendLocationAndState(basePacket);
                     this.mintransMoscowRegionSink.SendLocationAndState(basePacket);
                     this.retranslatorPilotka.retranslate(basePacket);
+                    this.gisHandler.handle(basePacket);
 
                     if (telemaximaEnabled)
                     {

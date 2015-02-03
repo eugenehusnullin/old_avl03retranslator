@@ -95,5 +95,17 @@
     <Setting Name="Activemq_enabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="GIS_Enabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="GIS_Url" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://2gis.ru</Value>
+    </Setting>
+    <Setting Name="GIS_ImeiListFileName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">2gis.txt</Value>
+    </Setting>
+    <Setting Name="GIS_Allboards" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
