@@ -46,7 +46,7 @@ namespace RepairFromLog
             stoped = true;
             thread.Join();
 
-            System.Console.Out.WriteLine(imei + " count: " + count + ".");
+            Console.Out.WriteLine(DateTime.Now.ToString() + " --- " + "After join: " + imei + " count: " + count + ".");
         }
 
         private void work()
@@ -89,8 +89,11 @@ namespace RepairFromLog
                         }
                         catch (Exception e)
                         {
-                            Console.Out.WriteLine(e.ToString());
-                            Console.Out.WriteLine(line);
+                            if (trySendCount == 1000)
+                            {
+                                Console.Out.WriteLine(DateTime.Now.ToString() + " --- " + e.ToString());
+                                Console.Out.WriteLine(DateTime.Now.ToString() + " --- " + line);
+                            }
                             Thread.Sleep(1000);
                             reconect = true;
                         }
@@ -99,12 +102,15 @@ namespace RepairFromLog
 
                 if ((count % 1000) == 0)
                 {
-                    Console.Out.WriteLine(imei + " - " + count);
+                    Console.Out.WriteLine(DateTime.Now.ToString() + " --- " + imei + " - " + count);
+                    Console.Out.WriteLine(DateTime.Now.ToString() + " --- " + imei + " - " + line);
                 }
                 Thread.Sleep(1000);
             }
             stream.Close();
             tcpClient.Close();
+
+            Console.Out.WriteLine(DateTime.Now.ToString() + " --- " + "After while: " + imei + " count: " + count + ".");
         }
         
 

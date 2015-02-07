@@ -46,7 +46,7 @@ namespace RepairFromLog
 
                 foreach (var pair in dict)
                 {
-                    Console.Out.WriteLine(pair.Value.imei + ": ---- " + pair.Value.count);
+                    Console.Out.WriteLine(DateTime.Now.ToString() + " --- " + pair.Value.imei + ": ---- " + pair.Value.count);
                 }
             }
         }
