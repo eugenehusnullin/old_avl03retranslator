@@ -79,8 +79,6 @@ namespace TcpServer.Core.async.mon
                 log.Debug("Start receive from monitoring failed.", e);
                 receiveFailed(saea);
                 closeSocket(saea);
-                (saea.UserToken as DataHoldingUserToken).socketGroup = null;
-                saea.Dispose();
             }
         }
 
@@ -93,8 +91,6 @@ namespace TcpServer.Core.async.mon
                 log.DebugFormat("Process receive from monitoring failed. SocketError={0} or BytesTransferred={1}.", saea.SocketError, saea.BytesTransferred);
                 receiveFailed(saea);
                 closeSocket(saea);
-                userToken.socketGroup = null;
-                saea.Dispose();
             }
             else
             {
@@ -105,10 +101,30 @@ namespace TcpServer.Core.async.mon
             }
         }
 
-        public void startSend(SocketAsyncEventArgs saea, byte[] bytes)
+        public void startSend(SocketGroup socketGroup, byte[] bytes)
         {
             try
             {
+                SocketAsyncEventArgs saea = socketGroup.monSendSAEA;
+
+                if (saea == null)
+                {
+                    // создаем соединение с мониторингом
+                    SocketAsyncEventArgs monReceive, monSend;
+                    if (createConnection(out monReceive, out monSend))
+                    {
+                        ((DataHoldingUserToken)monReceive.UserToken).socketGroup = socketGroup;
+                        ((DataHoldingUserToken)monSend.UserToken).socketGroup = socketGroup;
+                        socketGroup.monReceiveSAEA = monReceive;
+                        socketGroup.monSendSAEA = monSend;
+                        startReceive(monReceive);
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+
                 var userToken = (DataHoldingUserToken)saea.UserToken;
                 userToken.resetAll();
                 userToken.messageBytes = bytes;
@@ -137,8 +153,6 @@ namespace TcpServer.Core.async.mon
                 log.Debug("Start send to monitoring failed.", e);
                 sendFailed(saea);                
                 closeSocket(saea);
-                userToken.socketGroup = null;
-                saea.Dispose();
             }
         }
 
@@ -168,8 +182,6 @@ namespace TcpServer.Core.async.mon
                 userToken.resetAll();
                 sendFailed(saea);
                 closeSocket(saea);
-                userToken.socketGroup = null;
-                saea.Dispose();
             }
         }
 

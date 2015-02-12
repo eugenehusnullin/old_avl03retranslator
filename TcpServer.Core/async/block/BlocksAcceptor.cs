@@ -164,8 +164,6 @@ namespace TcpServer.Core.async.block
                     log.Debug("Start Receive from block failed.", e);
                     receiveFailed(saea);
                     closeSocket(saea);
-                    userToken.socketGroup = null;
-                    saea.Dispose();
                 }
             }
             else
@@ -184,8 +182,6 @@ namespace TcpServer.Core.async.block
                 userToken.resetAll();
                 receiveFailed(saea);
                 closeSocket(saea);
-                userToken.socketGroup = null;
-                saea.Dispose();
                 return;
             }
 
@@ -215,8 +211,6 @@ namespace TcpServer.Core.async.block
                         userToken.resetAll();
                         receiveFailed(saea);
                         closeSocket(saea);
-                        userToken.socketGroup = null;
-                        saea.Dispose();
                         return;
                     }
                 }
@@ -247,8 +241,6 @@ namespace TcpServer.Core.async.block
                     userToken.resetAll();
                     receiveFailed(saea);
                     closeSocket(saea);
-                    userToken.socketGroup = null;
-                    saea.Dispose();
                     return;
                 }
                 else
@@ -296,8 +288,6 @@ namespace TcpServer.Core.async.block
                 log.Debug("Start send to block failed.", e);
                 sendFailed(saea);
                 closeSocket(saea);
-                userToken.socketGroup = null;
-                saea.Dispose();
             }
         }
 
@@ -327,8 +317,6 @@ namespace TcpServer.Core.async.block
                 userToken.resetAll();
                 sendFailed(saea);
                 closeSocket(saea);
-                userToken.socketGroup = null;
-                saea.Dispose();
             }
         }
 

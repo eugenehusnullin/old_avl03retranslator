@@ -113,28 +113,10 @@ namespace TcpServer.Core.async.retranslator
 
         private void blockConnectionAccepted(SocketAsyncEventArgs saea)
         {
-            // создаем заранее соединение с мониторингом
-            SocketAsyncEventArgs monReceive, monSend;
-            if (monConnector.createConnection(out monReceive, out monSend))
-            {
-                var socketGroup = new SocketGroup();
-
-                ((DataHoldingUserToken)saea.UserToken).socketGroup = socketGroup;
-                ((DataHoldingUserToken)monReceive.UserToken).socketGroup = socketGroup;
-                ((DataHoldingUserToken)monSend.UserToken).socketGroup = socketGroup;
-
-                socketGroup.blockReceiveSAEA = saea;
-                socketGroup.monReceiveSAEA = monReceive;
-                socketGroup.monSendSAEA = monSend;
-
-                monConnector.startReceive(monReceive);
-                blocksAcceptor.startReceive(saea);
-            }
-            else
-            {
-                blocksAcceptor.closeSocket(saea);
-                return;
-            }
+            var socketGroup = new SocketGroup();
+            ((DataHoldingUserToken)saea.UserToken).socketGroup = socketGroup;
+            socketGroup.blockReceiveSAEA = saea;
+            blocksAcceptor.startReceive(saea);
         }
 
         private void messageReceivedFromBlock(byte[] message, SocketAsyncEventArgs saea)
@@ -162,7 +144,7 @@ namespace TcpServer.Core.async.retranslator
 
                 fs.Close();
 
-                monConnector.startSend(socketGroup.monSendSAEA, message);
+                monConnector.startSend(socketGroup, message);
             }
             else
             {
@@ -183,7 +165,7 @@ namespace TcpServer.Core.async.retranslator
                 {
                     socketGroup.IMEI = imei;
                 }
-                monConnector.startSend(socketGroup.monSendSAEA, processedBytes);
+                monConnector.startSend(socketGroup, processedBytes);
 
                 // mon2
                 if (Settings.Default.Mon2_Enabled && (Settings.Default.Mon2_Allboards || mon2Imeis.Contains(imei)))
@@ -212,11 +194,11 @@ namespace TcpServer.Core.async.retranslator
                     {
                     if (Settings.Default.Mon2_Format)
                     {
-                        mon2Connector.startSend(socketGroup.mon2SendSAEA, processedBytes);
+                        mon2Connector.startSend(socketGroup, processedBytes);
                     }
                     else
                     {
-                        mon2Connector.startSend(socketGroup.mon2SendSAEA, message);
+                        mon2Connector.startSend(socketGroup, message);
                     }
                     }
                 }
