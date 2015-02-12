@@ -101,30 +101,14 @@ namespace TcpServer.Core.async.mon
             }
         }
 
-        public void startSend(SocketGroup socketGroup, byte[] bytes)
+        public void startSend(SocketAsyncEventArgs saea, byte[] bytes)
         {
+            if (saea == null)
+            {
+                return;
+            }
             try
             {
-                SocketAsyncEventArgs saea = socketGroup.monSendSAEA;
-
-                if (saea == null)
-                {
-                    // создаем соединение с мониторингом
-                    SocketAsyncEventArgs monReceive, monSend;
-                    if (createConnection(out monReceive, out monSend))
-                    {
-                        ((DataHoldingUserToken)monReceive.UserToken).socketGroup = socketGroup;
-                        ((DataHoldingUserToken)monSend.UserToken).socketGroup = socketGroup;
-                        socketGroup.monReceiveSAEA = monReceive;
-                        socketGroup.monSendSAEA = monSend;
-                        startReceive(monReceive);
-                    }
-                    else
-                    {
-                        return;
-                    }
-                }
-
                 var userToken = (DataHoldingUserToken)saea.UserToken;
                 userToken.resetAll();
                 userToken.messageBytes = bytes;

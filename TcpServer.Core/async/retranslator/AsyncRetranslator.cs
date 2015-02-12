@@ -119,6 +119,42 @@ namespace TcpServer.Core.async.retranslator
             blocksAcceptor.startReceive(saea);
         }
 
+        private void connectMon(SocketGroup socketGroup)
+        {            
+            SocketAsyncEventArgs monReceive, monSend;
+            if (monConnector.createConnection(out monReceive, out monSend))
+            {
+                ((DataHoldingUserToken)monReceive.UserToken).socketGroup = socketGroup;
+                ((DataHoldingUserToken)monSend.UserToken).socketGroup = socketGroup;
+                socketGroup.monReceiveSAEA = monReceive;
+                socketGroup.monSendSAEA = monSend;
+                monConnector.startReceive(monReceive);
+            }
+            else
+            {
+                socketGroup.monReceiveSAEA = null;
+                socketGroup.monSendSAEA = null;
+            }
+        }
+
+        private void connectMon2(SocketGroup socketGroup)
+        {            
+            SocketAsyncEventArgs mon2Receive, mon2Send;
+            if (mon2Connector.createConnection(out mon2Receive, out mon2Send))
+            {
+                ((DataHoldingUserToken)mon2Receive.UserToken).socketGroup = socketGroup;
+                ((DataHoldingUserToken)mon2Send.UserToken).socketGroup = socketGroup;
+                socketGroup.mon2ReceiveSAEA = mon2Receive;
+                socketGroup.mon2SendSAEA = mon2Send;
+                mon2Connector.startReceive(mon2Receive);
+            }
+            else
+            {
+                socketGroup.mon2ReceiveSAEA = null;
+                socketGroup.mon2SendSAEA = null;
+            }
+        }
+
         private void messageReceivedFromBlock(byte[] message, SocketAsyncEventArgs saea)
         {
             if (log.IsDebugEnabled)
@@ -144,7 +180,11 @@ namespace TcpServer.Core.async.retranslator
 
                 fs.Close();
 
-                monConnector.startSend(socketGroup, message);
+                if (socketGroup.monSendSAEA == null)
+                {
+                    connectMon(socketGroup);
+                }
+                monConnector.startSend(socketGroup.monSendSAEA, message);
             }
             else
             {
@@ -165,41 +205,28 @@ namespace TcpServer.Core.async.retranslator
                 {
                     socketGroup.IMEI = imei;
                 }
-                monConnector.startSend(socketGroup, processedBytes);
+
+                if (socketGroup.monSendSAEA == null)
+                {
+                    connectMon(socketGroup);
+                }
+                monConnector.startSend(socketGroup.monSendSAEA, processedBytes);
 
                 // mon2
                 if (Settings.Default.Mon2_Enabled && (Settings.Default.Mon2_Allboards || mon2Imeis.Contains(imei)))
                 {
                     if (socketGroup.mon2SendSAEA == null)
                     {
-                        SocketAsyncEventArgs mon2Receive, mon2Send;
-                        if (mon2Connector.createConnection(out mon2Receive, out mon2Send))
-                        {
-                            ((DataHoldingUserToken)mon2Receive.UserToken).socketGroup = socketGroup;
-                            ((DataHoldingUserToken)mon2Send.UserToken).socketGroup = socketGroup;
-
-                            socketGroup.mon2ReceiveSAEA = mon2Receive;
-                            socketGroup.mon2SendSAEA = mon2Send;
-
-                            mon2Connector.startReceive(mon2Receive);
-                        }
-                        else
-                        {
-                            socketGroup.mon2ReceiveSAEA = null;
-                            socketGroup.mon2SendSAEA = null;
-                        }
+                        connectMon2(socketGroup);
                     }
 
-                    if (socketGroup.mon2SendSAEA != null)
-                    {
                     if (Settings.Default.Mon2_Format)
                     {
-                        mon2Connector.startSend(socketGroup, processedBytes);
+                        mon2Connector.startSend(socketGroup.mon2SendSAEA, processedBytes);
                     }
                     else
                     {
-                        mon2Connector.startSend(socketGroup, message);
-                    }
+                        mon2Connector.startSend(socketGroup.mon2SendSAEA, message);
                     }
                 }
             }
