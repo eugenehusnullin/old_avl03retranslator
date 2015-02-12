@@ -20,7 +20,7 @@ namespace TcpServer.Core.gis
         private object locker = new object();
         private Dictionary<string, List<BasePacket>> dictionary = new Dictionary<string, List<BasePacket>>();
         private DateTime min = DateTime.MaxValue;
-        private TimeSpan allowTimeSpan = new TimeSpan(0, 4, 30);
+        private readonly TimeSpan allowTimeSpan = new TimeSpan(0, 4, 30);
         private HashSet<String> imeis = new HashSet<string>();
         private bool allImeis = false;
         private volatile bool stoped = false;
@@ -44,6 +44,7 @@ namespace TcpServer.Core.gis
             stoped = false;
             thread = new Thread(() => process());
             thread.Start();
+            log.Info("2GIS started");
         }
 
         public void stop()
@@ -56,6 +57,7 @@ namespace TcpServer.Core.gis
             stoped = true;
             thread.Interrupt();
             thread.Join();
+            log.Info("2GIS stoped");
         }
 
         public void handle(BasePacket basePacket)
@@ -99,57 +101,78 @@ namespace TcpServer.Core.gis
 
         private void process()
         {
-            while (!stoped)
+            try
             {
-                Dictionary<string, List<BasePacket>> sendList = null;
-                lock (this.locker)
+                while (!stoped)
                 {
-                    TimeSpan ts = DateTime.UtcNow.Subtract(this.min);
-                    if (ts >= this.allowTimeSpan)
+                    Dictionary<string, List<BasePacket>> sendList = null;
+                    lock (this.locker)
                     {
-                        sendList = this.dictionary;
-                        this.dictionary = new Dictionary<string, List<BasePacket>>();
-                        this.min = DateTime.MaxValue;
+                        TimeSpan ts = DateTime.UtcNow.Subtract(this.min);
+                        if (ts >= this.allowTimeSpan)
+                        {
+                            sendList = this.dictionary;
+                            this.dictionary = new Dictionary<string, List<BasePacket>>();
+                            this.min = DateTime.MaxValue;
+                        }
+                    }
+
+                    if (sendList != null && sendList.Count > 0)
+                    {
+                        send2GIS(sendList);
+                    }
+                    else
+                    {
+                        Thread.Sleep(3000);
                     }
                 }
-
-                if (sendList != null && sendList.Count > 0)
-                {
-                    send2GIS(sendList);
-                }
-                else
-                {
-                    Thread.Sleep(3000);
-                }
+            }
+            catch (Exception e)
+            {
+                log.Error(e.ToString());
             }
         }
 
         private bool send2GIS(Dictionary<string, List<BasePacket>> sendList)
         {
-            var xmlDoc = buildXml(sendList);
-
-            var webRequest = (HttpWebRequest)WebRequest.Create(Settings.Default.GIS_Url);
-            webRequest.Timeout = 10000;
-            webRequest.Method = "POST";
-            webRequest.ContentType = "application/x-www-form-urlencoded";
-            using (var writer = new StreamWriter(webRequest.GetRequestStream()))
+            try
             {
-                writer.Write("data=" + HttpUtility.UrlEncode(xmlDoc.OuterXml, Encoding.UTF8));
+                var xmlDoc = buildXml(sendList);
+                var values = xmlDoc.OuterXml;
+
+                log.Debug(values);
+
+                var webRequest = (HttpWebRequest)WebRequest.Create(Settings.Default.GIS_Url);
+                webRequest.Timeout = 10000;
+                webRequest.Method = "POST";
+                webRequest.ContentType = "application/x-www-form-urlencoded";
+                using (var writer = new StreamWriter(webRequest.GetRequestStream()))
+                {
+                    writer.Write("data=" + HttpUtility.UrlEncode(values, Encoding.UTF8));
+                }
+                var webResponse = (HttpWebResponse)webRequest.GetResponse();
+                return webResponse.StatusCode != HttpStatusCode.OK;
             }
-            var webResponse = (HttpWebResponse)webRequest.GetResponse();
-            return webResponse.StatusCode != HttpStatusCode.OK;
+            catch (Exception e)
+            {
+                log.Error(e.ToString());
+                return false;
+            }
         }
 
         private XmlDocument buildXml(Dictionary<string, List<BasePacket>> sendList)
         {
             XmlDocument xmlDoc = new XmlDocument();
             XmlNode rootNode = xmlDoc.CreateElement("tracks");
+            XmlAttribute attribute = xmlDoc.CreateAttribute("clid");
+            attribute.Value = Settings.Default.GIS_CLID;
+            rootNode.Attributes.Append(attribute);
             xmlDoc.AppendChild(rootNode);
 
             foreach (var pair in sendList)
             {
                 XmlNode trackNode = xmlDoc.CreateElement("track");
-                XmlAttribute attribute = xmlDoc.CreateAttribute("uuid");
+                attribute = xmlDoc.CreateAttribute("uuid");
                 attribute.Value = pair.Key;
                 trackNode.Attributes.Append(attribute);
                 rootNode.AppendChild(trackNode);

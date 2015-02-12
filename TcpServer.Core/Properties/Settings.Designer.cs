@@ -338,5 +338,14 @@ namespace TcpServer.Core.Properties {
                 return ((bool)(this["GIS_Allboards"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1450")]
+        public string GIS_CLID {
+            get {
+                return ((string)(this["GIS_CLID"]));
+            }
+        }
     }
 }
