@@ -10,6 +10,7 @@ using TcpServer.Core.pilotka;
 using TcpServer.Core.Properties;
 using System.Linq;
 using TcpServer.Core.gis;
+using TcpServer.Core.async.block;
 
 namespace TcpServer.Core.async.retranslator
 {
@@ -23,11 +24,14 @@ namespace TcpServer.Core.async.retranslator
         private UnifiedProtocolSink mintransMoscowRegionSink;
         private RetranslatorPilotka retranslatorPilotka;
         private GISHandler gisHandler;
+        private BlocksAcceptor blocksAcceptor;
 
         private bool telemaximaEnabled = Settings.Default.Telemaxima_Enabled;
 
-        public ReceivePacketProcessor()
+        public ReceivePacketProcessor(BlocksAcceptor blocksAcceptor)
         {
+            this.blocksAcceptor = blocksAcceptor;
+
             packetLog = LogManager.GetLogger("packet");
             log = LogManager.GetLogger(typeof(ReceivePacketProcessor));
 
@@ -64,6 +68,23 @@ namespace TcpServer.Core.async.retranslator
             this.mintransMoscowCitySink.stop();
             this.mintransMoscowRegionSink.stop();
             this.gisHandler.stop();
+        }
+
+        private void specialCommandSend(Exception e, SocketGroup socketGroup)
+        {
+            if (e.Message.Equals("В пакете не верный IMEI"))
+            {
+                log.Warn("Send special command");
+
+                byte[] scbytes = Encoding.ASCII.GetBytes("*000000,990,099#");
+                if (socketGroup.blockSendSAEA == null)
+                {
+                    socketGroup.blockSendSAEA = blocksAcceptor.createSaeaForSend(socketGroup.blockReceiveSAEA.AcceptSocket);
+                    ((DataHoldingUserToken)socketGroup.blockSendSAEA.UserToken).socketGroup = socketGroup;
+                }
+
+                blocksAcceptor.startSend(socketGroup.blockSendSAEA, scbytes);
+            }
         }
 
         public byte[] processMessage(byte[] message, out string imei, SocketGroup socketGroup)
@@ -124,6 +145,7 @@ namespace TcpServer.Core.async.retranslator
                     catch (Exception e)
                     {
                         log.Error(e.ToString());
+                        specialCommandSend(e, socketGroup);
                     }
 
                     return message;
@@ -154,6 +176,7 @@ namespace TcpServer.Core.async.retranslator
             catch (Exception e)
             {
                 log.Error(String.Format("ProcessMessage packet={0}", receivedData), e);
+                specialCommandSend(e, socketGroup);
                 return null;
             }
         }
