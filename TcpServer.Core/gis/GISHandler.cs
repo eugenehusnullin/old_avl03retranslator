@@ -182,11 +182,11 @@ namespace TcpServer.Core.gis
                     XmlNode pointNode = xmlDoc.CreateElement("point");
 
                     attribute = xmlDoc.CreateAttribute("latitude");
-                    attribute.Value = Convert.ToString(item.Latitude);
+                    attribute.Value = Convert.ToString(item.LatitudeOrig).Replace(',','.');
                     pointNode.Attributes.Append(attribute);
 
                     attribute = xmlDoc.CreateAttribute("longitude");
-                    attribute.Value = Convert.ToString(item.Longitude);
+                    attribute.Value = Convert.ToString(item.LongitudeOrig).Replace(',','.');
                     pointNode.Attributes.Append(attribute);
 
                     attribute = xmlDoc.CreateAttribute("avg_speed");

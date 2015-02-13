@@ -358,6 +358,7 @@ namespace TcpServer.Core
                 // coordinats 
                 float latitude;
                 float.TryParse(matchGroups["Latitude"].Value, out latitude);
+                result.LatitudeOrig = latitude;
                 result.Latitude = ConvertGlonassToBaseCoordinat(latitude);
 
                 char latitudeLetter;
@@ -366,6 +367,7 @@ namespace TcpServer.Core
 
                 float longitude;
                 float.TryParse(matchGroups["Longitude"].Value, out longitude);
+                result.LongitudeOrig = longitude;
                 result.Longitude = ConvertGlonassToBaseCoordinat(longitude);
 
                 char longitudeLetter;
@@ -519,16 +521,20 @@ namespace TcpServer.Core
 
             // coordinats 
             float latitude;
-            float.TryParse(matchGroups["Latitude"].Value, out latitude);
+            string slat = matchGroups["Latitude"].Value;
+            float.TryParse(slat, out latitude);
             result.Latitude = latitude;
+            result.LatitudeOrig = int.Parse(slat.Substring(0, 2)) + (float.Parse(slat.Substring(2))*60);
 
             char latitudeLetter;
             char.TryParse(matchGroups["LatitudeLetter"].Value, out latitudeLetter);
             result.LatitudeLetter = latitudeLetter;
 
             float longitude;
-            float.TryParse(matchGroups["Longitude"].Value, out longitude);
+            string slon = matchGroups["Longitude"].Value;
+            float.TryParse(slon, out longitude);
             result.Longitude = longitude;
+            result.LongitudeOrig = int.Parse(slon.Substring(0, 3)) + (float.Parse(slon.Substring(3))*60);
 
             char longitudeLetter;
             char.TryParse(matchGroups["LongitudeLetter"].Value, out longitudeLetter);
@@ -846,9 +852,11 @@ namespace TcpServer.Core
         /// </summary>
         public char State { get; set; }
 
+        public double LatitudeOrig { get; set; }
         public double Latitude { get; set; }
         public char LatitudeLetter { get; set; }
 
+        public double LongitudeOrig { get; set; }
         public double Longitude { get; set; }
         public char LongitudeLetter { get; set; }
 
