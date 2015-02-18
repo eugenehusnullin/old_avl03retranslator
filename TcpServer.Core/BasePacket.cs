@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using TcpServer.Core.exceptions;
 
 namespace TcpServer.Core
 {
@@ -346,7 +347,10 @@ namespace TcpServer.Core
                 var result = new BasePacket();
 
                 long imeiCheck;
-                if (!long.TryParse(matchGroups["Imei"].Value, out imeiCheck)) throw new Exception("В пакете не верный IMEI");
+                if (!long.TryParse(matchGroups["Imei"].Value, out imeiCheck))
+                {
+                    throw new BadPacketException();
+                }
                 result.IMEI = matchGroups["Imei"].Value;
 
                 result.AlarmType = matchGroups["AlarmType"].Value;
@@ -507,7 +511,7 @@ namespace TcpServer.Core
             var result = new BasePacket();
 
             long imeiCheck;
-            if (!long.TryParse(matchGroups["Imei"].Value, out imeiCheck)) throw new Exception("В пакете не верный IMEI");
+            if (!long.TryParse(matchGroups["Imei"].Value, out imeiCheck)) throw new BadPacketException();
             result.IMEI = matchGroups["Imei"].Value;
 
             result.AlarmType = matchGroups["AlarmType"].Value;

@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="exceptions\BadPacketException.cs" />
     <Compile Include="gis\GISHandler.cs" />
     <Compile Include="async\block\ImageHolder.cs" />
     <Compile Include="async\block\ReceiveAllReadedHandler.cs" />

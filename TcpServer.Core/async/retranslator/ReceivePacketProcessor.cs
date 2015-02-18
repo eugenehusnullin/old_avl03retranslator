@@ -11,6 +11,7 @@ using TcpServer.Core.Properties;
 using System.Linq;
 using TcpServer.Core.gis;
 using TcpServer.Core.async.block;
+using TcpServer.Core.exceptions;
 
 namespace TcpServer.Core.async.retranslator
 {
@@ -72,7 +73,7 @@ namespace TcpServer.Core.async.retranslator
 
         private void specialCommandSend(Exception e, SocketGroup socketGroup)
         {
-            if (e.Message.Equals("В пакете не верный IMEI"))
+            if (e is BadPacketException || e is ArgumentOutOfRangeException)            
             {
                 log.Warn("Send special command");
 
