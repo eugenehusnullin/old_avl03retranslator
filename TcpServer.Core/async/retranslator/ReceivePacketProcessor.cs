@@ -73,19 +73,20 @@ namespace TcpServer.Core.async.retranslator
 
         private void specialCommandSend(Exception e, SocketGroup socketGroup)
         {
-            if (e is BadPacketException || e is ArgumentOutOfRangeException)            
-            {
-                log.Warn("Send special command");
+            return;
+            //if (e is BadPacketException || e is ArgumentOutOfRangeException)            
+            //{
+            //    log.Warn("Send special command");
 
-                byte[] scbytes = Encoding.ASCII.GetBytes("*000000,990,099#");
-                if (socketGroup.blockSendSAEA == null)
-                {
-                    socketGroup.blockSendSAEA = blocksAcceptor.createSaeaForSend(socketGroup.blockReceiveSAEA.AcceptSocket);
-                    ((DataHoldingUserToken)socketGroup.blockSendSAEA.UserToken).socketGroup = socketGroup;
-                }
+            //    byte[] scbytes = Encoding.ASCII.GetBytes("*000000,990,099#");
+            //    if (socketGroup.blockSendSAEA == null)
+            //    {
+            //        socketGroup.blockSendSAEA = blocksAcceptor.createSaeaForSend(socketGroup.blockReceiveSAEA.AcceptSocket);
+            //        ((DataHoldingUserToken)socketGroup.blockSendSAEA.UserToken).socketGroup = socketGroup;
+            //    }
 
-                blocksAcceptor.startSend(socketGroup.blockSendSAEA, scbytes);
-            }
+            //    blocksAcceptor.startSend(socketGroup.blockSendSAEA, scbytes);
+            //}
         }
 
         public byte[] processMessage(byte[] message, out string imei, SocketGroup socketGroup)
@@ -146,7 +147,7 @@ namespace TcpServer.Core.async.retranslator
                     catch (Exception e)
                     {
                         log.Error(e.ToString());
-                        specialCommandSend(e, socketGroup);
+                        //specialCommandSend(e, socketGroup);
                     }
 
                     return message;
@@ -177,7 +178,7 @@ namespace TcpServer.Core.async.retranslator
             catch (Exception e)
             {
                 log.Error(String.Format("ProcessMessage packet={0}", receivedData), e);
-                specialCommandSend(e, socketGroup);
+                //specialCommandSend(e, socketGroup);
                 return null;
             }
         }
