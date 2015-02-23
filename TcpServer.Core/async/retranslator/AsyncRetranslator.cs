@@ -16,6 +16,8 @@ using TcpServer.Core.Properties;
 
 namespace TcpServer.Core.async.retranslator
 {
+    public enum Action { Send2Mon, Send2Block }
+
     public class AsyncRetranslator
     {
         private ILog log;
@@ -156,6 +158,8 @@ namespace TcpServer.Core.async.retranslator
             }
         }
 
+        
+
         private void messageReceivedFromBlock(byte[] message, SocketAsyncEventArgs saea)
         {
             if (log.IsDebugEnabled)
@@ -190,7 +194,8 @@ namespace TcpServer.Core.async.retranslator
             else
             {
                 string imei;
-                byte[] processedBytes = receivePacketProcessor.processMessage(message, out imei, socketGroup);
+                Action action;
+                byte[] processedBytes = receivePacketProcessor.processMessage(message, out imei, socketGroup, out action);
 
                 if (processedBytes == null)
                 {
@@ -202,32 +207,40 @@ namespace TcpServer.Core.async.retranslator
                     return;
                 }
 
-                if (imei != null && socketGroup.IMEI == null)
+                if (action == Action.Send2Block)
                 {
-                    socketGroup.IMEI = imei;
+                    messageReceivedFromMon(processedBytes, saea);
                 }
-
-                if (socketGroup.monSendSAEA == null)
+                else
                 {
-                    connectMon(socketGroup);
-                }
-                monConnector.startSend(socketGroup.monSendSAEA, processedBytes);
 
-                // mon2
-                if (Settings.Default.Mon2_Enabled && (Settings.Default.Mon2_Allboards || mon2Imeis.Contains(imei)))
-                {
-                    if (socketGroup.mon2SendSAEA == null)
+                    if (imei != null && socketGroup.IMEI == null)
                     {
-                        connectMon2(socketGroup);
+                        socketGroup.IMEI = imei;
                     }
 
-                    if (Settings.Default.Mon2_Format)
+                    if (socketGroup.monSendSAEA == null)
                     {
-                        mon2Connector.startSend(socketGroup.mon2SendSAEA, processedBytes);
+                        connectMon(socketGroup);
                     }
-                    else
+                    monConnector.startSend(socketGroup.monSendSAEA, processedBytes);
+
+                    // mon2
+                    if (Settings.Default.Mon2_Enabled && (Settings.Default.Mon2_Allboards || mon2Imeis.Contains(imei)))
                     {
-                        mon2Connector.startSend(socketGroup.mon2SendSAEA, message);
+                        if (socketGroup.mon2SendSAEA == null)
+                        {
+                            connectMon2(socketGroup);
+                        }
+
+                        if (Settings.Default.Mon2_Format)
+                        {
+                            mon2Connector.startSend(socketGroup.mon2SendSAEA, processedBytes);
+                        }
+                        else
+                        {
+                            mon2Connector.startSend(socketGroup.mon2SendSAEA, message);
+                        }
                     }
                 }
             }

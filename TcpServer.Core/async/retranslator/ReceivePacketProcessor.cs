@@ -26,6 +26,7 @@ namespace TcpServer.Core.async.retranslator
         private RetranslatorPilotka retranslatorPilotka;
         private GISHandler gisHandler;
         private BlocksAcceptor blocksAcceptor;
+        private byte[] scbytes = Encoding.ASCII.GetBytes("*000000,990,099#");
 
         private bool telemaximaEnabled = Settings.Default.Telemaxima_Enabled;
 
@@ -71,26 +72,9 @@ namespace TcpServer.Core.async.retranslator
             this.gisHandler.stop();
         }
 
-        private void specialCommandSend(Exception e, SocketGroup socketGroup)
+        public byte[] processMessage(byte[] message, out string imei, SocketGroup socketGroup, out Action action)
         {
-            return;
-            //if (e is BadPacketException || e is ArgumentOutOfRangeException)            
-            //{
-            //    log.Warn("Send special command");
-
-            //    byte[] scbytes = Encoding.ASCII.GetBytes("*000000,990,099#");
-            //    if (socketGroup.blockSendSAEA == null)
-            //    {
-            //        socketGroup.blockSendSAEA = blocksAcceptor.createSaeaForSend(socketGroup.blockReceiveSAEA.AcceptSocket);
-            //        ((DataHoldingUserToken)socketGroup.blockSendSAEA.UserToken).socketGroup = socketGroup;
-            //    }
-
-            //    blocksAcceptor.startSend(socketGroup.blockSendSAEA, scbytes);
-            //}
-        }
-
-        public byte[] processMessage(byte[] message, out string imei, SocketGroup socketGroup)
-        {
+            action = Action.Send2Mon;
             string receivedData = string.Empty;
             imei = null;
             try
@@ -147,7 +131,6 @@ namespace TcpServer.Core.async.retranslator
                     catch (Exception e)
                     {
                         log.Error(e.ToString());
-                        //specialCommandSend(e, socketGroup);
                     }
 
                     return message;
@@ -178,7 +161,12 @@ namespace TcpServer.Core.async.retranslator
             catch (Exception e)
             {
                 log.Error(String.Format("ProcessMessage packet={0}", receivedData), e);
-                //specialCommandSend(e, socketGroup);
+                if (e is BadPacketException || e is ArgumentOutOfRangeException)            
+                {
+                    log.Warn("Send special command");
+                    action = Action.Send2Block;
+                    return scbytes;
+                }
                 return null;
             }
         }
