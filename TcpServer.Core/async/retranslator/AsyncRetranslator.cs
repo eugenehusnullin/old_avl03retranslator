@@ -77,7 +77,7 @@ namespace TcpServer.Core.async.retranslator
 
             blockConnectionAcceptedDelegate = blockConnectionAccepted;
 
-            
+
             blocksAcceptor = new BlocksAcceptor(listenHost, listenPort, messageReceivedFromBlockDelegate, messageSendedToBlockDelegate,
                 blockConnectionAcceptedDelegate, blockReceiveFailedDelegate, blockSendFailedDelegate);
             monConnector = new MonConnector(monHost, monPort, messageReceivedFromMonDelegate, messageSendedToMonDelegate,
@@ -123,7 +123,7 @@ namespace TcpServer.Core.async.retranslator
         }
 
         private void connectMon(SocketGroup socketGroup)
-        {            
+        {
             SocketAsyncEventArgs monReceive, monSend;
             if (monConnector.createConnection(out monReceive, out monSend))
             {
@@ -141,7 +141,7 @@ namespace TcpServer.Core.async.retranslator
         }
 
         private void connectMon2(SocketGroup socketGroup)
-        {            
+        {
             SocketAsyncEventArgs mon2Receive, mon2Send;
             if (mon2Connector.createConnection(out mon2Receive, out mon2Send))
             {
@@ -158,7 +158,7 @@ namespace TcpServer.Core.async.retranslator
             }
         }
 
-        
+
 
         private void messageReceivedFromBlock(byte[] message, SocketAsyncEventArgs saea)
         {
@@ -172,7 +172,7 @@ namespace TcpServer.Core.async.retranslator
 
             if (Settings.Default.PureRetranslate)
             {
-                string filename = Path.Combine(appPath,"purelog"); //((IPEndPoint)saea.AcceptSocket.RemoteEndPoint).Address.ToString();
+                string filename = Path.Combine(appPath, "purelog"); //((IPEndPoint)saea.AcceptSocket.RemoteEndPoint).Address.ToString();
                 var fs = new FileStream(filename, FileMode.Append);
                 string messageHead = "^device:";
                 var messageHeadBytes = Encoding.ASCII.GetBytes(messageHead);
@@ -272,7 +272,7 @@ namespace TcpServer.Core.async.retranslator
 
             if (Settings.Default.PureRetranslate)
             {
-                string filename = Path.Combine(appPath,"purelog"); //((IPEndPoint)saea.AcceptSocket.RemoteEndPoint).Address.ToString();
+                string filename = Path.Combine(appPath, "purelog"); //((IPEndPoint)saea.AcceptSocket.RemoteEndPoint).Address.ToString();
                 var fs = new FileStream(filename, FileMode.Append);
                 string messageHead = "^server:";
                 var messageHeadBytes = Encoding.ASCII.GetBytes(messageHead);
@@ -333,60 +333,102 @@ namespace TcpServer.Core.async.retranslator
 
         private void blockReceiveFailed(SocketAsyncEventArgs saea)
         {
-            var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
-            if (socketGroup.monSendSAEA != null)
+            try
             {
-                monConnector.closeSocket(socketGroup.monSendSAEA);
-                (socketGroup.monSendSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
-                socketGroup.monSendSAEA.Dispose();
+                var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
+                if (socketGroup.monSendSAEA != null)
+                {
+                    monConnector.closeSocket(socketGroup.monSendSAEA);
+                    (socketGroup.monSendSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
+                    socketGroup.monSendSAEA.Dispose();
+                }
+            }
+            catch (Exception e)
+            {
+                log.Error(e.ToString());
             }
         }
 
         private void blockSendFailed(SocketAsyncEventArgs saea)
         {
-            var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
-            if (socketGroup.monReceiveSAEA != null)
+            try
             {
-                monConnector.closeSocket(socketGroup.monReceiveSAEA);
-                (socketGroup.monReceiveSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
-                socketGroup.monReceiveSAEA.Dispose();
+                var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
+                if (socketGroup.monReceiveSAEA != null)
+                {
+                    monConnector.closeSocket(socketGroup.monReceiveSAEA);
+                    (socketGroup.monReceiveSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
+                    socketGroup.monReceiveSAEA.Dispose();
+                }
+            }
+            catch (Exception e)
+            {
+                log.Error(e.ToString());
             }
         }
 
         private void monReceiveFailed(SocketAsyncEventArgs saea)
         {
-            var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
-            if (socketGroup.blockSendSAEA != null)
+            try
             {
-                blocksAcceptor.closeSocket(socketGroup.blockSendSAEA);
-                (socketGroup.blockSendSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
-                socketGroup.blockSendSAEA.Dispose();
+                var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
+                if (socketGroup.blockSendSAEA != null)
+                {
+                    blocksAcceptor.closeSocket(socketGroup.blockSendSAEA);
+                    (socketGroup.blockSendSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
+                    socketGroup.blockSendSAEA.Dispose();
+                }
+            }
+            catch (Exception e)
+            {
+                log.Error(e.ToString());
             }
         }
 
         private void mon2ReceiveFailed(SocketAsyncEventArgs saea)
         {
-            var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
-            socketGroup.mon2ReceiveSAEA = null;
-            socketGroup.mon2SendSAEA = null;
+            try
+            {
+                var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
+                socketGroup.mon2ReceiveSAEA = null;
+                socketGroup.mon2SendSAEA = null;
+            }
+            catch (Exception e)
+            {
+                log.Error(e.ToString());
+            }
         }
 
         private void monSendFailed(SocketAsyncEventArgs saea)
         {
-            var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
-            if (socketGroup.blockReceiveSAEA != null)
+            try
             {
-                blocksAcceptor.closeSocket(socketGroup.blockReceiveSAEA);
-                (socketGroup.blockReceiveSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
-                socketGroup.blockReceiveSAEA.Dispose();
+                var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
+                if (socketGroup.blockReceiveSAEA != null)
+                {
+                    blocksAcceptor.closeSocket(socketGroup.blockReceiveSAEA);
+                    (socketGroup.blockReceiveSAEA.UserToken as DataHoldingUserToken).socketGroup = null;
+                    socketGroup.blockReceiveSAEA.Dispose();
+                }
+            }
+            catch (Exception e)
+            {
+                log.Error(e.ToString());
             }
         }
 
         private void mon2SendFailed(SocketAsyncEventArgs saea)
         {
-            var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
-            socketGroup.mon2ReceiveSAEA = null;
-            socketGroup.mon2SendSAEA = null;
+            try
+            {
+                var socketGroup = (saea.UserToken as DataHoldingUserToken).socketGroup;
+                socketGroup.mon2ReceiveSAEA = null;
+                socketGroup.mon2SendSAEA = null;
+            }
+            catch (Exception e)
+            {
+                log.Error(e.ToString());
+            }
         }
     }
 }
