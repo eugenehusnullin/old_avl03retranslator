@@ -111,20 +111,32 @@ namespace TcpServer.Core.async.retranslator
                 {
                     try
                     {
-                        if (receivedData.Contains("GSMVER:") && socketGroup.IMEI != null)
+                        if (receivedData.ToUpper().Contains("VER:"))
                         {
-                            using (var db = new somereasonEntities())
+                            if (!receivedData.ToUpper().Contains("VER:9.44") && socketGroup.IMEI != null)
                             {
-                                var blockInfo = db.block_info.FirstOrDefault(_ => _.imei == socketGroup.IMEI);
-                                if (blockInfo == null)
+                                using (var db = new somereasonEntities())
                                 {
-                                    blockInfo = new block_info();
-                                    blockInfo.imei = socketGroup.IMEI;
-                                    blockInfo.info = receivedData;
-                                    blockInfo.arrived = DateTime.Now;
-                                    db.block_info.AddObject(blockInfo);
-                                    db.SaveChanges();
+                                    var blockInfo = db.block_info.FirstOrDefault(_ => _.imei == socketGroup.IMEI);
+                                    if (blockInfo == null)
+                                    {
+                                        blockInfo = new block_info();
+                                        blockInfo.imei = socketGroup.IMEI;
+                                        blockInfo.info = receivedData;
+                                        blockInfo.arrived = DateTime.Now;
+                                        db.block_info.AddObject(blockInfo);
+                                        db.SaveChanges();
+                                        log.Info("VER YES_SAVE IMEI=" + socketGroup.IMEI);
+                                    }
+                                    else
+                                    {
+                                        log.Info("VER EXISTS IMEI=" + socketGroup.IMEI);
+                                    }
                                 }
+                            }
+                            else
+                            {
+                                log.Info("VER NOT_SAVE IMEI=" + socketGroup.IMEI ?? "NULL");
                             }
                         }
                     }
