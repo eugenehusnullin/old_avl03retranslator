@@ -25,15 +25,12 @@ namespace TcpServer.Core.async.retranslator
         private UnifiedProtocolSink mintransMoscowRegionSink;
         private RetranslatorPilotka retranslatorPilotka;
         private GISHandler gisHandler;
-        private BlocksAcceptor blocksAcceptor;
-        private byte[] scbytes = Encoding.ASCII.GetBytes("*000000,990,099#");
 
+        private byte[] scbytes = Encoding.ASCII.GetBytes("*000000,990,099#");
         private bool telemaximaEnabled = Settings.Default.Telemaxima_Enabled;
 
-        public ReceivePacketProcessor(BlocksAcceptor blocksAcceptor)
+        public ReceivePacketProcessor()
         {
-            this.blocksAcceptor = blocksAcceptor;
-
             packetLog = LogManager.GetLogger("packet");
             log = LogManager.GetLogger(typeof(ReceivePacketProcessor));
 

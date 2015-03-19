@@ -82,7 +82,7 @@ namespace TcpServer.Core.async.retranslator
                 blockConnectionAcceptedDelegate, blockReceiveFailedDelegate, blockSendFailedDelegate);
             monConnector = new MonConnector(monHost, monPort, messageReceivedFromMonDelegate, messageSendedToMonDelegate,
                 monReceiveFailedDelegate, monSendFailedDelegate, 3, 7000);
-            receivePacketProcessor = new ReceivePacketProcessor(blocksAcceptor);
+            receivePacketProcessor = new ReceivePacketProcessor();
 
             if (Settings.Default.Mon2_Enabled)
             {
