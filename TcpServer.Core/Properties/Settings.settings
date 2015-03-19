@@ -65,9 +65,6 @@
     <Setting Name="Mon2_Port" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">16161</Value>
     </Setting>
-    <Setting Name="TcpServer_Core_ru_mos_ods_TelemetryService" Type="(Web Service URL)" Scope="Application">
-      <Value Profile="(Default)">http://ods.mos.ru:80/telemetry/telemetryWebService</Value>
-    </Setting>
     <Setting Name="PureRetranslate" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>

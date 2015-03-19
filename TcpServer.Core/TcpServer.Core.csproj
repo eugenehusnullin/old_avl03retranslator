@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DateTimeHelper.cs" />
     <Compile Include="exceptions\BadPacketException.cs" />
     <Compile Include="gis\GISHandler.cs" />
     <Compile Include="async\block\ImageHolder.cs" />
@@ -90,18 +91,14 @@
     <Compile Include="async\common\SocketGroup.cs" />
     <Compile Include="BasePacket.cs" />
     <Compile Include="ByteHelper.cs" />
-    <Compile Include="Crc16.cs" />
     <Compile Include="Crc16Ibm.cs" />
     <Compile Include="CrcNmea.cs" />
-    <Compile Include="DateTimeHelper.cs" />
     <Compile Include="DictionarySaver.cs" />
     <Compile Include="edmx\somereason.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>somereason.edmx</DependentUpon>
     </Compile>
-    <Compile Include="Listner.cs" />
-    <Compile Include="Logger.cs" />
     <Compile Include="Mintrans\ImeiList.cs" />
     <Compile Include="Mintrans\IUnifiedProtocolSettings.cs" />
     <Compile Include="Mintrans\MessageBuilder.cs" />
@@ -117,7 +114,6 @@
       <DependentUpon>SoapTemplates.resx</DependentUpon>
     </Compile>
     <Compile Include="Mintrans\Worker.cs" />
-    <Compile Include="OdsTransportAssertion.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="pilotka\ImeiDictionaryLoader.cs" />
     <Compile Include="pilotka\PilotkaSettings.cs" />
@@ -130,20 +126,9 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="RetranslatorGlonass.cs" />
     <Compile Include="RetranslatorAdv.cs" />
     <Compile Include="RetranslatorTelemaxima.cs" />
-    <Compile Include="RetranslatorTeltonika.cs" />
-    <Compile Include="RetranslatorWialon.cs" />
-    <Compile Include="RetranslatorWsdl.cs" />
-    <Compile Include="Sender.cs" />
     <Compile Include="TcpClients.cs" />
-    <Compile Include="TelemetryService.cs" />
-    <Compile Include="Web References\ru.mos.ods\Reference.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Reference.map</DependentUpon>
-    </Compile>
     <Compile Include="WialonBlockData.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -164,11 +149,6 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </None>
-    <None Include="Web References\ru.mos.ods\Reference.map">
-      <Generator>MSDiscoCodeGenerator</Generator>
-      <LastGenOutput>Reference.cs</LastGenOutput>
-    </None>
-    <None Include="Web References\ru.mos.ods\TelemetryService.wsdl" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Mintrans\SoapTemplates.resx">
@@ -182,19 +162,6 @@
   </ItemGroup>
   <ItemGroup>
     <WebReferences Include="Web References\" />
-  </ItemGroup>
-  <ItemGroup>
-    <WebReferenceUrl Include="http://ods.mos.ru/telemetry/telemetryWebService%3fwsdl">
-      <UrlBehavior>Dynamic</UrlBehavior>
-      <RelPath>Web References\ru.mos.ods\</RelPath>
-      <UpdateFromURL>http://ods.mos.ru/telemetry/telemetryWebService%3fwsdl</UpdateFromURL>
-      <ServiceLocationURL>
-      </ServiceLocationURL>
-      <CachedDynamicPropName>
-      </CachedDynamicPropName>
-      <CachedAppSettingsObjectName>Settings</CachedAppSettingsObjectName>
-      <CachedSettingsPropName>TcpServer_Core_ru_mos_ods_TelemetryService</CachedSettingsPropName>
-    </WebReferenceUrl>
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />

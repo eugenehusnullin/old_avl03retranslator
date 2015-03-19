@@ -214,16 +214,6 @@ namespace TcpServer.Core.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.WebServiceUrl)]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://ods.mos.ru:80/telemetry/telemetryWebService")]
-        public string TcpServer_Core_ru_mos_ods_TelemetryService {
-            get {
-                return ((string)(this["TcpServer_Core_ru_mos_ods_TelemetryService"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool PureRetranslate {
             get {
