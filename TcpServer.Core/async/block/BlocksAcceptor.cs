@@ -78,13 +78,19 @@ namespace TcpServer.Core.async.block
 
         public void stop()
         {
-            shutdown = true;
-
-            if (listenSocket.Connected)
+            try
             {
-                listenSocket.Shutdown(SocketShutdown.Both);
+                shutdown = true;
+
+                if (listenSocket.Connected)
+                {
+                    listenSocket.Shutdown(SocketShutdown.Both);
+                }
+                listenSocket.Close();
+                listenSocket.Dispose();
+            }catch
+            {
             }
-            listenSocket.Close();
         }
 
         private void acceptEvent(object sender, SocketAsyncEventArgs saea)

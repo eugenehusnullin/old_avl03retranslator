@@ -51,6 +51,11 @@ namespace TcpServer.Core.async.retranslator
 
         private string appPath;
 
+        private volatile int monConnectionFailed = 0;
+        private Thread monConnectionCheckThread;
+        private Object monConnectionCheckLocker = new Object();
+        private volatile bool monConnectionCheckStarted = false;
+
         public AsyncRetranslator(string listenHost, int listenPort, string monHost, int monPort)
         {
             appPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
@@ -127,6 +132,8 @@ namespace TcpServer.Core.async.retranslator
             SocketAsyncEventArgs monReceive, monSend;
             if (monConnector.createConnection(out monReceive, out monSend))
             {
+                monConnectionFailed = 0;
+
                 ((DataHoldingUserToken)monReceive.UserToken).socketGroup = socketGroup;
                 ((DataHoldingUserToken)monSend.UserToken).socketGroup = socketGroup;
                 socketGroup.monReceiveSAEA = monReceive;
@@ -137,6 +144,51 @@ namespace TcpServer.Core.async.retranslator
             {
                 socketGroup.monReceiveSAEA = null;
                 socketGroup.monSendSAEA = null;
+
+                // LOCK THIS
+                lock (monConnectionCheckLocker)
+                {
+                    monConnectionFailed++;
+                    if (monConnectionFailed >= 5 && !monConnectionCheckStarted)
+                    {
+                        blocksAcceptor.stop();
+                        monConnectionCheckThread = new Thread(() => monConnectionCheckProcess());
+                        monConnectionCheckThread.Start();
+                        monConnectionCheckStarted = true;
+                    }
+                }
+            }
+        }
+
+        private void monConnectionCheckProcess()
+        {
+            while (true)
+            {
+                try
+                {
+                    SocketAsyncEventArgs monReceive, monSend;
+                    if (monConnector.createConnection(out monReceive, out monSend))
+                    {
+                        blocksAcceptor.start();
+                        monConnectionCheckStarted = false;
+                        break;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            Thread.Sleep(60 * 1000);
+                        }
+                        catch
+                        {
+                            break;
+                        }
+                    }
+                }
+                catch
+                {
+                    Thread.Sleep(10 * 1000);
+                }
             }
         }
 
