@@ -96,9 +96,8 @@ namespace TcpServer.Core.async.mon
             {
                 byte[] bytes = new byte[saea.BytesTransferred];
                 Buffer.BlockCopy(saea.Buffer, saea.Offset, bytes, 0, saea.BytesTransferred);
-                int dataTypeId = userToken.dataTypeId;
                 userToken.resetAll();
-                messageReceived(bytes, saea, dataTypeId);
+                messageReceived(bytes, saea);
             }
         }
 

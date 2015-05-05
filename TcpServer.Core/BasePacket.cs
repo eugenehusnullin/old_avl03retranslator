@@ -767,7 +767,7 @@ namespace TcpServer.Core
             //sb.Append("359772032388028|61$GPRMC,301620.000,A,4650.3652,N,02927.7965,E,0.00,,231111,,,A*70|03.1|02.7|01.6|000000000000|20111123201620|03990000|00000000|000803C2|0000|0.0000|0005|");
 
             sb.Append("|");
-            sb.AppendFormat("{0}", LastCmd);
+            sb.AppendFormat("{0}", VERSION);
 
             sb.Insert(0, string.Format("$${0:X2}", sb.Length + 9));
             sb.Append("|");
@@ -918,6 +918,6 @@ namespace TcpServer.Core
 
         public char Mode { get; set; }
 
-        public string LastCmd = "";
+        public string VERSION = "";
     }
 }

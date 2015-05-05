@@ -253,10 +253,8 @@ namespace TcpServer.Core.async.block
                 {
                     if (message != null)
                     {
-                        int dataTypeId = userToken.dataTypeId;
-
                         userToken.resetReadyMessage();
-                        messageReceived(message, saea, dataTypeId);
+                        messageReceived(message, saea);
                         return;
                     }
                     else

@@ -69,7 +69,7 @@ namespace TcpServer.Core.async.retranslator
             this.gisHandler.stop();
         }
 
-        public byte[] processMessage(byte[] message, out string imei, SocketGroup socketGroup, out Action action, int dataTypeId)
+        public byte[] processMessage(byte[] message, out string imei, SocketGroup socketGroup, out Action action)
         {
             action = Action.Send2Mon;
             string receivedData = string.Empty;
@@ -77,12 +77,6 @@ namespace TcpServer.Core.async.retranslator
             try
             {
                 receivedData = Encoding.ASCII.GetString(message);
-
-                if (dataTypeId == 2)
-                {
-                    socketGroup.LastCmd = receivedData;
-                }
-
                 if (receivedData.StartsWith("$$"))
                 {
                     var basePacket = BasePacket.GetFromGlonass(receivedData);
@@ -104,10 +98,10 @@ namespace TcpServer.Core.async.retranslator
                         retranslatorTelemaxima.checkAndRetranslate(basePacket);
                     }
 
-                    if (socketGroup.LastCmd != null)
+                    if (socketGroup.VERSION != null)
                     {
-                        basePacket.LastCmd = socketGroup.LastCmd;
-                        socketGroup.LastCmd = null;
+                        basePacket.VERSION = socketGroup.VERSION;
+                        socketGroup.VERSION = null;
                     }
 
                     var gpsData = basePacket.ToPacketGps();
@@ -122,6 +116,7 @@ namespace TcpServer.Core.async.retranslator
                     {
                         if (receivedData.ToUpper().Contains("VER:"))
                         {
+                            socketGroup.VERSION = receivedData;
                             if (!receivedData.ToUpper().Contains("VER:9.44") && socketGroup.IMEI != null)
                             {
                                 using (var db = new somereasonEntities())
