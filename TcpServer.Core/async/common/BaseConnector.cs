@@ -9,7 +9,7 @@ namespace TcpServer.Core.async.common
 {
     public class BaseConnector
     {
-        public delegate void MessageReceived(byte[] message, SocketAsyncEventArgs saea);
+        public delegate void MessageReceived(byte[] message, SocketAsyncEventArgs saea, int dataTypeId);
         public delegate void MessageSended(SocketAsyncEventArgs saea, byte[] message);
         public delegate void ReceiveFailed(SocketAsyncEventArgs saea);
         public delegate void SendFailed(SocketAsyncEventArgs saea);

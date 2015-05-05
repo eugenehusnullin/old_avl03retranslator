@@ -18,6 +18,7 @@ namespace TcpServer.Core.async.common
         public SocketAsyncEventArgs mon2ReceiveSAEA = null;
         public SocketAsyncEventArgs mon2SendSAEA = null;
         public string IMEI = null;
+        public string LastCmd = null;
 
     }
 }

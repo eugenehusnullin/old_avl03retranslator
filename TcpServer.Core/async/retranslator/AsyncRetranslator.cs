@@ -212,7 +212,7 @@ namespace TcpServer.Core.async.retranslator
 
 
 
-        private void messageReceivedFromBlock(byte[] message, SocketAsyncEventArgs saea)
+        private void messageReceivedFromBlock(byte[] message, SocketAsyncEventArgs saea, int dataTypeId)
         {
             if (log.IsDebugEnabled)
             {
@@ -247,7 +247,7 @@ namespace TcpServer.Core.async.retranslator
             {
                 string imei;
                 Action action;
-                byte[] processedBytes = receivePacketProcessor.processMessage(message, out imei, socketGroup, out action);
+                byte[] processedBytes = receivePacketProcessor.processMessage(message, out imei, socketGroup, out action, dataTypeId);
 
                 if (processedBytes == null)
                 {
@@ -261,7 +261,7 @@ namespace TcpServer.Core.async.retranslator
 
                 if (action == Action.Send2Block)
                 {
-                    messageReceivedFromMon(processedBytes, saea);
+                    messageReceivedFromMon(processedBytes, saea, -1);
                 }
                 else
                 {
@@ -314,7 +314,7 @@ namespace TcpServer.Core.async.retranslator
         {
         }
 
-        private void messageReceivedFromMon(byte[] message, SocketAsyncEventArgs saea)
+        private void messageReceivedFromMon(byte[] message, SocketAsyncEventArgs saea, int dataTypeId)
         {
             if (log.IsDebugEnabled)
             {
@@ -353,7 +353,7 @@ namespace TcpServer.Core.async.retranslator
             blocksAcceptor.startSend(socketGroup.blockSendSAEA, message);
         }
 
-        private void messageReceivedFromMon2(byte[] message, SocketAsyncEventArgs saea)
+        private void messageReceivedFromMon2(byte[] message, SocketAsyncEventArgs saea, int dataTypeId)
         {
             // log command
             {
