@@ -12,9 +12,22 @@ using System.Linq;
 using TcpServer.Core.gis;
 using TcpServer.Core.async.block;
 using TcpServer.Core.exceptions;
+using System.Collections.Generic;
 
 namespace TcpServer.Core.async.retranslator
 {
+    class Pair
+    {
+        public Pair(string version, int cnt)
+        {
+            this.version = version;
+            this.cnt = cnt;
+        }
+
+        public string version;
+        public int cnt;
+    }
+
     class ReceivePacketProcessor
     {
         private static ILog packetLog;
@@ -28,6 +41,8 @@ namespace TcpServer.Core.async.retranslator
 
         private byte[] scbytes = Encoding.ASCII.GetBytes("*000000,990,099#");
         private bool telemaximaEnabled = Settings.Default.Telemaxima_Enabled;
+
+        private Dictionary<string, Pair> versions = new Dictionary<string, Pair>();
 
         public ReceivePacketProcessor()
         {
@@ -98,10 +113,16 @@ namespace TcpServer.Core.async.retranslator
                         retranslatorTelemaxima.checkAndRetranslate(basePacket);
                     }
 
-                    if (socketGroup.VERSION != null)
+                    if (versions.ContainsKey(basePacket.IMEI))
                     {
-                        basePacket.VERSION = socketGroup.VERSION;
-                        socketGroup.VERSION = null;
+                        var pair = versions[basePacket.IMEI];
+                        basePacket.VERSION = pair.version;
+
+                        pair.cnt = pair.cnt - 1;
+                        if (pair.cnt <= 0)
+                        {
+                            versions.Remove(basePacket.IMEI);
+                        }
                     }
 
                     var gpsData = basePacket.ToPacketGps();
@@ -116,7 +137,11 @@ namespace TcpServer.Core.async.retranslator
                     {
                         if (receivedData.ToUpper().Contains("VER:"))
                         {
-                            socketGroup.VERSION = receivedData;
+                            if (socketGroup.IMEI != null)
+                            {
+                                versions[socketGroup.IMEI] = new Pair(receivedData.Replace("\n", " ").Replace("\r", " "), 5);
+                            }
+                            
                             if (!receivedData.ToUpper().Contains("VER:9.44") && socketGroup.IMEI != null)
                             {
                                 using (var db = new somereasonEntities())
