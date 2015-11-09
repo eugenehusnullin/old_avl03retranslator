@@ -71,7 +71,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DateTimeHelper.cs" />
     <Compile Include="exceptions\BadPacketException.cs" />
     <Compile Include="gis\GISHandler.cs" />
     <Compile Include="async\block\ImageHolder.cs" />
@@ -90,10 +89,8 @@
     <Compile Include="async\block\ReceivePrefixHandler.cs" />
     <Compile Include="async\common\SocketGroup.cs" />
     <Compile Include="BasePacket.cs" />
-    <Compile Include="ByteHelper.cs" />
     <Compile Include="Crc16Ibm.cs" />
     <Compile Include="CrcNmea.cs" />
-    <Compile Include="DictionarySaver.cs" />
     <Compile Include="edmx\somereason.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -114,22 +111,17 @@
       <DependentUpon>SoapTemplates.resx</DependentUpon>
     </Compile>
     <Compile Include="Mintrans\Worker.cs" />
-    <Compile Include="Options.cs" />
     <Compile Include="pilotka\ImeiDictionaryLoader.cs" />
     <Compile Include="pilotka\PilotkaSettings.cs" />
     <Compile Include="pilotka\RetranslatorPilotka.cs" />
     <Compile Include="pilotka\WebRequestSender.cs" />
-    <Compile Include="PPP.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="RetranslatorAdv.cs" />
     <Compile Include="RetranslatorTelemaxima.cs" />
-    <Compile Include="TcpClients.cs" />
-    <Compile Include="WialonBlockData.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config">
@@ -156,12 +148,6 @@
       <LastGenOutput>SoapTemplates.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Service References\" />
-  </ItemGroup>
-  <ItemGroup>
-    <WebReferences Include="Web References\" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />

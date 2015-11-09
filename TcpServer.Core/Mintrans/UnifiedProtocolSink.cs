@@ -56,43 +56,6 @@ namespace TcpServer.Core.Mintrans
             }
         }
 
-        public async void SendLocationAndStateAsync(BasePacket packet)
-        {
-
-            if (this.settings.Enabled) 
-            {
-                var id = this.imeiList.GetId(packet.IMEI);
-                if (id != null)
-                {
-                    SoapSink sink = this.soapSinkPool.GetFromPool();
-                    try
-                    {
-                        byte[] messageBytes = this.builder.CreateLocationAndStateMessage(packet, id);
-                        await sink.PostSoapMessageAsync(messageBytes);
-                        this.log.InfoFormat(
-                            packet.isSOS() ? "ALARM = SOS, IMEI={0}, geo={1}, {2}, speed={3}, direction={4}, altitude={5}, state={6}, id={7}" 
-                            : "IMEI={0}, geo={1}, {2}, speed={3}, direction={4}, altitude={5}, state={6}, id={7}",
-                            packet.IMEI,
-                            packet.Latitude,
-                            packet.Longitude,
-                            packet.Speed,
-                            packet.Direction,
-                            packet.Altitude,
-                            packet.State,
-                            id);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.log.Error("UnifiedProtocolSink.SendLocationAndState: " + this.settings.Url + ": " + ex.ToString());
-                    }
-                    finally
-                    {
-                        this.soapSinkPool.ReturnToPool(sink);
-                    }
-                }
-            }
-        }
-
         public void SendLocationAndState(BasePacket packet)
         {
             if (settings.Enabled) 
